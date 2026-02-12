@@ -28,6 +28,7 @@ import VendorDashboard from "./pages/VendorDashboard";
 import VendorProfile from "./pages/VendorProfile";
 import VendorLeadDetail from "./pages/VendorLeadDetail";
 import CreateProjectForm from "./pages/CreateProjectForm";
+import ProjectDetail from "./pages/ProjectDetail";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute requiredRole="business">
           <CreateProjectForm />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/business/project/:projectId"
+      element={
+        <ProtectedRoute requiredRole="business">
+          <ProjectDetail />
         </ProtectedRoute>
       }
     />
