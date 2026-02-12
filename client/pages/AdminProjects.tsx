@@ -54,15 +54,15 @@ export default function AdminProjects() {
       try {
         const [projectsData, companiesData, creatorsData] = await Promise.all([
           getProjects().catch((err) => {
-            console.error("Error fetching projects:", err);
+            console.error("Error fetching projects:", getErrorMessage(err));
             return [];
           }),
           getCompanies().catch((err) => {
-            console.error("Error fetching companies:", err);
+            console.error("Error fetching companies:", getErrorMessage(err));
             return [];
           }),
           getCreatorProfiles().catch((err) => {
-            console.error("Error fetching creators:", err);
+            console.error("Error fetching creators:", getErrorMessage(err));
             return [];
           }),
         ]);
