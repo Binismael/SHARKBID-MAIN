@@ -5,7 +5,6 @@ import { Card } from '@/components/ui/card';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 interface FormData {
@@ -89,106 +88,50 @@ export default function CreateProjectForm() {
         return;
       }
 
-      // Get the service category ID by looking up the category name
-      const { data: categoryData, error: categoryError } = await supabase
-        .from('service_categories')
-        .select('id')
-        .eq('name', formData.service_category)
-        .single();
-
-      if (categoryError || !categoryData) {
-        console.error('Service category lookup error:', categoryError);
-        toast.error('Selected service category not found');
-        setLoading(false);
-        return;
-      }
-
-      // Prepare project data - only include non-null values
+      // Prepare project data
       const projectData = {
-        business_id: user.id,
         title: formData.title,
         description: formData.description || '',
-        service_category_id: categoryData.id,
-        budget_min: formData.budget_min ? parseInt(formData.budget_min) : null,
-        budget_max: formData.budget_max ? parseInt(formData.budget_max) : null,
-        timeline_start: formData.timeline_start || null,
-        timeline_end: formData.timeline_end || null,
+        service_category: formData.service_category,
+        budget_min: formData.budget_min ? parseInt(formData.budget_min) : undefined,
+        budget_max: formData.budget_max ? parseInt(formData.budget_max) : undefined,
+        timeline_start: formData.timeline_start || undefined,
+        timeline_end: formData.timeline_end || undefined,
         project_city: formData.project_city || '',
         project_state: formData.project_state,
         project_zip: formData.project_zip || '',
         business_size: formData.business_size || '',
         special_requirements: formData.special_requirements || '',
-        status: 'open',
       };
 
       console.log('Attempting to create project with data:', projectData);
 
-      // Create project in Supabase
-      const { data: project, error: projectError } = await supabase
-        .from('projects')
-        .insert([projectData])
-        .select('*')
-        .single();
+      // Call server API to create project
+      const response = await fetch('/api/projects/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id,
+        },
+        body: JSON.stringify(projectData),
+      });
 
-      if (projectError) {
-        const errorMessage = projectError.message || 'Unknown database error';
-        const errorDetails = projectError.details || '';
-        const errorCode = projectError.code || 'UNKNOWN';
-
-        const fullErrorInfo = {
-          message: errorMessage,
-          details: errorDetails,
-          code: errorCode,
-          status: projectError.status,
-          hint: (projectError as any).hint,
-        };
-
-        console.error('Project creation error:', fullErrorInfo);
-
-        // Show detailed error message
-        let displayMessage = 'Failed to create project';
-
-        if (errorMessage.includes('duplicate key') || errorCode === '23505') {
-          displayMessage = 'A project with this title already exists';
-        } else if (errorMessage.includes('foreign key') || errorCode === '23503') {
-          displayMessage = 'Invalid service category selected';
-        } else if (errorMessage.includes('permission') || errorCode === '42501') {
-          displayMessage = 'You do not have permission to create projects';
-        } else if (errorMessage.includes('not found') || errorCode === '404') {
-          displayMessage = 'Table or schema not found - contact support';
-        } else {
-          displayMessage = `Failed: ${errorMessage}`;
+      if (!response.ok) {
+        let errorMessage = `Server error: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          console.error('Server error details:', errorData);
+        } catch (e) {
+          // Could not parse error response
         }
-
-        console.error('Detailed error info:', JSON.stringify(fullErrorInfo, null, 2));
-        toast.error(displayMessage);
-        setLoading(false);
-        return;
+        throw new Error(errorMessage);
       }
 
-      if (!project) {
-        toast.error('Failed to retrieve created project');
-        setLoading(false);
-        return;
-      }
+      const result = await response.json();
 
-      // Trigger lead routing
-      try {
-        const routingResponse = await fetch('/api/routing/trigger', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectId: project.id }),
-        });
-
-        if (!routingResponse.ok) {
-          const routingError = await routingResponse.json();
-          console.warn('Lead routing failed:', routingError);
-          // Don't fail the entire operation if routing fails
-          toast.info('Project created, but routing vendors took longer than expected');
-        }
-      } catch (routingErr) {
-        console.warn('Lead routing error:', routingErr);
-        // Silent fail - project was still created
+      if (!result.success || !result.project) {
+        throw new Error('Invalid response from server');
       }
 
       toast.success('Project created successfully!');
@@ -208,7 +151,7 @@ export default function CreateProjectForm() {
         errorMessage = String(error);
       }
 
-      console.error('Unexpected error creating project:', {
+      console.error('Error creating project:', {
         error,
         errorMessage,
         errorType: typeof error,

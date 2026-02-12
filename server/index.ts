@@ -5,6 +5,7 @@ import { handleDemo } from "./routes/demo";
 import { handleAIIntake } from "./routes/ai-intake";
 import { handleTriggerRouting } from "./routes/lead-routing";
 import { handlePublishProject, handleGetProject } from "./routes/projects";
+import { handleCreateProject } from "./routes/create-project";
 import emailRouter from "./routes/email";
 import adminRouter from "./routes/admin";
 
@@ -28,6 +29,7 @@ export function createServer() {
   app.post("/api/ai-intake", handleAIIntake);
 
   // Project routes
+  app.post("/api/projects/create", handleCreateProject);
   app.post("/api/projects/publish", handlePublishProject);
   app.get("/api/projects/:projectId", handleGetProject);
 
