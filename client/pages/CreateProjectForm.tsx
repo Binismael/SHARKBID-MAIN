@@ -83,52 +83,97 @@ export default function CreateProjectForm() {
         return;
       }
 
+      if (!user?.id) {
+        toast.error('User not authenticated');
+        setLoading(false);
+        return;
+      }
+
+      // Prepare project data - only include non-null values
+      const projectData = {
+        business_id: user.id,
+        title: formData.title,
+        description: formData.description || '',
+        service_category: formData.service_category,
+        budget_min: formData.budget_min ? parseInt(formData.budget_min) : null,
+        budget_max: formData.budget_max ? parseInt(formData.budget_max) : null,
+        timeline_start: formData.timeline_start || null,
+        timeline_end: formData.timeline_end || null,
+        project_city: formData.project_city || '',
+        project_state: formData.project_state,
+        project_zip: formData.project_zip || '',
+        business_size: formData.business_size || '',
+        special_requirements: formData.special_requirements || '',
+        status: 'open',
+      };
+
+      console.log('Attempting to create project with data:', projectData);
+
       // Create project in Supabase
       const { data: project, error: projectError } = await supabase
         .from('projects')
-        .insert({
-          user_id: user?.id,
-          title: formData.title,
-          description: formData.description,
-          service_category: formData.service_category,
-          budget_min: formData.budget_min ? parseInt(formData.budget_min) : null,
-          budget_max: formData.budget_max ? parseInt(formData.budget_max) : null,
-          timeline_start: formData.timeline_start || null,
-          timeline_end: formData.timeline_end || null,
-          project_city: formData.project_city,
-          project_state: formData.project_state,
-          project_zip: formData.project_zip,
-          business_size: formData.business_size,
-          special_requirements: formData.special_requirements,
-          status: 'open',
-        })
-        .select()
+        .insert([projectData])
+        .select('*')
         .single();
 
       if (projectError) {
-        console.error('Project creation error:', projectError);
-        toast.error('Failed to create project');
+        const errorMessage = projectError.message || 'Unknown database error';
+        const errorDetails = projectError.details || '';
+        console.error('Project creation error:', {
+          message: errorMessage,
+          details: errorDetails,
+          code: projectError.code,
+          fullError: projectError,
+        });
+
+        // Show user-friendly error message
+        let displayMessage = 'Failed to create project: ';
+        if (errorMessage.includes('duplicate key')) {
+          displayMessage += 'A project with this title already exists';
+        } else if (errorMessage.includes('foreign key')) {
+          displayMessage += 'Invalid category selection';
+        } else if (errorMessage.includes('permission')) {
+          displayMessage += 'You do not have permission to create projects';
+        } else {
+          displayMessage += errorMessage;
+        }
+
+        toast.error(displayMessage);
+        setLoading(false);
+        return;
+      }
+
+      if (!project) {
+        toast.error('Failed to retrieve created project');
         setLoading(false);
         return;
       }
 
       // Trigger lead routing
-      const routingResponse = await fetch('/api/routing/trigger', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId: project.id }),
-      });
+      try {
+        const routingResponse = await fetch('/api/routing/trigger', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId: project.id }),
+        });
 
-      if (!routingResponse.ok) {
-        console.warn('Lead routing failed:', await routingResponse.json());
-        // Don't fail the entire operation if routing fails
+        if (!routingResponse.ok) {
+          const routingError = await routingResponse.json();
+          console.warn('Lead routing failed:', routingError);
+          // Don't fail the entire operation if routing fails
+          toast.info('Project created, but routing vendors took longer than expected');
+        }
+      } catch (routingErr) {
+        console.warn('Lead routing error:', routingErr);
+        // Silent fail - project was still created
       }
 
       toast.success('Project created successfully!');
       navigate('/business/dashboard');
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('Error creating project:', error);
-      toast.error('An error occurred while creating the project');
+      toast.error(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
