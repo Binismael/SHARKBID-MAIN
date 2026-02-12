@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/utils';
 
 interface FormData {
   title: string;
@@ -149,19 +150,7 @@ export default function CreateProjectForm() {
       toast.success('Project created successfully!');
       navigate('/business/dashboard');
     } catch (error) {
-      let errorMessage = 'Unknown error';
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'object' && error !== null) {
-        try {
-          errorMessage = JSON.stringify(error);
-        } catch (e) {
-          errorMessage = String(error);
-        }
-      } else {
-        errorMessage = String(error);
-      }
+      const errorMessage = getErrorMessage(error);
 
       console.error('Error creating project:', {
         error,

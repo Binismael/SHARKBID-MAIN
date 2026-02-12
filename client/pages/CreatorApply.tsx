@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { submitCreatorApplication } from "@/lib/creator-application-service";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function CreatorApply() {
   const [formData, setFormData] = useState({
@@ -52,7 +53,7 @@ export default function CreatorApply() {
         // Hide success message after 5 seconds
         setTimeout(() => setSuccess(false), 5000);
       } else {
-        setError(result.error || "Failed to submit application");
+        setError(getErrorMessage(result.error || "Failed to submit application"));
       }
     } catch (err) {
       setError("An unexpected error occurred");

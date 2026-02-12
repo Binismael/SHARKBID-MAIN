@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { Edit2, Users, DollarSign, Trash2, Plus, Search, ChevronRight, Calendar, Briefcase, X } from "lucide-react";
 import { getProjects, deleteProject, getCompanies, updateProject, assignCreatorToProject, getCreatorProfiles, getProjectAssignments } from "@/lib/admin-service";
 import { useAuth } from "@/lib/auth-context";
+import { getErrorMessage } from "@/lib/utils";
 
 interface Project {
   id: string;
@@ -269,7 +270,7 @@ export default function AdminProjects() {
       }
     } catch (error) {
       console.error("[Assignment] Unexpected error:", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage = getErrorMessage(error);
       alert(`Failed to assign creators: ${errorMessage}\n\nCheck console for details.`);
     }
   };

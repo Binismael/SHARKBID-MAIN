@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Upload, X, AlertCircle, CheckCircle } from "lucide-react";
 import { uploadAsset } from "@/lib/asset-service";
+import { getErrorMessage } from "@/lib/utils";
 
 interface AssetUploadModalProps {
   isOpen: boolean;
@@ -73,7 +74,7 @@ export function AssetUploadModal({
         onClose();
       }, 1500);
     } else {
-      setError(result.error || "Upload failed");
+      setError(getErrorMessage(result.error || "Upload failed"));
     }
 
     setUploading(false);
