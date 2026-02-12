@@ -92,18 +92,18 @@ export default function AdminProjects() {
   }, []);
 
   const statusColors: Record<string, string> = {
-    brief_submitted: "bg-gray-100 text-gray-700",
-    briefing: "bg-blue-100 text-blue-700",
-    pre_production: "bg-purple-100 text-purple-700",
-    production: "bg-yellow-100 text-yellow-700",
-    post_production: "bg-orange-100 text-orange-700",
-    delivered: "bg-green-100 text-green-700",
+    brief_submitted: "bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-200",
+    briefing: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200",
+    pre_production: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200",
+    production: "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-200",
+    post_production: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200",
+    delivered: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200",
   };
 
   const tierColors: Record<string, string> = {
-    essential: "bg-slate-100 text-slate-700",
-    standard: "bg-blue-100 text-blue-700",
-    visionary: "bg-purple-100 text-purple-700",
+    essential: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200",
+    standard: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200",
+    visionary: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200",
   };
 
   const filteredProjects = projects.filter((p) => {
@@ -286,10 +286,10 @@ export default function AdminProjects() {
         {/* Enhanced Header */}
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
-              Project Control
+            <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+              Projects
             </h1>
-            <p className="text-muted-foreground flex items-center gap-2">
+            <p className="text-slate-600 dark:text-slate-400 flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
               Manage {projects.length} projects across all clients
             </p>
@@ -304,26 +304,26 @@ export default function AdminProjects() {
         </div>
 
         {/* Enhanced Filters */}
-        <div className="space-y-4 bg-muted/30 p-4 rounded-lg border border-border">
+        <div className="space-y-4 bg-white dark:bg-slate-900 p-6 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
             <div className="w-full sm:flex-1">
-              <label className="text-sm font-medium mb-2 block">Search Projects</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">Search Projects</label>
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
                 <Input
                   placeholder="Search by project name or client..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 py-2 bg-background hover:border-accent/50 transition-colors"
+                  className="pl-9 py-2 dark:bg-slate-800 dark:border-slate-700 dark:text-white hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
                 />
               </div>
             </div>
             <div className="w-full sm:w-48">
-              <label className="text-sm font-medium mb-2 block">Filter by Status</label>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">Filter by Status</label>
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-input rounded-md bg-background text-foreground hover:border-accent/50 transition-colors cursor-pointer"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-md dark:bg-slate-800 dark:text-white hover:border-slate-400 dark:hover:border-slate-600 transition-colors cursor-pointer"
               >
                 <option value="all">All Statuses</option>
                 <option value="draft">Draft</option>
@@ -335,7 +335,7 @@ export default function AdminProjects() {
               </select>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Showing {filteredProjects.length} of {projects.length} projects
           </p>
         </div>

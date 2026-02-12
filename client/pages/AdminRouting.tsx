@@ -1,8 +1,6 @@
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
-import { Search, Calendar, ArrowRight, Eye, Filter } from "lucide-react";
+import { Search, Calendar, Filter } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getErrorMessage } from "@/lib/utils";
 import { toast } from "sonner";
@@ -31,10 +29,10 @@ export default function AdminRouting() {
   const [loading, setLoading] = useState(true);
 
   const statusColors: Record<string, string> = {
-    routed: "bg-blue-100 text-blue-700",
-    viewed: "bg-purple-100 text-purple-700",
-    interested: "bg-orange-100 text-orange-700",
-    bid_submitted: "bg-green-100 text-green-700",
+    routed: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-200",
+    viewed: "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200",
+    interested: "bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-200",
+    bid_submitted: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-200",
   };
 
   useEffect(() => {
@@ -140,154 +138,125 @@ export default function AdminRouting() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="w-full">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mb-2">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+      {/* Header */}
+      <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Project Routing
           </h1>
-          <p className="text-slate-600">
+          <p className="text-slate-600 dark:text-slate-400 mt-2">
             Monitor how projects are distributed to vendors
           </p>
         </div>
+      </div>
 
+      <div className="container mx-auto px-4 py-12">
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-slate-900">
-                  {stats.total}
-                </div>
-                <div className="text-sm text-slate-600 mt-1">Total Routings</div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">
-                  {stats.routed}
-                </div>
-                <div className="text-sm text-slate-600 mt-1">Routed</div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-purple-600">
-                  {stats.viewed}
-                </div>
-                <div className="text-sm text-slate-600 mt-1">Viewed</div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-orange-600">
-                  {stats.interested}
-                </div>
-                <div className="text-sm text-slate-600 mt-1">Interested</div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">
-                  {stats.bid_submitted}
-                </div>
-                <div className="text-sm text-slate-600 mt-1">Bid Submitted</div>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 rounded-lg p-6 border border-slate-200 dark:border-slate-700 hover:shadow-lg transition-all">
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Total Routings</p>
+            <p className="text-4xl font-bold text-slate-900 dark:text-white mt-3">{stats.total}</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 rounded-lg p-6 border border-transparent hover:shadow-lg transition-all">
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Routed</p>
+            <p className="text-4xl font-bold text-blue-600 dark:text-blue-400 mt-3">{stats.routed}</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 rounded-lg p-6 border border-transparent hover:shadow-lg transition-all">
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Viewed</p>
+            <p className="text-4xl font-bold text-purple-600 dark:text-purple-400 mt-3">{stats.viewed}</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900 rounded-lg p-6 border border-transparent hover:shadow-lg transition-all">
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Interested</p>
+            <p className="text-4xl font-bold text-orange-600 dark:text-orange-400 mt-3">{stats.interested}</p>
+          </div>
+
+          <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 rounded-lg p-6 border border-transparent hover:shadow-lg transition-all">
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Bids Submitted</p>
+            <p className="text-4xl font-bold text-green-600 dark:text-green-400 mt-3">{stats.bid_submitted}</p>
+          </div>
         </div>
 
         {/* Filters */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="w-4 h-4" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 block">
-                  Search
-                </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-                  <Input
-                    placeholder="Search by project, vendor, or email..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 block">
-                  Status
-                </label>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="all">All Status</option>
-                  <option value="routed">Routed</option>
-                  <option value="viewed">Viewed</option>
-                  <option value="interested">Interested</option>
-                  <option value="bid_submitted">Bid Submitted</option>
-                </select>
+        <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-6 mb-8 shadow-sm">
+          <div className="flex items-center gap-2 mb-6">
+            <Filter className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Filters</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                Search
+              </label>
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder="Search by project, vendor, or email..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10 dark:bg-slate-800 dark:border-slate-700 dark:text-white"
+                />
               </div>
             </div>
-          </CardContent>
-        </Card>
+            <div>
+              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                Status
+              </label>
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-white"
+              >
+                <option value="all">All Status</option>
+                <option value="routed">Routed</option>
+                <option value="viewed">Viewed</option>
+                <option value="interested">Interested</option>
+                <option value="bid_submitted">Bid Submitted</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
         {/* Routings Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>
+        <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
               Routings ({filteredRoutings.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h2>
+          </div>
+          <div className="p-6">
             {loading ? (
               <div className="flex justify-center items-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
               </div>
             ) : filteredRoutings.length === 0 ? (
               <div className="text-center py-12">
-                <Eye className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-500">No routings found</p>
+                <p className="text-slate-500 dark:text-slate-400">No routings found</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-slate-200">
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">
+                    <tr className="border-b border-slate-200 dark:border-slate-700">
+                      <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">
                         Project
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">
+                      <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">
                         Vendor
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">
+                      <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">
                         Email
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">
+                      <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">
                         Budget
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">
+                      <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">
                         Status
                       </th>
-                      <th className="text-left py-3 px-4 font-semibold text-slate-700">
+                      <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">
                         Routed Date
                       </th>
                     </tr>
@@ -296,26 +265,26 @@ export default function AdminRouting() {
                     {filteredRoutings.map((routing) => (
                       <tr
                         key={routing.id}
-                        className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
+                        className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
                       >
                         <td className="py-4 px-4">
-                          <div className="font-medium text-slate-900">
+                          <div className="font-medium text-slate-900 dark:text-white">
                             {routing.projects?.title || "Unknown Project"}
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <div className="text-slate-700">
+                          <div className="text-slate-700 dark:text-slate-300">
                             {routing.profiles?.company_name ||
                               "Unknown Vendor"}
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <div className="text-slate-600 text-xs">
+                          <div className="text-slate-600 dark:text-slate-400 text-xs">
                             {routing.profiles?.contact_email || "N/A"}
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <div className="font-medium text-slate-900">
+                          <div className="font-medium text-slate-900 dark:text-white">
                             ${(routing.projects?.budget_max || 0).toLocaleString()}
                           </div>
                         </td>
@@ -323,14 +292,14 @@ export default function AdminRouting() {
                           <span
                             className={`px-3 py-1 rounded-full text-xs font-medium ${
                               statusColors[routing.status] ||
-                              "bg-gray-100 text-gray-700"
+                              "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
                             }`}
                           >
                             {routing.status.replace("_", " ")}
                           </span>
                         </td>
                         <td className="py-4 px-4">
-                          <div className="flex items-center gap-1 text-slate-600 text-xs">
+                          <div className="flex items-center gap-1 text-slate-600 dark:text-slate-400 text-xs">
                             <Calendar className="w-4 h-4" />
                             {formatDate(routing.routed_at)}
                           </div>
@@ -341,9 +310,9 @@ export default function AdminRouting() {
                 </table>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
