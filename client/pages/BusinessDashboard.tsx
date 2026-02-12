@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, BarChart3, TrendingUp, AlertCircle, Loader2 } from 'lucide-react';
+import { Plus, BarChart3, TrendingUp, AlertCircle, Loader2, Clock, CheckCircle2, MessageSquare, Eye } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 
@@ -62,46 +62,65 @@ export default function BusinessDashboard() {
     return colors[status] || colors.draft;
   };
 
+  const totalBids = projects.reduce((sum, p) => sum + (p.vendor_response_count || 0), 0);
+  const completedProjects = projects.filter(p => p.status === 'completed').length;
+
   const stats = [
     {
       label: 'Total Projects',
       value: projects.length,
       icon: BarChart3,
+      color: 'from-blue-600 to-blue-400',
+      description: `${completedProjects} completed`,
     },
     {
-      label: 'Open Bids',
-      value: projects.filter(p => p.status === 'open').length,
+      label: 'Active Bids',
+      value: totalBids,
       icon: TrendingUp,
+      color: 'from-green-600 to-green-400',
+      description: `${projects.filter(p => p.status === 'open').length} open projects`,
     },
     {
       label: 'In Review',
       value: projects.filter(p => p.status === 'in_review').length,
-      icon: AlertCircle,
+      icon: Clock,
+      color: 'from-orange-600 to-orange-400',
+      description: 'Awaiting decisions',
     },
   ];
 
+  const recentProjects = projects.slice(0, 3);
+  const projectsNeedingAttention = projects.filter(p => p.status === 'in_review' || p.status === 'open').length;
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">Dashboard</h1>
-              <p className="text-muted-foreground mt-1">Manage your projects and track vendor bids</p>
+            <div className="flex-1">
+              <div className="mb-2">
+                <p className="text-sm text-muted-foreground font-medium">Welcome back</p>
+              </div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+                Project Dashboard
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                You have <span className="font-semibold text-foreground">{projectsNeedingAttention}</span> projects that need your attention
+              </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 ml-8">
               <Button
                 onClick={() => navigate('/business/projects/create')}
                 variant="outline"
                 className="gap-2"
               >
                 <Plus className="h-4 w-4" />
-                Use Form
+                New Project
               </Button>
               <Button
                 onClick={() => navigate('/business/intake')}
-                className="gap-2"
+                className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
               >
                 <Plus className="h-4 w-4" />
                 AI Assistant
@@ -113,17 +132,23 @@ export default function BusinessDashboard() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.label} className="p-6">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground font-medium">{stat.label}</p>
-                    <p className="text-3xl font-bold mt-2">{stat.value}</p>
+              <Card key={stat.label} className={`p-6 border-0 bg-gradient-to-br ${stat.color} text-white overflow-hidden relative`}>
+                <div className="relative z-10">
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <p className="text-white/80 text-sm font-medium">{stat.label}</p>
+                      <p className="text-4xl font-bold mt-2">{stat.value}</p>
+                    </div>
+                    <Icon className="h-8 w-8 opacity-40" />
                   </div>
-                  <Icon className="h-8 w-8 text-muted-foreground opacity-50" />
+                  <p className="text-white/70 text-sm">{stat.description}</p>
+                </div>
+                <div className="absolute -bottom-2 -right-2 opacity-10">
+                  <Icon className="h-24 w-24" />
                 </div>
               </Card>
             );
@@ -150,24 +175,32 @@ export default function BusinessDashboard() {
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </Card>
           ) : projects.length === 0 ? (
-            <Card className="p-12 text-center">
-              <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="text-xl font-semibold mb-2">No projects yet</h3>
-              <p className="text-muted-foreground mb-8">Start by creating your first project and let vendors bid on it</p>
-              <div className="flex gap-3 justify-center">
+            <Card className="p-16 text-center border-dashed border-2 border-muted-foreground/20 bg-gradient-to-br from-muted/20 to-muted/5">
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-primary/10 rounded-full mx-auto flex items-center justify-center mb-4">
+                  <Plus className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+              <h3 className="text-2xl font-bold mb-2">Create Your First Project</h3>
+              <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+                Get started by creating a project. Choose between our smart form or have a conversation with our AI assistant to describe your project.
+              </p>
+              <div className="flex gap-3 justify-center flex-wrap">
                 <Button
                   onClick={() => navigate('/business/projects/create')}
                   variant="outline"
+                  size="lg"
                   className="gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  Use Form
+                  Traditional Form
                 </Button>
                 <Button
                   onClick={() => navigate('/business/intake')}
-                  className="gap-2"
+                  size="lg"
+                  className="gap-2 bg-gradient-to-r from-primary to-primary/80"
                 >
-                  <Plus className="h-4 w-4" />
+                  <MessageSquare className="h-4 w-4" />
                   AI Assistant
                 </Button>
               </div>
@@ -177,34 +210,77 @@ export default function BusinessDashboard() {
               {projects.map((project) => (
                 <Card
                   key={project.id}
-                  className="p-6 cursor-pointer hover:shadow-md transition-shadow"
+                  className="p-6 cursor-pointer hover:shadow-lg hover:border-primary transition-all duration-200 group"
                   onClick={() => navigate(`/business/project/${project.id}`)}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold">{project.title}</h3>
-                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(project.status)}`}>
+                  <div className="flex items-start justify-between gap-4">
+                    {/* Left Content */}
+                    <div className="flex-1 min-w-0">
+                      {/* Title and Status */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <h3 className="text-lg font-semibold group-hover:text-primary transition-colors truncate">
+                          {project.title}
+                        </h3>
+                        <span className={`text-xs px-3 py-1 rounded-full font-medium whitespace-nowrap ${getStatusColor(project.status)}`}>
+                          {project.status === 'open' && <span className="inline-block w-2 h-2 bg-current rounded-full mr-1.5"></span>}
                           {project.status.charAt(0).toUpperCase() + project.status.slice(1).replace('_', ' ')}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">{project.description}</p>
-                      <div className="flex gap-4 mt-4 text-sm">
+
+                      {/* Description */}
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{project.description}</p>
+
+                      {/* Meta Info Grid */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {/* Budget */}
                         {project.budget_min && project.budget_max && (
                           <div>
-                            <p className="text-muted-foreground">Budget</p>
-                            <p className="font-medium">${project.budget_min.toLocaleString()} - ${project.budget_max.toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground font-medium uppercase mb-1">Budget</p>
+                            <p className="text-sm font-semibold">${project.budget_min.toLocaleString()}</p>
+                            <p className="text-xs text-muted-foreground">to ${project.budget_max.toLocaleString()}</p>
                           </div>
                         )}
+
+                        {/* Posted Date */}
                         <div>
-                          <p className="text-muted-foreground">Posted</p>
-                          <p className="font-medium">{new Date(project.created_at).toLocaleDateString()}</p>
+                          <p className="text-xs text-muted-foreground font-medium uppercase mb-1">Posted</p>
+                          <p className="text-sm font-semibold">{new Date(project.created_at).toLocaleDateString()}</p>
+                          <p className="text-xs text-muted-foreground">{Math.ceil((Date.now() - new Date(project.created_at).getTime()) / (1000 * 60 * 60 * 24))} days ago</p>
+                        </div>
+
+                        {/* Bids */}
+                        <div>
+                          <p className="text-xs text-muted-foreground font-medium uppercase mb-1">Bids Received</p>
+                          <p className="text-sm font-semibold">{project.vendor_response_count || 0}</p>
+                          <p className="text-xs text-muted-foreground">vendor proposals</p>
+                        </div>
+
+                        {/* Location */}
+                        <div>
+                          <p className="text-xs text-muted-foreground font-medium uppercase mb-1">Location</p>
+                          <p className="text-sm font-semibold">{project.project_state}</p>
+                          <p className="text-xs text-muted-foreground truncate">{project.project_city}</p>
                         </div>
                       </div>
                     </div>
-                    <div className="text-right ml-4">
-                      <p className="text-2xl font-bold text-primary">{project.vendor_response_count || 0}</p>
-                      <p className="text-xs text-muted-foreground">vendor bids</p>
+
+                    {/* Right Side - Quick Actions */}
+                    <div className="flex flex-col items-center gap-3 ml-4">
+                      <div className="text-center">
+                        <MessageSquare className="h-5 w-5 text-muted-foreground mx-auto mb-1" />
+                        <p className="text-2xl font-bold text-primary">{project.vendor_response_count || 0}</p>
+                        <p className="text-xs text-muted-foreground">responses</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/business/project/${project.id}`);
+                        }}
+                        className="mt-2"
+                      >
+                        View Details
+                      </Button>
                     </div>
                   </div>
                 </Card>
