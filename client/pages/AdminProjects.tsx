@@ -11,7 +11,7 @@ import { getErrorMessage } from "@/lib/utils";
 interface Project {
   id: string;
   title: string;
-  companies?: { name: string };
+  companies?: { company_name: string };
   company_id?: string;
   tier: "essential" | "standard" | "visionary";
   status: "brief_submitted" | "briefing" | "pre_production" | "production" | "post_production" | "delivered";
@@ -107,7 +107,7 @@ export default function AdminProjects() {
   };
 
   const filteredProjects = projects.filter((p) => {
-    const clientName = companies.find(c => c.id === p.company_id)?.name || "";
+    const clientName = companies.find(c => c.id === p.company_id)?.company_name || "";
     const matchesSearch =
       p.title.toLowerCase().includes(search.toLowerCase()) ||
       clientName.toLowerCase().includes(search.toLowerCase());
@@ -371,7 +371,7 @@ export default function AdminProjects() {
             </Card>
           ) : (
             filteredProjects.map((project) => {
-              const clientName = companies.find(c => c.id === project.company_id)?.name || "Unknown Client";
+              const clientName = companies.find(c => c.id === project.company_id)?.company_name || "Unknown Client";
               const budgetPercent = budgetUtilization(project.budget_used, project.budget);
               return (
                 <Card
@@ -613,7 +613,7 @@ export default function AdminProjects() {
                     <option value="">Choose a client...</option>
                     {companies.map((c) => (
                       <option key={c.id} value={c.id}>
-                        {c.name}
+                        {c.company_name}
                       </option>
                     ))}
                   </select>

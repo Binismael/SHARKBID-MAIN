@@ -227,15 +227,30 @@ export async function updateCreatorStatus(
   return data?.[0];
 }
 
-// Companies
+// Companies (Business Profiles)
 export async function getCompanies() {
-  const { data, error } = await supabase
-    .from("companies")
-    .select("*")
-    .order("created_at", { ascending: false });
-  
-  if (error) throw error;
-  return data;
+  try {
+    const { data, error } = await withRetry(
+      () => supabase
+        .from("profiles")
+        .select("id, user_id, company_name, company_description, company_website, contact_email, contact_phone, created_at")
+        .eq("role", "business")
+        .order("created_at", { ascending: false }),
+      6,
+      100,
+      3000
+    );
+
+    if (error) {
+      console.warn("Companies fetch error:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in getCompanies:", error);
+    return [];
+  }
 }
 
 // Payments
@@ -304,7 +319,7 @@ export async function getDashboardStats() {
       withRetry(() => supabase.from("projects").select("id", { count: "exact", head: true }), 5, 100, 2500),
       withRetry(() => supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("role", "creator"), 5, 100, 2500),
       withRetry(() => supabase.from("payments").select("id", { count: "exact", head: true }), 5, 100, 2500),
-      withRetry(() => supabase.from("companies").select("id", { count: "exact", head: true }), 5, 100, 2500),
+      withRetry(() => supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "business"), 5, 100, 2500),
     ]);
 
     // Extract counts safely
