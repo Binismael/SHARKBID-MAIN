@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, TrendingUp, AlertCircle, Loader2, Eye, CheckCircle2, Clock } from 'lucide-react';
+import { Plus, TrendingUp, AlertCircle, Loader2, Eye, CheckCircle2, Clock, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { getErrorMessage } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface Lead {
   id: string;
@@ -28,13 +29,29 @@ interface BidStats {
 }
 
 export default function VendorDashboard() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [stats, setStats] = useState<BidStats>({ total_leads: 0, bids_submitted: 0, bids_accepted: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profileComplete, setProfileComplete] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setIsSigningOut(true);
+      await signOut();
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (err) {
+      const message = getErrorMessage(err || 'Failed to logout');
+      toast.error(message);
+      console.error('Logout error:', err);
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -164,12 +181,23 @@ export default function VendorDashboard() {
               <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">Vendor Dashboard</h1>
               <p className="text-slate-600 dark:text-slate-400 mt-2">Manage your leads and grow your business</p>
             </div>
-            <Button
-              onClick={() => navigate('/vendor/profile')}
-              className={`gap-2 ${profileComplete ? 'bg-slate-200 text-slate-900 hover:bg-slate-300' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'}`}
-            >
-              {profileComplete ? 'Edit Profile' : 'Complete Profile'}
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => navigate('/vendor/profile')}
+                className={`gap-2 ${profileComplete ? 'bg-slate-200 text-slate-900 hover:bg-slate-300' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'}`}
+              >
+                {profileComplete ? 'Edit Profile' : 'Complete Profile'}
+              </Button>
+              <Button
+                onClick={handleLogout}
+                disabled={isSigningOut}
+                variant="outline"
+                className="gap-2 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <LogOut className="h-4 w-4" />
+                {isSigningOut ? 'Signing out...' : 'Log Out'}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
