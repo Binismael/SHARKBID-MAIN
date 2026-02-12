@@ -41,6 +41,8 @@ export default function AdminRouting() {
     const fetchRoutings = async () => {
       try {
         setLoading(true);
+
+        // Fetch project_routing data with projects
         const { data, error } = await supabase
           .from("project_routing")
           .select(
@@ -50,8 +52,7 @@ export default function AdminRouting() {
             vendor_id,
             routed_at,
             status,
-            projects(id, title, budget_max),
-            profiles!vendor_id(company_name, contact_email)
+            projects(id, title, budget_max)
           `
           )
           .order("routed_at", { ascending: false });
@@ -62,7 +63,34 @@ export default function AdminRouting() {
           return;
         }
 
-        setRoutings(data || []);
+        // Get unique vendor IDs
+        const vendorIds = [...new Set(data?.map(r => r.vendor_id) || [])];
+
+        // Fetch vendor profiles
+        let vendorProfiles: Record<string, any> = {};
+        if (vendorIds.length > 0) {
+          const { data: profiles, error: profileError } = await supabase
+            .from("profiles")
+            .select("user_id, company_name, contact_email")
+            .in("user_id", vendorIds);
+
+          if (profileError) {
+            console.error("Error fetching profiles:", getErrorMessage(profileError));
+          } else if (profiles) {
+            vendorProfiles = profiles.reduce((acc: Record<string, any>, profile) => {
+              acc[profile.user_id] = profile;
+              return acc;
+            }, {});
+          }
+        }
+
+        // Combine the data
+        const routingsWithProfiles = data?.map(routing => ({
+          ...routing,
+          profiles: vendorProfiles[routing.vendor_id] || { company_name: "Unknown Vendor", contact_email: "N/A" }
+        })) || [];
+
+        setRoutings(routingsWithProfiles);
       } catch (error) {
         console.error("Error fetching routings:", getErrorMessage(error));
         toast.error(getErrorMessage(error));
