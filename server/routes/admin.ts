@@ -1,0 +1,181 @@
+import { Router, Request, Response } from "express";
+import { createClient } from "@supabase/supabase-js";
+
+const router = Router();
+
+// Create Supabase client with service role key (bypasses RLS)
+// Only use in secure server context, NEVER expose the key to client
+const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+
+console.log(`[ADMIN] Supabase URL: ${supabaseUrl ? "configured" : "NOT configured"}`);
+console.log(`[ADMIN] Service Role Key: ${serviceRoleKey ? "configured" : "NOT configured"}`);
+
+const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+
+// Middleware to verify admin user (basic check)
+async function verifyAdmin(req: Request, res: Response, next: Function) {
+  try {
+    // In production, verify the JWT token and check if user is admin
+    // For now, we'll require a service role operation (server-side only)
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // In production, decode JWT and verify admin role
+    // For MVP, server-side operations are inherently protected
+    next();
+  } catch (error) {
+    res.status(401).json({ error: "Unauthorized" });
+  }
+}
+
+// POST /api/admin/assign-creator
+// Body: { projectId, creatorId, role }
+router.post("/admin/assign-creator", async (req: Request, res: Response) => {
+  try {
+    const { projectId, creatorId, role = "contributor" } = req.body;
+
+    console.log(`[ADMIN] Assigning creator ${creatorId} to project ${projectId}`);
+
+    // Validate inputs
+    if (!projectId || !creatorId) {
+      console.warn("[ADMIN] Missing required fields");
+      return res.status(400).json({
+        error: "Missing required fields: projectId, creatorId",
+        success: false,
+      });
+    }
+
+    // Check service role key configuration
+    const hasServiceRole = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+    console.log(`[ADMIN] Service role key configured: ${hasServiceRole}`);
+
+    // Use service role to bypass RLS
+    const { data, error } = await supabaseAdmin
+      .from("project_assignments")
+      .insert([
+        {
+          project_id: projectId,
+          creator_id: creatorId,
+          role,
+        },
+      ])
+      .select();
+
+    if (error) {
+      console.error("[ADMIN] Supabase error:", error);
+      return res.status(400).json({
+        error: error.message || "Failed to assign creator",
+        details: process.env.NODE_ENV === "development" ? error : undefined,
+        success: false,
+      });
+    }
+
+    console.log("[ADMIN] Successfully assigned creator");
+    return res.status(200).json({
+      success: true,
+      data: data?.[0] || { project_id: projectId, creator_id: creatorId, role },
+    });
+  } catch (error) {
+    console.error("[ADMIN] Endpoint error:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return res.status(500).json({
+      error: "Internal server error",
+      message,
+      success: false,
+    });
+  }
+});
+
+// POST /api/admin/bulk-assign-creators
+// Body: { projectId, creatorIds: string[], role }
+router.post(
+  "/admin/bulk-assign-creators",
+  async (req: Request, res: Response) => {
+    try {
+      const { projectId, creatorIds, role = "contributor" } = req.body;
+
+      // Validate inputs
+      if (!projectId || !Array.isArray(creatorIds) || creatorIds.length === 0) {
+        return res.status(400).json({
+          error: "Missing required fields: projectId, creatorIds (array)",
+        });
+      }
+
+      // Prepare bulk insert data
+      const assignmentData = creatorIds.map((creatorId) => ({
+        project_id: projectId,
+        creator_id: creatorId,
+        role,
+      }));
+
+      // Use service role to bypass RLS
+      const { data, error } = await supabaseAdmin
+        .from("project_assignments")
+        .insert(assignmentData)
+        .select();
+
+      if (error) {
+        console.error("Supabase error bulk assigning creators:", error);
+        return res.status(400).json({
+          error: error.message || "Failed to assign creators",
+          details: error,
+        });
+      }
+
+      return res.json({
+        success: true,
+        count: data?.length || 0,
+        data,
+      });
+    } catch (error) {
+      console.error("Error in bulk-assign-creators endpoint:", error);
+      return res.status(500).json({
+        error: "Internal server error",
+        message: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+);
+
+// GET /api/admin/project-assignments/:projectId
+router.get("/admin/project-assignments/:projectId", async (req: Request, res: Response) => {
+  try {
+    const { projectId } = req.params;
+
+    if (!projectId) {
+      return res.status(400).json({
+        error: "Missing projectId",
+      });
+    }
+
+    // Use service role to bypass RLS
+    const { data, error } = await supabaseAdmin
+      .from("project_assignments")
+      .select("id, project_id, creator_id, role, created_at")
+      .eq("project_id", projectId);
+
+    if (error) {
+      console.error("Supabase error fetching assignments:", error);
+      return res.status(400).json({
+        error: error.message || "Failed to fetch assignments",
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: data || [],
+    });
+  } catch (error) {
+    console.error("Error in get assignments endpoint:", error);
+    return res.status(500).json({
+      error: "Internal server error",
+      message: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+});
+
+export default router;

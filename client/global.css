@@ -1,0 +1,253 @@
+/** @import must precede all other statements */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * Visual Matters Design System
+   * Balanced, modern color palette with consistent typography
+   * Primary: Blue, Secondary: Purple, Accents: Cyan/Green
+   */
+  
+  /* Light mode */
+  :root {
+    /* Backgrounds */
+    --background: 0 0% 99.5%;
+    --foreground: 220 13% 20%;
+    
+    /* Cards and elevated surfaces */
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 20%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 20%;
+    
+    /* Primary (Blue) */
+    --primary: 217 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary (Purple) */
+    --secondary: 276 100% 50%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Muted (Gray) */
+    --muted: 220 14% 60%;
+    --muted-foreground: 220 13% 45%;
+    
+    /* Accent (Cyan) */
+    --accent: 200 100% 45%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Destructive (Red) */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Borders and inputs */
+    --border: 220 13% 90%;
+    --input: 220 13% 95%;
+    --ring: 217 100% 50%;
+    
+    --radius: 0.5rem;
+  }
+  
+  /* Dark mode */
+  .dark {
+    --background: 220 13% 12%;
+    --foreground: 0 0% 95%;
+    
+    --card: 220 13% 17%;
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 220 13% 17%;
+    --popover-foreground: 0 0% 95%;
+    
+    --primary: 217 100% 60%;
+    --primary-foreground: 220 13% 12%;
+    
+    --secondary: 276 100% 60%;
+    --secondary-foreground: 220 13% 12%;
+    
+    --muted: 220 13% 50%;
+    --muted-foreground: 220 13% 70%;
+    
+    --accent: 200 100% 55%;
+    --accent-foreground: 220 13% 12%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 220 13% 25%;
+    --input: 220 13% 20%;
+    --ring: 217 100% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography Hierarchy */
+  h1 {
+    @apply text-4xl font-bold leading-tight tracking-tight text-foreground;
+  }
+
+  h2 {
+    @apply text-3xl font-bold leading-snug text-foreground;
+  }
+
+  h3 {
+    @apply text-2xl font-semibold leading-snug text-foreground;
+  }
+
+  h4 {
+    @apply text-xl font-semibold text-foreground;
+  }
+
+  h5 {
+    @apply text-lg font-semibold text-foreground;
+  }
+
+  h6 {
+    @apply text-base font-semibold text-foreground;
+  }
+
+  p {
+    @apply text-base leading-relaxed text-foreground;
+  }
+
+  small {
+    @apply text-sm text-muted-foreground;
+  }
+
+  label {
+    @apply text-sm font-medium text-foreground;
+  }
+
+  :where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  pre,
+  code {
+    overflow-x: auto;
+    white-space: pre;
+  }
+}
+
+@layer utilities {
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  @keyframes blob {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+    }
+    25% {
+      transform: translate(20px, -50px) scale(1.1);
+    }
+    50% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+    75% {
+      transform: translate(50px, 50px) scale(1.05);
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .animate-slide-in-up {
+    animation: slideInUp 0.3s ease-out;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
+
+  /* Smooth transitions */
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .hover-lift {
+    @apply transition-smooth hover:shadow-lg hover:-translate-y-1;
+  }
+
+  .hover-glow {
+    @apply transition-smooth hover:shadow-[0_0_20px_rgba(59,130,246,0.3)];
+  }
+
+  /* Text utilities */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-subtle {
+    @apply text-muted-foreground;
+  }
+
+  .text-emphasis {
+    @apply font-semibold text-foreground;
+  }
+}
