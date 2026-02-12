@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { AlertCircle, Loader2, Save, X, Plus } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
+import { getErrorMessage } from '@/lib/utils';
 
 interface VendorProfile {
   company_name: string;
@@ -88,7 +89,7 @@ export default function VendorProfile() {
           setSelectedStates(profileData.vendor_coverage_areas || []);
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to load profile';
+        const message = getErrorMessage(err || 'Failed to load profile');
         setError(message);
       } finally {
         setLoading(false);
@@ -165,7 +166,7 @@ export default function VendorProfile() {
         navigate('/vendor/dashboard');
       }, 1500);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to save profile';
+      const message = getErrorMessage(err || 'Failed to save profile');
       setError(message);
       console.error('Error:', err);
     } finally {

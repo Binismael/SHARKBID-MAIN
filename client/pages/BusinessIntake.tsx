@@ -6,6 +6,7 @@ import { Send, Loader2, Check, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { getErrorMessage } from '@/lib/utils';
 
 interface Message {
   id: string;
@@ -139,7 +140,7 @@ export default function BusinessIntake() {
         }));
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred while getting AI response';
+      const errorMessage = getErrorMessage(err || 'An error occurred while getting AI response');
       setError(errorMessage);
       console.error('AI Intake Error:', err);
 
@@ -227,7 +228,7 @@ export default function BusinessIntake() {
       // Redirect to dashboard
       navigate(`/business/dashboard`, { replace: true });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to submit project';
+      const errorMessage = getErrorMessage(err || 'Failed to submit project');
       setError(errorMessage);
       console.error('Error:', err);
     } finally {

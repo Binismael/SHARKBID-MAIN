@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { AlertCircle, Loader2, Users, FileText, TrendingUp, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { getErrorMessage } from '@/lib/utils';
 
 interface Metrics {
   total_businesses: number;
@@ -107,7 +108,7 @@ export default function AdminDashboard() {
 
         setPendingVendors(pendingData || []);
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to load dashboard';
+        const message = getErrorMessage(err || 'Failed to load dashboard');
         setError(message);
         console.error('Error:', err);
       } finally {

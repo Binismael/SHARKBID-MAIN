@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { AlertCircle, Loader2, ArrowLeft, Send, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
+import { getErrorMessage } from '@/lib/utils';
 
 interface Project {
   id: string;
@@ -96,7 +97,7 @@ export default function VendorLeadDetail() {
           setResponseNotes(bidData.response_notes || '');
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to load project';
+        const message = getErrorMessage(err || 'Failed to load project');
         setError(message);
         console.error('Error:', err);
       } finally {
@@ -161,7 +162,7 @@ export default function VendorLeadDetail() {
 
       setExistingBid(updatedBid);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to submit bid';
+      const message = getErrorMessage(err || 'Failed to submit bid');
       setError(message);
       console.error('Error:', err);
     } finally {

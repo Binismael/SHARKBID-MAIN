@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Plus, TrendingUp, AlertCircle, Loader2, Eye, CheckCircle2, Clock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
+import { getErrorMessage } from '@/lib/utils';
 
 interface Lead {
   id: string;
@@ -102,7 +103,7 @@ export default function VendorDashboard() {
           bids_accepted: bidsData?.filter(b => b.status === 'accepted').length || 0,
         });
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to load leads';
+        const message = getErrorMessage(err || 'Failed to load leads');
         setError(message);
         console.error('Error:', err);
       } finally {

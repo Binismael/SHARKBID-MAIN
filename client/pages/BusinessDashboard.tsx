@@ -6,6 +6,7 @@ import { Plus, BarChart3, TrendingUp, AlertCircle, Loader2, Clock, CheckCircle2,
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/utils';
 
 interface Project {
   id: string;
@@ -33,7 +34,7 @@ export default function BusinessDashboard() {
       toast.success('Logged out successfully');
       navigate('/login');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to logout';
+      const message = getErrorMessage(err || 'Failed to logout');
       toast.error(message);
       console.error('Logout error:', err);
     } finally {
@@ -56,7 +57,7 @@ export default function BusinessDashboard() {
         if (error) throw error;
         setProjects(data || []);
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to load projects';
+        const message = getErrorMessage(err || 'Failed to load projects');
         setError(message);
         console.error('Error:', err);
       } finally {

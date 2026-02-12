@@ -6,6 +6,7 @@ import { ArrowLeft, Edit2, Trash2, Loader2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/lib/utils';
 
 interface Project {
   id: string;
@@ -62,7 +63,7 @@ export default function ProjectDetail() {
         setProject(data);
         setError(null);
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to load project';
+        const message = getErrorMessage(err || 'Failed to load project');
         setError(message);
         console.error('Error:', err);
       } finally {
@@ -93,7 +94,7 @@ export default function ProjectDetail() {
       toast.success('Project deleted successfully');
       navigate('/business/dashboard');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to delete project';
+      const message = getErrorMessage(err || 'Failed to delete project');
       toast.error(message);
       console.error('Error deleting project:', err);
     } finally {
