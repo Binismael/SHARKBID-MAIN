@@ -8,7 +8,7 @@ export default function Index() {
       {/* Navigation */}
       <nav className="border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="text-2xl font-bold text-foreground">Visual Matters</div>
+          <div className="text-2xl font-bold text-foreground">Sharkbid</div>
           <div className="flex items-center gap-6">
             <Link to="/login" className="text-foreground hover:text-accent transition">
               Sign In
@@ -25,20 +25,20 @@ export default function Index() {
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <h1 className="text-5xl md:text-6xl font-bold leading-tight">
-              The creative infrastructure platform for agencies
+              Connect Businesses with Qualified Vendors
             </h1>
             <p className="text-xl text-muted-foreground">
-              Scale creative operations 3x without growing your team. Automate projects, creator workflows, and payments on a single platform built for premium creative work.
+              Sharkbid is the B2B marketplace where businesses post projects and vendors bid. Automated matching by service category and location makes it fast, fair, and efficient.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
               <Button asChild size="lg">
                 <Link to="/signup">
-                  Start Free Trial
+                  Start Matching Today
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
               <Button variant="outline" size="lg" asChild>
-                <a href="#features">Learn More</a>
+                <a href="#how-it-works">How It Works</a>
               </Button>
             </div>
           </div>
@@ -46,47 +46,47 @@ export default function Index() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 border-b border-border">
+      <section id="how-it-works" className="py-24 border-b border-border">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Built for creative teams</h2>
-            <p className="text-lg text-muted-foreground">Everything you need to run a world-class creative operations platform</p>
+            <h2 className="text-4xl font-bold mb-4">Sharkbid Makes Matching Easy</h2>
+            <p className="text-lg text-muted-foreground">Three simple steps to connect businesses with the right vendors</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Feature 1 */}
             <div className="border border-border rounded-lg p-8 hover:shadow-md transition">
               <Layers className="h-8 w-8 text-accent mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Multi-Tier Project Management</h3>
+              <h3 className="text-xl font-semibold mb-3">AI-Powered Project Intake</h3>
               <p className="text-muted-foreground">
-                Essential, Standard, and Visionary tiers with tier-based scope, pricing, and automatic milestone generation. Control every project from intake to delivery.
+                Businesses describe their needs in a natural conversation. Our AI captures all details (service type, location, budget, timeline) and structures them automatically into a clean project record.
               </p>
             </div>
 
             {/* Feature 2 */}
             <div className="border border-border rounded-lg p-8 hover:shadow-md transition">
               <Zap className="h-8 w-8 text-accent mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Creator Marketplace</h3>
+              <h3 className="text-xl font-semibold mb-3">Smart Lead Routing</h3>
               <p className="text-muted-foreground">
-                Vet and approve creators instantly. Assign work with clarity. Track deliverables and process payments in one dashboard. No email needed.
+                Projects automatically route to vendors based on service category and geographic coverage. Every qualified vendor sees opportunities they can actually win.
               </p>
             </div>
 
             {/* Feature 3 */}
             <div className="border border-border rounded-lg p-8 hover:shadow-md transition">
               <Lock className="h-8 w-8 text-accent mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Asset Vault</h3>
+              <h3 className="text-xl font-semibold mb-3">Transparent Bidding</h3>
               <p className="text-muted-foreground">
-                Every asset automatically linked and searchable by project, creator, tag, or year. Your clients see only what they own. Perfect audit trail.
+                Vendors see full project details and can submit bids confidently. Businesses compare responses side-by-side. All communications stay on platform for accountability.
               </p>
             </div>
 
             {/* Feature 4 */}
             <div className="border border-border rounded-lg p-8 hover:shadow-md transition">
               <BarChart3 className="h-8 w-8 text-accent mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Real-Time Visibility</h3>
+              <h3 className="text-xl font-semibold mb-3">Complete Visibility</h3>
               <p className="text-muted-foreground">
-                Clients see budgets, timelines, and progress. Creators see deliverables and payment status. Admin controls everything in one control tower.
+                Businesses track their projects from post to selection. Vendors monitor their pipeline and bid status. Admins oversee the entire marketplace ecosystem.
               </p>
             </div>
           </div>
@@ -96,36 +96,36 @@ export default function Index() {
       {/* Portal Overview */}
       <section className="py-24 border-b border-border">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold mb-12 text-center">Three powerful portals</h2>
+          <h2 className="text-4xl font-bold mb-12 text-center">Three tailored portals</h2>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Client Portal */}
+            {/* Business Portal */}
             <div className="border border-border rounded-lg p-8 bg-card">
-              <h3 className="text-2xl font-semibold mb-4">Client Portal</h3>
+              <h3 className="text-2xl font-semibold mb-4">Business Portal</h3>
               <p className="text-muted-foreground mb-6">
-                Clients buy outcomes, not creatives. They see:
+                Describe your project, receive bids, select the best vendor:
               </p>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>✓ Active projects and status</li>
-                <li>✓ Budget tracking</li>
-                <li>✓ Milestone timelines</li>
-                <li>✓ Asset vault</li>
-                <li>✓ Feedback & approvals</li>
+                <li>✓ AI-guided project intake chat</li>
+                <li>✓ Automatic vendor matching</li>
+                <li>✓ View incoming bids</li>
+                <li>✓ Track project status</li>
+                <li>✓ Manage vendor selection</li>
               </ul>
             </div>
 
-            {/* Creator Portal */}
+            {/* Vendor Portal */}
             <div className="border border-border rounded-lg p-8 bg-card">
-              <h3 className="text-2xl font-semibold mb-4">Creator Portal</h3>
+              <h3 className="text-2xl font-semibold mb-4">Vendor Portal</h3>
               <p className="text-muted-foreground mb-6">
-                Creators focus on execution. They see:
+                Find leads, bid confidently, win business:
               </p>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>✓ Assigned projects</li>
-                <li>✓ Clear briefs & due dates</li>
-                <li>✓ Upload & submission</li>
-                <li>✓ Payment status</li>
-                <li>✓ Earnings history</li>
+                <li>✓ Create service profile</li>
+                <li>✓ Set geographic coverage</li>
+                <li>✓ Receive qualified leads</li>
+                <li>✓ Submit bids on projects</li>
+                <li>✓ Track bid status</li>
               </ul>
             </div>
 
@@ -133,14 +133,14 @@ export default function Index() {
             <div className="border border-border rounded-lg p-8 bg-card">
               <h3 className="text-2xl font-semibold mb-4">Admin Control Tower</h3>
               <p className="text-muted-foreground mb-6">
-                You orchestrate the ecosystem. You control:
+                Orchestrate the marketplace ecosystem:
               </p>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>✓ Creator supply & approval</li>
-                <li>✓ Client demand & pricing</li>
-                <li>✓ Project workflows</li>
-                <li>✓ Milestone & payment tracking</li>
-                <li>✓ All analytics</li>
+                <li>✓ Vendor approval & management</li>
+                <li>✓ View all projects & bids</li>
+                <li>✓ Configure routing rules</li>
+                <li>✓ Manually reassign leads</li>
+                <li>✓ Performance analytics</li>
               </ul>
             </div>
           </div>
@@ -151,13 +151,13 @@ export default function Index() {
       <section className="py-24 border-b border-border">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-4xl font-bold mb-6">Built-in automation</h2>
+            <h2 className="text-4xl font-bold mb-6">Intelligent Automation</h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Triggers fire automatically on user approval, project creation, milestone delivery, and asset uploads. Webhooks and email notifications keep everyone in sync.
+              Every step of the matching process is automated. AI captures project details, smart routing delivers leads to the right vendors, and notifications keep everyone informed in real-time.
             </p>
             <div className="bg-muted/50 border border-border rounded-lg p-8">
               <p className="text-sm text-muted-foreground text-left">
-                <strong>Example workflow:</strong> Client selects tier → Draft project created → Milestones auto-generated → Admin assigns creators → Creator sees brief → Deliverable marked ready → Payment processing starts → Creator notified.
+                <strong>Example flow:</strong> Business submits project via AI chat → System extracts details → Matching algorithm identifies qualified vendors → Leads auto-route to vendor portals → Vendors notified → Bids submitted → Business reviews and decides → Winner selected automatically.
               </p>
             </div>
           </div>
@@ -167,25 +167,25 @@ export default function Index() {
       {/* Design Principles */}
       <section className="py-24 border-b border-border bg-muted/30">
         <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold mb-12 text-center">Designed for concierge excellence</h2>
+          <h2 className="text-4xl font-bold mb-12 text-center">Built for the B2B marketplace</h2>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             <div className="text-center">
-              <div className="text-4xl font-bold text-accent mb-3">3</div>
-              <p className="font-semibold mb-2">Clicks to any asset</p>
-              <p className="text-sm text-muted-foreground">Navigation designed for speed and simplicity</p>
+              <div className="text-4xl font-bold text-accent mb-3">1 Min</div>
+              <p className="font-semibold mb-2">Project submission</p>
+              <p className="text-sm text-muted-foreground">AI chat captures details faster than any form</p>
             </div>
 
             <div className="text-center">
-              <div className="text-4xl font-bold text-accent mb-3">0</div>
-              <p className="font-semibold mb-2">Email required</p>
-              <p className="text-sm text-muted-foreground">Everything in the portal. Real-time updates.</p>
+              <div className="text-4xl font-bold text-accent mb-3">Fair</div>
+              <p className="font-semibold mb-2">Competition</p>
+              <p className="text-sm text-muted-foreground">All qualified vendors see the same leads</p>
             </div>
 
             <div className="text-center">
               <div className="text-4xl font-bold text-accent mb-3">100%</div>
               <p className="font-semibold mb-2">Transparency</p>
-              <p className="text-sm text-muted-foreground">Everyone sees their role in the system</p>
+              <p className="text-sm text-muted-foreground">Bids, timelines, and budgets are always clear</p>
             </div>
           </div>
         </div>
@@ -194,19 +194,19 @@ export default function Index() {
       {/* CTA Section */}
       <section className="py-24">
         <div className="container mx-auto px-4 text-center space-y-6">
-          <h2 className="text-4xl font-bold">Ready to scale without growing?</h2>
+          <h2 className="text-4xl font-bold">Ready to transform B2B matching?</h2>
           <p className="text-xl text-muted-foreground">
-            Visual Matters turns creative agencies into operating systems.
+            Sharkbid makes it easy for businesses to find vendors and vendors to find work.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
             <Button asChild size="lg">
               <Link to="/signup">
-                Start Free Trial
+                Get Started Free
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             <Button variant="outline" size="lg" asChild>
-              <Link to="/apply">Apply as Creator</Link>
+              <Link to="/vendor/apply">Apply as Vendor</Link>
             </Button>
           </div>
         </div>
@@ -215,7 +215,7 @@ export default function Index() {
       {/* Footer */}
       <footer className="border-t border-border py-8 bg-muted/30">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>&copy; 2025 Visual Matters. A creative infrastructure platform.</p>
+          <p>&copy; 2025 Sharkbid. B2B vendor marketplace powered by AI.</p>
         </div>
       </footer>
     </div>

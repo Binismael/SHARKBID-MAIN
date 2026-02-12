@@ -12,37 +12,18 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import CreatorApply from "./pages/CreatorApply";
-
-// Client routes
-import ClientDashboard from "./pages/ClientDashboard";
-import ClientProjects from "./pages/ClientProjects";
-import ClientAssets from "./pages/ClientAssets";
-import ClientProjectBriefing from "./pages/ClientProjectBriefing";
-import CreatorMarketplace from "./pages/CreatorMarketplace";
-import CreatorPortfolio from "./pages/CreatorPortfolio";
-
-// Shared routes
-import ActivityFeed from "./pages/ActivityFeed";
-import SecuritySettings from "./pages/SecuritySettings";
-import UserProfile from "./pages/UserProfile";
-
-// Creator routes
-import CreatorDashboard from "./pages/CreatorDashboard";
-import CreatorOnboarding from "./pages/CreatorOnboarding";
-import CreatorProjects from "./pages/CreatorProjects";
-import CreatorPayments from "./pages/CreatorPayments";
-import CreatorAssets from "./pages/CreatorAssets";
-
-// Admin routes
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminUsers from "./pages/AdminUsers";
-import AdminProjects from "./pages/AdminProjects";
-import AdminPayments from "./pages/AdminPayments";
-import Reports from "./pages/Reports";
-import AdminControls from "./pages/AdminControls";
-
+import BusinessIntake from "./pages/BusinessIntake";
 import NotFound from "./pages/NotFound";
+
+// Protected pages (to be built)
+import UserProfile from "./pages/UserProfile";
+import SecuritySettings from "./pages/SecuritySettings";
+import ActivityFeed from "./pages/ActivityFeed";
+
+// Dashboard pages
+import BusinessDashboard from "./pages/BusinessDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import CreatorDashboard from "./pages/CreatorDashboard";
 
 const queryClient = new QueryClient();
 
@@ -52,46 +33,52 @@ const AppRoutes = () => (
     <Route path="/" element={<Index />} />
     <Route path="/login" element={<Login />} />
     <Route path="/signup" element={<Signup />} />
-    <Route path="/apply" element={<CreatorApply />} />
 
-    {/* Client routes */}
+    {/* Business Portal Routes */}
     <Route
-      path="/client/dashboard"
+      path="/business/dashboard"
       element={
-        <ProtectedRoute requiredRole="client">
-          <ClientDashboard />
+        <ProtectedRoute requiredRole="business">
+          <BusinessDashboard />
         </ProtectedRoute>
       }
     />
     <Route
-      path="/client/projects/:id"
+      path="/business/intake"
       element={
-        <ProtectedRoute requiredRole="client">
-          <ClientProjects />
+        <ProtectedRoute requiredRole="business">
+          <BusinessIntake />
         </ProtectedRoute>
       }
     />
+
+    {/* Vendor Portal Routes */}
     <Route
-      path="/client/assets"
+      path="/vendor/dashboard"
       element={
-        <ProtectedRoute requiredRole="client">
-          <ClientAssets />
+        <ProtectedRoute requiredRole="vendor">
+          <CreatorDashboard />
         </ProtectedRoute>
       }
     />
+    <Route path="/vendor/apply" element={<Index />} />
+
+    {/* Admin Portal Routes */}
     <Route
-      path="/client/briefing"
+      path="/admin/dashboard"
       element={
-        <ProtectedRoute requiredRole="client">
-          <ClientProjectBriefing />
+        <ProtectedRoute requiredRole="admin">
+          <AdminDashboard />
         </ProtectedRoute>
       }
     />
+
+    {/* Shared Routes */}
     <Route
-      path="/activity-feed"
+      path="/profile"
       element={
         <ProtectedRoute>
-          <ActivityFeed />
+          <UserProfile />
         </ProtectedRoute>
       }
     />
@@ -104,142 +91,10 @@ const AppRoutes = () => (
       }
     />
     <Route
-      path="/profile"
+      path="/activity"
       element={
         <ProtectedRoute>
-          <UserProfile />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/client/profile"
-      element={
-        <ProtectedRoute requiredRole="client">
-          <UserProfile />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/creator/profile"
-      element={
-        <ProtectedRoute requiredRole="creator">
-          <UserProfile />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/profile"
-      element={
-        <ProtectedRoute requiredRole="admin">
-          <UserProfile />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/marketplace"
-      element={
-        <ProtectedRoute requiredRole="client">
-          <CreatorMarketplace />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/creator/:creatorId"
-      element={
-        <ProtectedRoute requiredRole="client">
-          <CreatorPortfolio />
-        </ProtectedRoute>
-      }
-    />
-
-    {/* Creator routes */}
-    <Route
-      path="/creator/onboarding"
-      element={
-        <ProtectedRoute requiredRole="creator">
-          <CreatorOnboarding />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/creator/dashboard"
-      element={
-        <ProtectedRoute requiredRole="creator">
-          <CreatorDashboard />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/creator/projects/:id"
-      element={
-        <ProtectedRoute requiredRole="creator">
-          <CreatorProjects />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/creator/payments"
-      element={
-        <ProtectedRoute requiredRole="creator">
-          <CreatorPayments />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/creator/assets"
-      element={
-        <ProtectedRoute requiredRole="creator">
-          <CreatorAssets />
-        </ProtectedRoute>
-      }
-    />
-
-    {/* Admin routes */}
-    <Route
-      path="/admin/dashboard"
-      element={
-        <ProtectedRoute requiredRole="admin">
-          <AdminDashboard />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/users"
-      element={
-        <ProtectedRoute requiredRole="admin">
-          <AdminUsers />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/projects"
-      element={
-        <ProtectedRoute requiredRole="admin">
-          <AdminProjects />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/payments"
-      element={
-        <ProtectedRoute requiredRole="admin">
-          <AdminPayments />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/reports"
-      element={
-        <ProtectedRoute requiredRole="admin">
-          <Reports />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/admin/controls"
-      element={
-        <ProtectedRoute requiredRole="admin">
-          <AdminControls />
+          <ActivityFeed />
         </ProtectedRoute>
       }
     />

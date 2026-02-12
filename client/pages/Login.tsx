@@ -17,10 +17,10 @@ export default function Login() {
     if (user && userRole) {
       if (userRole === "admin") {
         navigate("/admin/dashboard", { replace: true });
-      } else if (userRole === "client") {
-        navigate("/client/dashboard", { replace: true });
-      } else if (userRole === "creator") {
-        navigate("/creator/dashboard", { replace: true });
+      } else if (userRole === "business") {
+        navigate("/business/dashboard", { replace: true });
+      } else if (userRole === "vendor") {
+        navigate("/vendor/dashboard", { replace: true });
       }
     }
   }, [user, userRole, navigate]);
@@ -59,10 +59,10 @@ export default function Login() {
             <Sparkles className="h-6 w-6 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Visual Matters
+            Sharkbid
           </h1>
           <p className="text-sm text-muted-foreground">
-            Creative collaboration platform
+            Business-to-Vendor Matching Platform
           </p>
         </div>
 
@@ -166,12 +166,12 @@ export default function Login() {
             </Button>
           </Link>
 
-          {/* Creator Link */}
+          {/* Vendor Link */}
           <div className="text-center pt-2 border-t border-border">
             <p className="text-xs text-muted-foreground mb-3">
-              Are you a creator?
+              Are you a vendor?
             </p>
-            <Link to="/apply" className="text-sm font-medium text-primary hover:text-primary/90 transition-colors inline-flex items-center gap-1">
+            <Link to="/vendor/apply" className="text-sm font-medium text-primary hover:text-primary/90 transition-colors inline-flex items-center gap-1">
               Apply to join
               <ArrowRight className="h-3 w-3" />
             </Link>
@@ -182,10 +182,10 @@ export default function Login() {
         <div className="mt-8 p-4 rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/20 backdrop-blur-sm">
           <h3 className="text-xs font-semibold text-blue-900 dark:text-blue-200 mb-2 flex items-center gap-2">
             <Sparkles className="h-4 w-4" />
-            Demo Credentials
+            Sharkbid Portal
           </h3>
           <p className="text-xs text-blue-800 dark:text-blue-300 leading-relaxed">
-            Auto-route to your dashboard: <strong>Admin</strong> → Control Tower, <strong>Client</strong> → Vision Dashboard, <strong>Creator</strong> → Execution Console
+            Three portals in one: <strong>Businesses</strong> submit projects, <strong>Vendors</strong> bid, <strong>Admin</strong> orchestrates the marketplace.
           </p>
         </div>
       </div>

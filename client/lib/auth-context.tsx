@@ -5,13 +5,13 @@ import { supabase } from "./supabase";
 interface AuthContextType {
   session: Session | null;
   user: User | null;
-  userRole: "admin" | "client" | "creator" | null;
+  userRole: "admin" | "business" | "vendor" | null;
   loading: boolean;
   signUp: (
     email: string,
     password: string,
     displayName: string,
-    role: "admin" | "client" | "creator"
+    role: "admin" | "business" | "vendor"
   ) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [userRole, setUserRole] = useState<"admin" | "client" | "creator" | null>(null);
+  const [userRole, setUserRole] = useState<"admin" | "business" | "vendor" | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(currentSession.user);
           // Get user role from metadata
           const role = (currentSession.user.user_metadata?.role ||
-            "client") as "admin" | "client" | "creator";
+            "business") as "admin" | "business" | "vendor";
           setUserRole(role);
         }
       } catch (err) {
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(currentSession);
         setUser(currentSession.user);
         const role = (currentSession.user.user_metadata?.role ||
-          "client") as "admin" | "client" | "creator";
+          "business") as "admin" | "business" | "vendor";
         setUserRole(role);
       } else {
         setSession(null);
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     email: string,
     password: string,
     displayName: string,
-    role: "admin" | "client" | "creator"
+    role: "admin" | "business" | "vendor"
   ) => {
     try {
       setError(null);
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: {
             role,
             display_name: displayName,
-            company_name: role === "client" ? displayName : undefined,
+            company_name: role === "business" ? displayName : undefined,
           },
         },
       });

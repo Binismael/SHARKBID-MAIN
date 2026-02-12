@@ -9,7 +9,7 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [role, setRole] = useState<"admin" | "client" | "creator">("client");
+  const [role, setRole] = useState<"admin" | "business" | "vendor">("business");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { signUp, user, userRole } = useAuth();
@@ -19,10 +19,10 @@ export default function Signup() {
     if (user && userRole) {
       if (userRole === "admin") {
         navigate("/admin/dashboard", { replace: true });
-      } else if (userRole === "client") {
-        navigate("/client/dashboard", { replace: true });
-      } else if (userRole === "creator") {
-        navigate("/creator/dashboard", { replace: true });
+      } else if (userRole === "business") {
+        navigate("/business/dashboard", { replace: true });
+      } else if (userRole === "vendor") {
+        navigate("/vendor/dashboard", { replace: true });
       }
     }
   }, [user, userRole, navigate]);
@@ -31,7 +31,7 @@ export default function Signup() {
     e.preventDefault();
     setError("");
 
-    const requiredFields = role === "client" ? [email, password, companyName] : [email, password];
+    const requiredFields = role === "business" ? [email, password, companyName] : [email, password];
     if (!requiredFields.every(field => field.trim())) {
       setError("Please fill in all required fields");
       return;
@@ -44,7 +44,7 @@ export default function Signup() {
 
     try {
       setLoading(true);
-      const displayName = role === "client" ? companyName : `${role.charAt(0).toUpperCase() + role.slice(1)} User`;
+      const displayName = role === "business" ? companyName : `${role.charAt(0).toUpperCase() + role.slice(1)} User`;
       await signUp(email, password, displayName, role);
       alert("Sign up successful! Redirecting to login...");
       navigate("/login", { replace: true });
@@ -58,15 +58,15 @@ export default function Signup() {
 
   const roleOptions = [
     {
-      value: "client" as const,
-      label: "Client",
-      description: "Hire creators",
+      value: "business" as const,
+      label: "Business",
+      description: "Find vendors",
       icon: Building2,
     },
     {
-      value: "creator" as const,
-      label: "Creator",
-      description: "Earn money",
+      value: "vendor" as const,
+      label: "Vendor",
+      description: "Bid on projects",
       icon: Briefcase,
     },
     {
@@ -91,10 +91,10 @@ export default function Signup() {
             <Sparkles className="h-6 w-6 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Visual Matters
+            Sharkbid
           </h1>
           <p className="text-sm text-muted-foreground">
-            Join the creative community
+            Join the business-to-vendor marketplace
           </p>
         </div>
 
@@ -143,8 +143,8 @@ export default function Signup() {
               </div>
             </div>
 
-            {/* Company Name (for clients) */}
-            {role === "client" && (
+            {/* Company Name (for businesses) */}
+            {role === "business" && (
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
                   Company Name
@@ -256,13 +256,13 @@ export default function Signup() {
           <ul className="space-y-2 text-xs text-green-800 dark:text-green-300">
             <li className="flex items-start gap-2">
               <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              {role === "client" && "Access to verified creators"}
-              {role === "creator" && "Find paid projects"}
-              {role === "admin" && "Platform management"}
+              {role === "business" && "Find qualified vendors for your projects"}
+              {role === "vendor" && "Discover high-quality business opportunities"}
+              {role === "admin" && "Platform management & analytics"}
             </li>
             <li className="flex items-start gap-2">
               <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <span>Secure payments & milestones</span>
+              <span>Safe transactions & escrow protection</span>
             </li>
           </ul>
         </div>

@@ -3,7 +3,7 @@ import { useAuth } from "./auth-context";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "admin" | "client" | "creator";
+  requiredRole?: "admin" | "business" | "vendor";
 }
 
 export function ProtectedRoute({
@@ -33,10 +33,10 @@ export function ProtectedRoute({
     // If user is logged in but doesn't have the right role, redirect to their dashboard
     if (userRole === "admin") {
       return <Navigate to="/admin/dashboard" replace />;
-    } else if (userRole === "client") {
-      return <Navigate to="/client/dashboard" replace />;
-    } else if (userRole === "creator") {
-      return <Navigate to="/creator/dashboard" replace />;
+    } else if (userRole === "business") {
+      return <Navigate to="/business/dashboard" replace />;
+    } else if (userRole === "vendor") {
+      return <Navigate to="/vendor/dashboard" replace />;
     }
     // Fallback
     return <Navigate to="/login" replace />;

@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
+import { handleAIIntake } from "./routes/ai-intake";
 import emailRouter from "./routes/email";
 import adminRouter from "./routes/admin";
 
@@ -20,6 +21,9 @@ export function createServer() {
   });
 
   app.get("/api/demo", handleDemo);
+
+  // AI Intake route
+  app.post("/api/ai-intake", handleAIIntake);
 
   // Email routes
   app.use("/api", emailRouter);
