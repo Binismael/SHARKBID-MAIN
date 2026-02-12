@@ -89,12 +89,26 @@ export default function CreateProjectForm() {
         return;
       }
 
+      // Get the service category ID by looking up the category name
+      const { data: categoryData, error: categoryError } = await supabase
+        .from('service_categories')
+        .select('id')
+        .eq('name', formData.service_category)
+        .single();
+
+      if (categoryError || !categoryData) {
+        console.error('Service category lookup error:', categoryError);
+        toast.error('Selected service category not found');
+        setLoading(false);
+        return;
+      }
+
       // Prepare project data - only include non-null values
       const projectData = {
         business_id: user.id,
         title: formData.title,
         description: formData.description || '',
-        service_category: formData.service_category,
+        service_category_id: categoryData.id,
         budget_min: formData.budget_min ? parseInt(formData.budget_min) : null,
         budget_max: formData.budget_max ? parseInt(formData.budget_max) : null,
         timeline_start: formData.timeline_start || null,
@@ -119,25 +133,34 @@ export default function CreateProjectForm() {
       if (projectError) {
         const errorMessage = projectError.message || 'Unknown database error';
         const errorDetails = projectError.details || '';
-        console.error('Project creation error:', {
+        const errorCode = projectError.code || 'UNKNOWN';
+
+        const fullErrorInfo = {
           message: errorMessage,
           details: errorDetails,
-          code: projectError.code,
-          fullError: projectError,
-        });
+          code: errorCode,
+          status: projectError.status,
+          hint: (projectError as any).hint,
+        };
 
-        // Show user-friendly error message
-        let displayMessage = 'Failed to create project: ';
-        if (errorMessage.includes('duplicate key')) {
-          displayMessage += 'A project with this title already exists';
-        } else if (errorMessage.includes('foreign key')) {
-          displayMessage += 'Invalid category selection';
-        } else if (errorMessage.includes('permission')) {
-          displayMessage += 'You do not have permission to create projects';
+        console.error('Project creation error:', fullErrorInfo);
+
+        // Show detailed error message
+        let displayMessage = 'Failed to create project';
+
+        if (errorMessage.includes('duplicate key') || errorCode === '23505') {
+          displayMessage = 'A project with this title already exists';
+        } else if (errorMessage.includes('foreign key') || errorCode === '23503') {
+          displayMessage = 'Invalid service category selected';
+        } else if (errorMessage.includes('permission') || errorCode === '42501') {
+          displayMessage = 'You do not have permission to create projects';
+        } else if (errorMessage.includes('not found') || errorCode === '404') {
+          displayMessage = 'Table or schema not found - contact support';
         } else {
-          displayMessage += errorMessage;
+          displayMessage = `Failed: ${errorMessage}`;
         }
 
+        console.error('Detailed error info:', JSON.stringify(fullErrorInfo, null, 2));
         toast.error(displayMessage);
         setLoading(false);
         return;
@@ -171,8 +194,27 @@ export default function CreateProjectForm() {
       toast.success('Project created successfully!');
       navigate('/business/dashboard');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error('Error creating project:', error);
+      let errorMessage = 'Unknown error';
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        try {
+          errorMessage = JSON.stringify(error);
+        } catch (e) {
+          errorMessage = String(error);
+        }
+      } else {
+        errorMessage = String(error);
+      }
+
+      console.error('Unexpected error creating project:', {
+        error,
+        errorMessage,
+        errorType: typeof error,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+
       toast.error(`Error: ${errorMessage}`);
     } finally {
       setLoading(false);

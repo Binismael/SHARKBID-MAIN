@@ -14,6 +14,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import BusinessIntake from "./pages/BusinessIntake";
 import NotFound from "./pages/NotFound";
+import DebugPage from "./pages/Debug";
 
 // Protected pages (to be built)
 import UserProfile from "./pages/UserProfile";
@@ -36,6 +37,7 @@ const AppRoutes = () => (
     <Route path="/" element={<Index />} />
     <Route path="/login" element={<Login />} />
     <Route path="/signup" element={<Signup />} />
+    <Route path="/debug" element={<DebugPage />} />
 
     {/* Business Portal Routes */}
     <Route
