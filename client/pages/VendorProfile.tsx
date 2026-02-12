@@ -85,8 +85,22 @@ export default function VendorProfile() {
 
         if (profileData) {
           setProfile(profileData);
+
+          // vendor_services should contain service category IDs
           setSelectedServices(profileData.vendor_services || []);
-          setSelectedStates(profileData.vendor_coverage_areas || []);
+
+          // Convert coverage area UUIDs back to state abbreviations
+          if (profileData.vendor_coverage_areas && profileData.vendor_coverage_areas.length > 0) {
+            const { data: coverageData } = await supabase
+              .from('coverage_areas')
+              .select('state')
+              .in('id', profileData.vendor_coverage_areas);
+
+            const states = coverageData?.map(item => item.state) || [];
+            setSelectedStates(states);
+          } else {
+            setSelectedStates([]);
+          }
         }
       } catch (err) {
         const message = getErrorMessage(err || 'Failed to load profile');
@@ -142,6 +156,14 @@ export default function VendorProfile() {
     setError(null);
 
     try {
+      // Convert state abbreviations to coverage area UUIDs
+      const { data: coverageData } = await supabase
+        .from('coverage_areas')
+        .select('id')
+        .in('state', selectedStates);
+
+      const coverageAreaIds = coverageData?.map(item => item.id) || [];
+
       const { error: updateError } = await supabase
         .from('profiles')
         .upsert({
@@ -155,7 +177,7 @@ export default function VendorProfile() {
           employee_count: profile.employee_count,
           certifications: profile.certifications,
           vendor_services: selectedServices,
-          vendor_coverage_areas: selectedStates,
+          vendor_coverage_areas: coverageAreaIds,
           is_approved: false,
         }, { onConflict: 'user_id' });
 
