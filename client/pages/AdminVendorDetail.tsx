@@ -204,12 +204,14 @@ export default function AdminVendorDetail() {
           <Button
             onClick={() => navigate('/admin/dashboard')}
             variant="outline"
-            className="mb-4 gap-2"
+            className="mb-4 gap-2 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             <ArrowLeft className="h-4 w-4" />
             Back
           </Button>
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white">Vendor Details</h1>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Vendor Details
+          </h1>
           <p className="text-slate-600 dark:text-slate-400 mt-2">{vendor.company_name}</p>
         </div>
       </div>
