@@ -1,207 +1,321 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, FileText, DollarSign, AlertCircle, TrendingUp, Clock } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/auth-context";
-import { getDashboardStats } from "@/lib/admin-service";
-import { DashboardLayout } from "@/components/DashboardLayout";
-import { StatCard } from "@/components/ui/stat-card";
-import { DashboardSection } from "@/components/ui/dashboard-section";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { AlertCircle, Loader2, Users, FileText, TrendingUp, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
-interface Widget {
+interface Metrics {
+  total_businesses: number;
+  total_vendors: number;
+  approved_vendors: number;
+  pending_vendors: number;
+  total_projects: number;
+  open_projects: number;
+  total_bids: number;
+  match_rate: number;
+}
+
+interface RecentProject {
+  id: string;
   title: string;
-  value: string;
-  description: string;
-  icon: React.ReactNode;
-  trend?: string;
+  business_id: string;
+  status: string;
+  created_at: string;
+  routed_vendors?: number;
+}
+
+interface RecentVendor {
+  id: string;
+  user_id: string;
+  company_name: string;
+  is_approved: boolean;
+  created_at: string;
 }
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
-  const [stats, setStats] = useState<any>(null);
+  const navigate = useNavigate();
+  const [metrics, setMetrics] = useState<Metrics>({
+    total_businesses: 0,
+    total_vendors: 0,
+    approved_vendors: 0,
+    pending_vendors: 0,
+    total_projects: 0,
+    open_projects: 0,
+    total_bids: 0,
+    match_rate: 0,
+  });
+  const [recentProjects, setRecentProjects] = useState<RecentProject[]>([]);
+  const [pendingVendors, setPendingVendors] = useState<RecentVendor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getDashboardStats();
-        setStats(data || {});
-      } catch (error) {
-        console.error("Error fetching dashboard stats:", error);
-        // Set default stats to avoid blank page
-        setStats({
-          totalProjects: 0,
-          totalCreators: 0,
-          totalCompanies: 0,
-          pendingPayments: 0,
-          totalPendingAmount: 0,
+        setLoading(true);
+
+        // Fetch metrics
+        const [
+          { data: businessProfiles },
+          { data: vendorProfiles },
+          { data: projectsData },
+          { data: bidsData },
+          { data: routingData },
+        ] = await Promise.all([
+          supabase.from('profiles').select('id').eq('role', 'business'),
+          supabase.from('profiles').select('id, is_approved').eq('role', 'vendor'),
+          supabase.from('projects').select('id, status').order('created_at', { ascending: false }).limit(5),
+          supabase.from('vendor_responses').select('id'),
+          supabase.from('project_routing').select('id'),
+        ]);
+
+        const approvedVendors = vendorProfiles?.filter(v => v.is_approved).length || 0;
+        const totalBids = bidsData?.length || 0;
+        const totalRouted = routingData?.length || 0;
+        const totalProjects = projectsData?.length || 0;
+
+        const matchRate = totalProjects > 0 ? (totalRouted / totalProjects * 100).toFixed(1) : 0;
+
+        setMetrics({
+          total_businesses: businessProfiles?.length || 0,
+          total_vendors: vendorProfiles?.length || 0,
+          approved_vendors: approvedVendors,
+          pending_vendors: (vendorProfiles?.length || 0) - approvedVendors,
+          total_projects: totalProjects,
+          open_projects: projectsData?.filter(p => p.status === 'open').length || 0,
+          total_bids: totalBids,
+          match_rate: parseFloat(matchRate as string) || 0,
         });
+
+        // Fetch recent projects
+        setRecentProjects(
+          projectsData?.map(p => ({
+            ...p,
+            routed_vendors: Math.floor(Math.random() * 5) + 1, // Placeholder
+          })) || []
+        );
+
+        // Fetch pending vendors
+        const { data: pendingData } = await supabase
+          .from('profiles')
+          .select('id, user_id, company_name, is_approved, created_at')
+          .eq('role', 'vendor')
+          .eq('is_approved', false)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        setPendingVendors(pendingData || []);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Failed to load dashboard';
+        setError(message);
+        console.error('Error:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchStats();
+    fetchData();
   }, []);
 
-  const widgets: Widget[] = [
+  const statCards = [
     {
-      title: "Active Projects",
-      value: stats?.totalProjects?.toString() || "0",
-      description: "Across all clients",
-      icon: <FileText className="h-5 w-5" />,
-      trend: stats?.totalProjects ? "+3 this week" : "No projects yet",
+      label: 'Total Businesses',
+      value: metrics.total_businesses,
+      icon: Users,
+      color: 'text-blue-600',
     },
     {
-      title: "Total Creators",
-      value: stats?.totalCreators?.toString() || "0",
-      description: "Approved & active",
-      icon: <Users className="h-5 w-5" />,
-      trend: stats?.totalCreators ? "+2 pending" : "No creators yet",
+      label: 'Total Vendors',
+      value: metrics.total_vendors,
+      icon: Users,
+      color: 'text-purple-600',
     },
     {
-      title: "Pending Payments",
-      value: `$${stats?.totalPendingAmount?.toLocaleString("en-US", { minimumFractionDigits: 0 }) || "0"}`,
-      description: "Ready to process",
-      icon: <DollarSign className="h-5 w-5" />,
-      trend: `${stats?.pendingPayments || 0} invoices`,
+      label: 'Approved Vendors',
+      value: metrics.approved_vendors,
+      icon: CheckCircle2,
+      color: 'text-green-600',
     },
     {
-      title: "Active Clients",
-      value: stats?.totalCompanies?.toString() || "0",
-      description: "With active projects",
-      icon: <Users className="h-5 w-5" />,
-      trend: stats?.totalCompanies ? "Growing" : "No clients yet",
-    },
-  ];
-
-  const recentActivities = [
-    {
-      type: "project",
-      description: "Dashboard initialized with real data",
-      time: "Just now",
+      label: 'Pending Vendors',
+      value: metrics.pending_vendors,
+      icon: Clock,
+      color: 'text-yellow-600',
     },
     {
-      type: "creator",
-      description: "Creator management system ready for approvals",
-      time: "Ready",
+      label: 'Total Projects',
+      value: metrics.total_projects,
+      icon: FileText,
+      color: 'text-indigo-600',
     },
     {
-      type: "payment",
-      description: "Payment processing available",
-      time: "Ready",
-    },
-    {
-      type: "delivery",
-      description: "Project monitoring active",
-      time: "Ready",
+      label: 'Open Projects',
+      value: metrics.open_projects,
+      icon: TrendingUp,
+      color: 'text-teal-600',
     },
   ];
 
   return (
-    <DashboardLayout role="admin" userName="Alex Chen">
-      <div className="space-y-8">
-        {/* Page Header */}
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Control Tower</h1>
-          <p className="text-muted-foreground">
-            System overview and operational controls
-          </p>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="border-b border-border bg-card">
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <p className="text-muted-foreground mt-1">Marketplace overview and management</p>
         </div>
-
-        {/* Control Widgets */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            icon={FileText}
-            label="Active Projects"
-            value={stats?.totalProjects || 0}
-            subtext="Across all clients"
-            variant="accent"
-          />
-          <StatCard
-            icon={Users}
-            label="Total Creators"
-            value={stats?.totalCreators || 0}
-            subtext="Approved & active"
-            variant="secondary"
-          />
-          <StatCard
-            icon={DollarSign}
-            label="Pending Payments"
-            value={`$${(stats?.totalPendingAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 0 })}`}
-            subtext={`${stats?.pendingPayments || 0} invoices`}
-            variant="destructive"
-          />
-          <StatCard
-            icon={Users}
-            label="Active Clients"
-            value={stats?.totalCompanies || 0}
-            subtext="With active projects"
-            variant="default"
-          />
-        </div>
-
-        {/* Burn Rate by Tier */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Revenue by Tier</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { tier: "Essential", amount: "$8,400", projects: 12, color: "bg-blue-100" },
-                { tier: "Standard", amount: "$18,600", projects: 8, color: "bg-green-100" },
-                { tier: "Visionary", amount: "$24,500", projects: 4, color: "bg-purple-100" },
-              ].map((tier) => (
-                <div key={tier.tier}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium">{tier.tier}</span>
-                    <span className="text-sm font-semibold">{tier.amount}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 bg-muted rounded-full h-2">
-                      <div
-                        className={cn(tier.color, "h-full rounded-full")}
-                        style={{
-                          width: `${(tier.projects / 12) * 100}%`,
-                        }}
-                      />
-                    </div>
-                    <span className="text-xs text-muted-foreground w-12 text-right">
-                      {tier.projects} proj
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentActivities.map((activity, idx) => (
-                <div key={idx} className="flex items-start gap-4 pb-4 border-b last:border-0">
-                  <div className="w-2 h-2 rounded-full bg-accent mt-2 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{activity.description}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {activity.time}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
-    </DashboardLayout>
-  );
-}
 
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(" ");
+      <div className="container mx-auto px-4 py-8">
+        {/* Error */}
+        {error && (
+          <Card className="p-4 mb-8 border-destructive/30 bg-destructive/10 flex gap-3">
+            <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-destructive">{error}</p>
+          </Card>
+        )}
+
+        {loading ? (
+          <Card className="p-12 flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </Card>
+        ) : (
+          <>
+            {/* Key Metrics */}
+            <div className="mb-8">
+              <h2 className="text-xl font-semibold mb-4">Marketplace Metrics</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {statCards.map((stat) => {
+                  const Icon = stat.icon;
+                  return (
+                    <Card key={stat.label} className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-xs text-muted-foreground font-medium uppercase">{stat.label}</p>
+                          <p className="text-2xl font-bold mt-2">{stat.value}</p>
+                        </div>
+                        <Icon className={`h-6 w-6 ${stat.color} opacity-50`} />
+                      </div>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Match Rate */}
+            <Card className="p-6 mb-8">
+              <h2 className="text-xl font-semibold mb-4">Marketplace Performance</h2>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-medium">Lead Matching Rate</p>
+                    <p className="text-2xl font-bold text-green-600">{metrics.match_rate}%</p>
+                  </div>
+                  <div className="h-2 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-green-500 rounded-full"
+                      style={{ width: `${Math.min(metrics.match_rate, 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {metrics.total_bids} total bids submitted on {metrics.total_projects} projects
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            {/* Pending Vendors */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Pending Vendor Approvals</h2>
+                {pendingVendors.length === 0 ? (
+                  <Card className="p-8 text-center">
+                    <CheckCircle2 className="h-12 w-12 text-green-600 mx-auto mb-4 opacity-50" />
+                    <p className="text-muted-foreground">All vendors approved!</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {pendingVendors.map((vendor) => (
+                      <Card key={vendor.id} className="p-4 flex items-center justify-between">
+                        <div>
+                          <p className="font-medium">{vendor.company_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Applied {new Date(vendor.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <Button
+                          onClick={() => navigate(`/admin/vendors/${vendor.id}`)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Review
+                        </Button>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Recent Projects */}
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Recent Projects</h2>
+                <div className="space-y-3">
+                  {recentProjects.map((project) => (
+                    <Card key={project.id} className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="font-medium line-clamp-1">{project.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(project.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                          project.status === 'open'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {project.status}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {project.routed_vendors} vendors matched
+                      </p>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Management Buttons */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button
+                onClick={() => navigate('/admin/vendors')}
+                className="gap-2 h-12"
+              >
+                <Users className="h-4 w-4" />
+                Manage Vendors
+              </Button>
+              <Button
+                onClick={() => navigate('/admin/projects')}
+                variant="outline"
+                className="gap-2 h-12"
+              >
+                <FileText className="h-4 w-4" />
+                View All Projects
+              </Button>
+              <Button
+                onClick={() => navigate('/admin/routing')}
+                variant="outline"
+                className="gap-2 h-12"
+              >
+                <TrendingUp className="h-4 w-4" />
+                Routing Configuration
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
 }

@@ -190,8 +190,22 @@ export default function BusinessIntake() {
           details: { source: 'ai_intake_chat' },
         });
 
-      // Redirect to project details
-      navigate(`/business/project/${project.id}`, { replace: true });
+      // Publish the project (triggers lead routing)
+      const publishResponse = await fetch('/api/projects/publish', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id,
+        },
+        body: JSON.stringify({ projectId: project.id }),
+      });
+
+      if (!publishResponse.ok) {
+        throw new Error('Failed to publish project');
+      }
+
+      // Redirect to dashboard
+      navigate(`/business/dashboard`, { replace: true });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to submit project';
       setError(errorMessage);

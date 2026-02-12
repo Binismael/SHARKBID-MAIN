@@ -3,6 +3,8 @@ import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { handleAIIntake } from "./routes/ai-intake";
+import { handleTriggerRouting } from "./routes/lead-routing";
+import { handlePublishProject, handleGetProject } from "./routes/projects";
 import emailRouter from "./routes/email";
 import adminRouter from "./routes/admin";
 
@@ -24,6 +26,13 @@ export function createServer() {
 
   // AI Intake route
   app.post("/api/ai-intake", handleAIIntake);
+
+  // Project routes
+  app.post("/api/projects/publish", handlePublishProject);
+  app.get("/api/projects/:projectId", handleGetProject);
+
+  // Lead routing (manual trigger for testing)
+  app.post("/api/routing/trigger", handleTriggerRouting);
 
   // Email routes
   app.use("/api", emailRouter);

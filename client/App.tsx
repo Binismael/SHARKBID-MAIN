@@ -23,7 +23,9 @@ import ActivityFeed from "./pages/ActivityFeed";
 // Dashboard pages
 import BusinessDashboard from "./pages/BusinessDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import CreatorDashboard from "./pages/CreatorDashboard";
+import VendorDashboard from "./pages/VendorDashboard";
+import VendorProfile from "./pages/VendorProfile";
+import VendorLeadDetail from "./pages/VendorLeadDetail";
 
 const queryClient = new QueryClient();
 
@@ -57,7 +59,23 @@ const AppRoutes = () => (
       path="/vendor/dashboard"
       element={
         <ProtectedRoute requiredRole="vendor">
-          <CreatorDashboard />
+          <VendorDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/vendor/profile"
+      element={
+        <ProtectedRoute requiredRole="vendor">
+          <VendorProfile />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/vendor/lead/:projectId"
+      element={
+        <ProtectedRoute requiredRole="vendor">
+          <VendorLeadDetail />
         </ProtectedRoute>
       }
     />
