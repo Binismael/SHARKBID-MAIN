@@ -24,6 +24,7 @@ import ActivityFeed from "./pages/ActivityFeed";
 // Dashboard pages
 import BusinessDashboard from "./pages/BusinessDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminVendorDetail from "./pages/AdminVendorDetail";
 import VendorDashboard from "./pages/VendorDashboard";
 import VendorProfile from "./pages/VendorProfile";
 import VendorLeadDetail from "./pages/VendorLeadDetail";
@@ -107,6 +108,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute requiredRole="admin">
           <AdminDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/vendors/:vendorId"
+      element={
+        <ProtectedRoute requiredRole="admin">
+          <AdminVendorDetail />
         </ProtectedRoute>
       }
     />

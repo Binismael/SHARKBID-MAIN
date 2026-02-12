@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth-context";
 import { Sparkles, ArrowRight, Building2, Briefcase, Shield, CheckCircle2, Zap, AlertCircle } from "lucide-react";
 
@@ -48,9 +49,17 @@ export default function Signup() {
       await signUp(email, password, displayName, role);
       alert("Sign up successful! Redirecting to login...");
       navigate("/login", { replace: true });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Signup error:", error);
-      setError("Sign up failed. Please try again.");
+
+      // Handle specific Supabase auth errors
+      if (error?.message?.includes("already registered") || error?.message?.includes("User already exists")) {
+        setError("This email is already registered. Please try logging in or use a different email.");
+      } else if (error?.message?.includes("Invalid")) {
+        setError("Invalid email or password. Please check and try again.");
+      } else {
+        setError(error?.message || "Sign up failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
