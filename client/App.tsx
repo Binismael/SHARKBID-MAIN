@@ -25,6 +25,7 @@ import ActivityFeed from "./pages/ActivityFeed";
 import BusinessDashboard from "./pages/BusinessDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminVendorDetail from "./pages/AdminVendorDetail";
+import AdminProjects from "./pages/AdminProjects";
 import VendorDashboard from "./pages/VendorDashboard";
 import VendorProfile from "./pages/VendorProfile";
 import VendorLeadDetail from "./pages/VendorLeadDetail";
@@ -108,6 +109,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute requiredRole="admin">
           <AdminDashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/projects"
+      element={
+        <ProtectedRoute requiredRole="admin">
+          <AdminProjects />
         </ProtectedRoute>
       }
     />
