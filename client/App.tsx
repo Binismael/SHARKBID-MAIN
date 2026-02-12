@@ -26,6 +26,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import VendorDashboard from "./pages/VendorDashboard";
 import VendorProfile from "./pages/VendorProfile";
 import VendorLeadDetail from "./pages/VendorLeadDetail";
+import CreateProjectForm from "./pages/CreateProjectForm";
 
 const queryClient = new QueryClient();
 
@@ -50,6 +51,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute requiredRole="business">
           <BusinessIntake />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/business/projects/create"
+      element={
+        <ProtectedRoute requiredRole="business">
+          <CreateProjectForm />
         </ProtectedRoute>
       }
     />

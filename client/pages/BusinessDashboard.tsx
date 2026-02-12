@@ -90,13 +90,23 @@ export default function BusinessDashboard() {
               <h1 className="text-3xl font-bold">Dashboard</h1>
               <p className="text-muted-foreground mt-1">Manage your projects and track vendor bids</p>
             </div>
-            <Button
-              onClick={() => navigate('/business/intake')}
-              className="gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              New Project
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => navigate('/business/projects/create')}
+                variant="outline"
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Use Form
+              </Button>
+              <Button
+                onClick={() => navigate('/business/intake')}
+                className="gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                AI Assistant
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -143,14 +153,24 @@ export default function BusinessDashboard() {
             <Card className="p-12 text-center">
               <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
               <h3 className="text-xl font-semibold mb-2">No projects yet</h3>
-              <p className="text-muted-foreground mb-6">Start by creating your first project and let vendors bid on it</p>
-              <Button
-                onClick={() => navigate('/business/intake')}
-                className="gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Create Project
-              </Button>
+              <p className="text-muted-foreground mb-8">Start by creating your first project and let vendors bid on it</p>
+              <div className="flex gap-3 justify-center">
+                <Button
+                  onClick={() => navigate('/business/projects/create')}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Use Form
+                </Button>
+                <Button
+                  onClick={() => navigate('/business/intake')}
+                  className="gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  AI Assistant
+                </Button>
+              </div>
             </Card>
           ) : (
             <div className="grid gap-4">
