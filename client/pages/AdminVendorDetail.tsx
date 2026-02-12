@@ -33,6 +33,19 @@ interface CoverageArea {
   state: string;
 }
 
+const STATE_NAMES: Record<string, string> = {
+  'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas', 'CA': 'California',
+  'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware', 'FL': 'Florida', 'GA': 'Georgia',
+  'HI': 'Hawaii', 'ID': 'Idaho', 'IL': 'Illinois', 'IN': 'Indiana', 'IA': 'Iowa',
+  'KS': 'Kansas', 'KY': 'Kentucky', 'LA': 'Louisiana', 'ME': 'Maine', 'MD': 'Maryland',
+  'MA': 'Massachusetts', 'MI': 'Michigan', 'MN': 'Minnesota', 'MS': 'Mississippi', 'MO': 'Missouri',
+  'MT': 'Montana', 'NE': 'Nebraska', 'NV': 'Nevada', 'NH': 'New Hampshire', 'NJ': 'New Jersey',
+  'NM': 'New Mexico', 'NY': 'New York', 'NC': 'North Carolina', 'ND': 'North Dakota', 'OH': 'Ohio',
+  'OK': 'Oklahoma', 'OR': 'Oregon', 'PA': 'Pennsylvania', 'RI': 'Rhode Island', 'SC': 'South Carolina',
+  'SD': 'South Dakota', 'TN': 'Tennessee', 'TX': 'Texas', 'UT': 'Utah', 'VT': 'Vermont',
+  'VA': 'Virginia', 'WA': 'Washington', 'WV': 'West Virginia', 'WI': 'Wisconsin', 'WY': 'Wyoming',
+};
+
 export default function AdminVendorDetail() {
   const { vendorId } = useParams<{ vendorId: string }>();
   const navigate = useNavigate();
@@ -299,8 +312,10 @@ export default function AdminVendorDetail() {
               {vendor.vendor_services && vendor.vendor_services.length > 0 ? (
                 <div className="space-y-2">
                   {vendor.vendor_services.map((serviceId, idx) => (
-                    <div key={idx} className="bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded text-sm text-slate-700 dark:text-slate-300 font-medium">
-                      {serviceNames[serviceId] || 'Loading...'}
+                    <div key={idx} className="bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 px-4 py-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                        {serviceNames[serviceId] || 'Loading...'}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -313,12 +328,17 @@ export default function AdminVendorDetail() {
             <Card className="p-6">
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Coverage Areas</h3>
               {vendor.vendor_coverage_areas && vendor.vendor_coverage_areas.length > 0 ? (
-                <div className="space-y-2">
-                  {vendor.vendor_coverage_areas.map((areaId, idx) => (
-                    <div key={idx} className="bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded text-sm text-slate-700 dark:text-slate-300 font-medium">
-                      {coverageNames[areaId] || 'Loading...'}
-                    </div>
-                  ))}
+                <div className="grid grid-cols-2 gap-3">
+                  {vendor.vendor_coverage_areas.map((areaId, idx) => {
+                    const stateAbbr = coverageNames[areaId];
+                    const stateName = stateAbbr ? STATE_NAMES[stateAbbr] || stateAbbr : 'Loading...';
+                    return (
+                      <div key={idx} className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 px-4 py-3 rounded-lg border border-green-200 dark:border-green-800">
+                        <p className="text-xs font-bold text-green-700 dark:text-green-400 uppercase tracking-wider">{stateAbbr}</p>
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white mt-1">{stateName}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-slate-600 dark:text-slate-400">No coverage areas specified</p>
