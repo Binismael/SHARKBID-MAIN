@@ -106,10 +106,21 @@ export default function BusinessIntake() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get AI response');
+        let errorMessage = `Server error: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+        } catch (e) {
+          // Could not parse error response
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
+
+      if (!data.response) {
+        throw new Error('Invalid response from AI service');
+      }
       
       const assistantMessage: Message = {
         id: Date.now().toString(),
@@ -128,9 +139,18 @@ export default function BusinessIntake() {
         }));
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred while getting AI response';
       setError(errorMessage);
-      console.error('Error:', err);
+      console.error('AI Intake Error:', err);
+
+      // Add error message to chat
+      const errorAssistantMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `I encountered an error: ${errorMessage}. Please try again or contact support if the problem persists.`,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorAssistantMessage]);
     } finally {
       setIsLoading(false);
     }

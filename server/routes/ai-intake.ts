@@ -22,50 +22,66 @@ async function callOpenAI(
   systemPrompt: string,
   messages: Message[]
 ): Promise<{ response: string; extractedData?: Record<string, any> }> {
-  const openaiApiKey = OPENAI_API_KEY;
+  const openaiApiKey = process.env.OPENAI_API_KEY;
 
   if (!openaiApiKey) {
-    throw new Error("OPENAI_API_KEY not configured");
+    throw new Error("OPENAI_API_KEY environment variable is not set");
   }
 
-  // Call OpenAI chat completion
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${openaiApiKey}`,
-    },
-    body: JSON.stringify({
-      model: "gpt-3.5-turbo",
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...messages,
-      ],
-      temperature: 0.7,
-      max_tokens: 500,
-    }),
-  });
+  try {
+    // Call OpenAI chat completion
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${openaiApiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages,
+        ],
+        temperature: 0.7,
+        max_tokens: 500,
+      }),
+    });
 
-  if (!response.ok) {
-    const error = await response.json();
-    console.error("OpenAI API error:", error);
-    throw new Error(`OpenAI API error: ${error.error?.message || "Unknown error"}`);
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errorData = await response.json();
+        console.error("OpenAI API error response:", errorData);
+        errorMessage = errorData.error?.message || errorMessage;
+      } catch (e) {
+        const textError = await response.text();
+        console.error("OpenAI API error text:", textError);
+      }
+      throw new Error(`OpenAI API error: ${errorMessage}`);
+    }
+
+    const data = await response.json();
+    const assistantMessage = data.choices?.[0]?.message?.content;
+
+    if (!assistantMessage) {
+      console.error("No message content in OpenAI response:", data);
+      throw new Error("No response content from OpenAI");
+    }
+
+    // Extract structured data from the conversation
+    const extractedData = extractProjectData(assistantMessage, messages);
+
+    return {
+      response: assistantMessage,
+      extractedData,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("OpenAI API call failed:", error.message);
+      throw error;
+    }
+    throw new Error(`OpenAI API call failed: ${String(error)}`);
   }
-
-  const data = await response.json();
-  const assistantMessage = data.choices[0]?.message?.content;
-
-  if (!assistantMessage) {
-    throw new Error("No response from OpenAI");
-  }
-
-  // Extract structured data from the conversation
-  const extractedData = extractProjectData(assistantMessage, messages);
-
-  return {
-    response: assistantMessage,
-    extractedData,
-  };
 }
 
 // Helper to extract structured project data from conversation
@@ -179,6 +195,15 @@ export const handleAIIntake: RequestHandler = async (req, res) => {
       });
     }
 
+    // Check if API key is configured
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("OPENAI_API_KEY is not configured in environment variables");
+      return res.status(500).json({
+        error: "OpenAI API key not configured",
+        message: "OPENAI_API_KEY environment variable is missing",
+      });
+    }
+
     // Build the messages array for OpenAI
     const messages: Message[] = [
       ...conversationHistory,
@@ -188,17 +213,22 @@ export const handleAIIntake: RequestHandler = async (req, res) => {
     // Call OpenAI
     const { response, extractedData } = await callOpenAI(systemPrompt, messages);
 
-    // Return response
-    res.json({
+    // Return response with proper headers
+    res.setHeader("Content-Type", "application/json");
+    res.status(200).json({
       response,
       extractedData,
+      success: true,
     });
   } catch (error) {
     console.error("AI Intake error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
+
+    // Return proper error response
     res.status(500).json({
       error: message,
-      details: process.env.NODE_ENV === "development" ? error : undefined,
+      success: false,
+      details: process.env.NODE_ENV === "development" ? String(error) : undefined,
     });
   }
 };
