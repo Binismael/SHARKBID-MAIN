@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, BarChart3, TrendingUp, AlertCircle, Loader2, Clock, CheckCircle2, MessageSquare, Eye } from 'lucide-react';
+import { Plus, BarChart3, TrendingUp, AlertCircle, Loader2, Clock, CheckCircle2, MessageSquare, Eye, LogOut, User } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
+import { toast } from 'sonner';
 
 interface Project {
   id: string;
@@ -18,11 +19,27 @@ interface Project {
 }
 
 export default function BusinessDashboard() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setIsSigningOut(true);
+      await signOut();
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to logout';
+      toast.error(message);
+      console.error('Logout error:', err);
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -97,7 +114,8 @@ export default function BusinessDashboard() {
       {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-8">
+            {/* Left Side - Title */}
             <div className="flex-1">
               <div className="mb-2">
                 <p className="text-sm text-muted-foreground font-medium">Welcome back</p>
@@ -109,7 +127,9 @@ export default function BusinessDashboard() {
                 You have <span className="font-semibold text-foreground">{projectsNeedingAttention}</span> projects that need your attention
               </p>
             </div>
-            <div className="flex gap-2 ml-8">
+
+            {/* Right Side - Actions and User Menu */}
+            <div className="flex gap-2 items-center ml-8">
               <Button
                 onClick={() => navigate('/business/projects/create')}
                 variant="outline"
@@ -125,6 +145,28 @@ export default function BusinessDashboard() {
                 <Plus className="h-4 w-4" />
                 AI Assistant
               </Button>
+
+              {/* User Menu */}
+              <div className="flex items-center gap-3 ml-6 pl-6 border-l border-border">
+                <div className="text-right">
+                  <p className="text-sm font-medium">{user?.email?.split('@')[0]}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email}</p>
+                </div>
+                <Button
+                  onClick={handleLogout}
+                  disabled={isSigningOut}
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  title="Logout"
+                >
+                  {isSigningOut ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <LogOut className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
