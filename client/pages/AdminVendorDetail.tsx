@@ -23,10 +23,22 @@ interface VendorProfile {
   employee_count: number;
 }
 
+interface ServiceCategory {
+  id: string;
+  name: string;
+}
+
+interface CoverageArea {
+  id: string;
+  state: string;
+}
+
 export default function AdminVendorDetail() {
   const { vendorId } = useParams<{ vendorId: string }>();
   const navigate = useNavigate();
   const [vendor, setVendor] = useState<VendorProfile | null>(null);
+  const [serviceNames, setServiceNames] = useState<Record<string, string>>({});
+  const [coverageNames, setCoverageNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
@@ -48,6 +60,39 @@ export default function AdminVendorDetail() {
         if (!data) throw new Error('Vendor not found');
 
         setVendor(data);
+
+        // Fetch service category names
+        if (data.vendor_services && data.vendor_services.length > 0) {
+          const { data: services } = await supabase
+            .from('service_categories')
+            .select('id, name')
+            .in('id', data.vendor_services);
+
+          if (services) {
+            const serviceMap = services.reduce((acc, service) => {
+              acc[service.id] = service.name;
+              return acc;
+            }, {} as Record<string, string>);
+            setServiceNames(serviceMap);
+          }
+        }
+
+        // Fetch coverage area states
+        if (data.vendor_coverage_areas && data.vendor_coverage_areas.length > 0) {
+          const { data: areas } = await supabase
+            .from('coverage_areas')
+            .select('id, state')
+            .in('id', data.vendor_coverage_areas);
+
+          if (areas) {
+            const areaMap = areas.reduce((acc, area) => {
+              acc[area.id] = area.state;
+              return acc;
+            }, {} as Record<string, string>);
+            setCoverageNames(areaMap);
+          }
+        }
+
         setError(null);
       } catch (err) {
         const message = getErrorMessage(err || 'Failed to load vendor');
@@ -253,9 +298,9 @@ export default function AdminVendorDetail() {
               </h3>
               {vendor.vendor_services && vendor.vendor_services.length > 0 ? (
                 <div className="space-y-2">
-                  {vendor.vendor_services.map((service, idx) => (
-                    <div key={idx} className="bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded text-sm text-slate-700 dark:text-slate-300">
-                      {service}
+                  {vendor.vendor_services.map((serviceId, idx) => (
+                    <div key={idx} className="bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded text-sm text-slate-700 dark:text-slate-300 font-medium">
+                      {serviceNames[serviceId] || 'Loading...'}
                     </div>
                   ))}
                 </div>
@@ -269,9 +314,9 @@ export default function AdminVendorDetail() {
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Coverage Areas</h3>
               {vendor.vendor_coverage_areas && vendor.vendor_coverage_areas.length > 0 ? (
                 <div className="space-y-2">
-                  {vendor.vendor_coverage_areas.map((area, idx) => (
-                    <div key={idx} className="bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded text-sm text-slate-700 dark:text-slate-300">
-                      {area}
+                  {vendor.vendor_coverage_areas.map((areaId, idx) => (
+                    <div key={idx} className="bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded text-sm text-slate-700 dark:text-slate-300 font-medium">
+                      {coverageNames[areaId] || 'Loading...'}
                     </div>
                   ))}
                 </div>
