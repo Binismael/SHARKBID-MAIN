@@ -120,10 +120,22 @@ export default function CreateProjectForm() {
         let errorMessage = `Server error: ${response.status}`;
         try {
           const errorData = await response.json();
-          errorMessage = errorData.error || errorData.message || errorMessage;
-          console.error('Server error details:', errorData);
+          console.error('Server error response:', errorData);
+
+          // Format error message
+          if (typeof errorData === 'object' && errorData !== null) {
+            if (errorData.error && typeof errorData.error === 'string') {
+              errorMessage = errorData.error;
+            } else if (errorData.message && typeof errorData.message === 'string') {
+              errorMessage = errorData.message;
+            } else if (errorData.details && typeof errorData.details === 'string') {
+              errorMessage = errorData.details;
+            } else {
+              errorMessage = JSON.stringify(errorData);
+            }
+          }
         } catch (e) {
-          // Could not parse error response
+          console.error('Could not parse error response:', e);
         }
         throw new Error(errorMessage);
       }
