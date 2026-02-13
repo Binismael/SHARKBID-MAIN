@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, BarChart3, TrendingUp, AlertCircle, Loader2, Clock, CheckCircle2, MessageSquare, Eye, LogOut, User, Users, ArrowLeft } from 'lucide-react';
+import { Plus, BarChart3, TrendingUp, AlertCircle, Loader2, Clock, CheckCircle2, MessageSquare, Eye, LogOut, User, Users, ArrowLeft, Shield } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
@@ -131,6 +131,16 @@ export default function BusinessDashboard() {
 
             {/* Right Side - Actions and User Menu */}
             <div className="flex gap-2 items-center ml-8">
+              {userRole === 'admin' && (
+                <Button
+                  onClick={() => navigate('/admin/dashboard')}
+                  variant="outline"
+                  className="gap-2 border-amber-500/20 hover:bg-amber-500/5 text-amber-600"
+                >
+                  <Shield className="h-4 w-4" />
+                  Admin Panel
+                </Button>
+              )}
               <Button
                 onClick={() => navigate("/")}
                 variant="ghost"
