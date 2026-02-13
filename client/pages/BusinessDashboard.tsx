@@ -58,7 +58,7 @@ export default function BusinessDashboard() {
         const result = await response.json();
 
         if (!result.success) {
-          throw new Error(result.error || 'Failed to load projects');
+          throw result.error || 'Failed to load projects';
         }
 
         setProjects(result.data || []);

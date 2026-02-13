@@ -117,7 +117,7 @@ export default function BusinessVendors() {
       const result = await response.json();
 
       if (!result.success) {
-        throw new Error(result.error || 'Failed to send invitation');
+        throw result.error || 'Failed to send invitation';
       }
 
       toast.success(`Invitation sent to ${selectedVendor.company_name}`);

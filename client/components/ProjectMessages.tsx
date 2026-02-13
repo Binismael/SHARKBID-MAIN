@@ -54,7 +54,7 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
       if (result.success) {
         setMessages(result.data);
       } else {
-        setError(result.error || 'Failed to load messages');
+        setError(getErrorMessage(result.error || 'Failed to load messages'));
       }
     } catch (err) {
       setError(getErrorMessage(err));
@@ -98,7 +98,7 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
         setMessages([...messages, result.data]);
         setNewMessage('');
       } else {
-        setError(result.error || 'Failed to send message');
+        setError(getErrorMessage(result.error || 'Failed to send message'));
       }
     } catch (err) {
       setError(getErrorMessage(err));

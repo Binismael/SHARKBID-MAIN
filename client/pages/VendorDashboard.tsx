@@ -80,7 +80,7 @@ export default function VendorDashboard() {
         const bidsResult = await bidsResponse.json();
 
         if (!bidsResult.success) {
-          throw new Error(bidsResult.error || 'Failed to load bids');
+          throw bidsResult.error || 'Failed to load bids';
         }
 
         const bidsData = bidsResult.data;
@@ -103,7 +103,7 @@ export default function VendorDashboard() {
         const result = await response.json();
 
         if (!result.success) {
-          throw new Error(result.error || 'Failed to load leads');
+          throw result.error || 'Failed to load leads';
         }
 
         const routedLeads = result.data;

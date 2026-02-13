@@ -72,7 +72,7 @@ export default function VendorLeadDetail() {
 
         if (!response.ok) {
           const result = await response.json();
-          throw new Error(result.error || 'Project not found');
+          throw result.error || 'Project not found';
         }
 
         const projectData = await response.json();
@@ -151,7 +151,7 @@ export default function VendorLeadDetail() {
       const result = await response.json();
 
       if (!result.success) {
-        throw new Error(result.error || 'Failed to submit bid');
+        throw result.error || 'Failed to submit bid';
       }
 
       setShowBidForm(false);
