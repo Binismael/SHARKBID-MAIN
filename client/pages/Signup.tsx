@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { getErrorMessage } from "@/lib/utils";
 import { Sparkles, ArrowRight, Building2, Briefcase, Shield, CheckCircle2, Zap, AlertCircle } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -100,8 +101,8 @@ export default function Signup() {
       <div className="w-full max-w-lg z-10">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 mb-6 shadow-2xl">
-            <Sparkles className="h-8 w-8 text-white" />
+          <div className="flex justify-center mb-6">
+            <Logo variant="light" className="h-14" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Join Sharkbid</h1>
           <p className="text-blue-100">

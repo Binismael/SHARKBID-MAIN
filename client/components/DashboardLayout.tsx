@@ -1,10 +1,11 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Menu, LogOut, Sparkles, X, Home, FileText, Settings, Zap, DollarSign, LayoutGrid, Users, BarChart3, Sliders, User, Lock, ArrowLeft } from "lucide-react";
+import { Menu, LogOut, X, Home, FileText, Settings, Zap, DollarSign, LayoutGrid, Users, BarChart3, Sliders, User, Lock, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { NotificationBell } from "@/components/NotificationBell";
+import { Logo } from "@/components/Logo";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -91,15 +92,10 @@ export function DashboardLayout({
         {/* Logo */}
         <div className="p-6 border-b border-border">
           <Link to="/" className="flex items-center gap-3 font-bold">
-            <div className={`p-2.5 ${roleConfig.bg} rounded-lg shadow-md`}>
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
+            <Logo variant="dark" />
             {sidebarOpen && (
               <div>
-                <span className="text-lg font-bold text-foreground block">
-                  Visual Matters
-                </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground block">
                   {roleConfig.title}
                 </span>
               </div>

@@ -36,6 +36,7 @@ import VendorDashboard from "./pages/VendorDashboard";
 import VendorAvailableProjects from "./pages/VendorAvailableProjects";
 import VendorProfile from "./pages/VendorProfile";
 import VendorLeadDetail from "./pages/VendorLeadDetail";
+import CreatorApply from "./pages/CreatorApply";
 import CreateProjectForm from "./pages/CreateProjectForm";
 import ProjectDetail from "./pages/ProjectDetail";
 
@@ -132,7 +133,7 @@ const AppRoutes = () => (
         </ProtectedRoute>
       }
     />
-    <Route path="/vendor/apply" element={<Index />} />
+    <Route path="/vendor/apply" element={<CreatorApply />} />
 
     {/* Admin Portal Routes */}
     <Route

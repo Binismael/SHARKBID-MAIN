@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap, Lock, Layers, BarChart3, Sparkles, CheckCircle2, TrendingUp, Users, UserPlus, Gauge, Target, Globe, Play, Rocket, Award, Clock } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 export default function Index() {
   return (
@@ -8,14 +9,9 @@ export default function Index() {
       {/* Navigation */}
       <nav className="border-b border-border/50 backdrop-blur-md sticky top-0 z-50 bg-background/80">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-purple-500 shadow-lg">
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
-            <div className="text-2xl font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent">
-              Sharkbid
-            </div>
-          </div>
+          <Link to="/" className="flex items-center gap-3">
+            <Logo variant="dark" />
+          </Link>
           <div className="flex items-center gap-4">
             <Link to="/login" className="text-foreground hover:text-primary transition font-medium">
               Sign In
@@ -394,10 +390,7 @@ export default function Index() {
             {/* Brand */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center">
-                  <Sparkles className="h-5 w-5 text-white" />
-                </div>
-                <span className="font-bold text-lg">Sharkbid</span>
+                <Logo variant="dark" className="h-8" />
               </div>
               <p className="text-sm text-muted-foreground">The B2B marketplace powered by intelligent matching.</p>
             </div>

@@ -5,75 +5,75 @@ const router = Router();
 // Email templates (same as frontend, but stored on backend)
 const emailTemplates: Record<string, { subject: string; html: string }> = {
   creator_application_received: {
-    subject: "Visual Matters - Application Received",
+    subject: "Sharkbid - Application Received",
     html: `
       <h2>Thank you for applying!</h2>
       <p>We've received your creator application and will review it shortly.</p>
       <p>You'll receive an email update within 2-3 business days.</p>
-      <p>Best regards,<br/>The Visual Matters Team</p>
+      <p>Best regards,<br/>The Sharkbid Team</p>
     `,
   },
   creator_application_approved: {
-    subject: "Visual Matters - Your Application Has Been Approved!",
+    subject: "Sharkbid - Your Application Has Been Approved!",
     html: `
       <h2>Congratulations!</h2>
       <p>Your creator application has been approved. You can now log in and complete your profile.</p>
       <p><a href="{{login_url}}">Click here to log in</a></p>
-      <p>Best regards,<br/>The Visual Matters Team</p>
+      <p>Best regards,<br/>The Sharkbid Team</p>
     `,
   },
   creator_application_rejected: {
-    subject: "Visual Matters - Application Update",
+    subject: "Sharkbid - Application Update",
     html: `
       <h2>Application Review</h2>
-      <p>Thank you for your interest in becoming a Visual Matters creator.</p>
+      <p>Thank you for your interest in becoming a Sharkbid creator.</p>
       <p>After reviewing your application, we've decided to move forward with other candidates at this time.</p>
       <p>Feedback: {{review_notes}}</p>
       <p>We encourage you to apply again in the future.</p>
-      <p>Best regards,<br/>The Visual Matters Team</p>
+      <p>Best regards,<br/>The Sharkbid Team</p>
     `,
   },
   project_created: {
-    subject: "Visual Matters - New Project Ready for Creators",
+    subject: "Sharkbid - New Project Ready for Creators",
     html: `
       <h2>New Project Available</h2>
       <p>A new project matching your skills is now available!</p>
       <p>Project: {{project_title}}</p>
       <p>Budget: BUDGET_{{budget_amount}}</p>
       <p><a href="{{project_url}}">View Project</a></p>
-      <p>Best regards,<br/>The Visual Matters Team</p>
+      <p>Best regards,<br/>The Sharkbid Team</p>
     `,
   },
   project_assigned: {
-    subject: "Visual Matters - You've Been Assigned to a Project",
+    subject: "Sharkbid - You've Been Assigned to a Project",
     html: `
       <h2>Project Assignment</h2>
       <p>You've been assigned to: {{project_title}}</p>
       <p>Role: {{role}}</p>
       <p><a href="{{project_url}}">View Project Details</a></p>
-      <p>Best regards,<br/>The Visual Matters Team</p>
+      <p>Best regards,<br/>The Sharkbid Team</p>
     `,
   },
   deliverable_submitted: {
-    subject: "Visual Matters - Deliverable Submitted",
+    subject: "Sharkbid - Deliverable Submitted",
     html: `
       <h2>Deliverable Received</h2>
       <p>A deliverable has been submitted for: {{project_title}}</p>
       <p>Milestone: {{milestone_title}}</p>
       <p>Creator: {{creator_name}}</p>
       <p><a href="{{review_url}}">Review Deliverable</a></p>
-      <p>Best regards,<br/>The Visual Matters Team</p>
+      <p>Best regards,<br/>The Sharkbid Team</p>
     `,
   },
   payment_processed: {
-    subject: "Visual Matters - Payment Confirmed",
+    subject: "Sharkbid - Payment Confirmed",
     html: `
       <h2>Payment Processed</h2>
       <p>Your payment has been successfully processed.</p>
       <p>Amount: AMOUNT_{{amount}}</p>
       <p>Project: {{project_title}}</p>
       <p>Transaction ID: {{transaction_id}}</p>
-      <p>Best regards,<br/>The Visual Matters Team</p>
+      <p>Best regards,<br/>The Sharkbid Team</p>
     `,
   },
 };
@@ -127,7 +127,7 @@ router.post("/send-email", async (req: Request, res: Response) => {
 
     // Send email via SendGrid
     const sendGridApiKey = process.env.SENDGRID_API_KEY;
-    const fromEmail = process.env.FROM_EMAIL || "noreply@visualmatters.co";
+    const fromEmail = process.env.FROM_EMAIL || "noreply@sharkbid.com";
 
     if (!sendGridApiKey) {
       console.warn("SENDGRID_API_KEY not configured - email not sent");

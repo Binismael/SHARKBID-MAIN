@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { getErrorMessage } from "@/lib/utils";
-import { AlertCircle, Mail, Lock, ArrowRight, Sparkles, Layers, Zap, CheckCircle2 } from "lucide-react";
+import { AlertCircle, Mail, Lock, ArrowRight, Layers, Zap, CheckCircle2, Sparkles } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -63,8 +64,8 @@ export default function Login() {
           {/* Left Side - Info */}
           <div className="hidden md:block text-white space-y-8 pl-8">
             <div>
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 mb-6 shadow-2xl">
-                <Sparkles className="h-8 w-8 text-white" />
+              <div className="mb-6">
+                <Logo variant="light" className="h-14" />
               </div>
               <h2 className="text-4xl font-bold mb-4">Welcome to Sharkbid</h2>
               <p className="text-blue-100 text-lg">
@@ -121,8 +122,8 @@ export default function Login() {
           <div className="w-full max-w-sm">
             {/* Mobile Header */}
             <div className="md:hidden text-center mb-8">
-              <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 mb-4 shadow-lg">
-                <Sparkles className="h-6 w-6 text-white" />
+              <div className="flex justify-center mb-4">
+                <Logo variant="light" className="h-12" />
               </div>
               <h1 className="text-3xl font-bold text-white mb-2">Sharkbid</h1>
               <p className="text-sm text-blue-100">Business-to-Vendor Matching Platform</p>
