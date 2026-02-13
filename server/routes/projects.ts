@@ -449,12 +449,15 @@ export const handleVendorSubmitBid: RequestHandler = async (req, res) => {
       if (error) throw error;
       result = data;
 
-      // Update routing status
+      // Update routing status (upsert in case it doesn't exist yet)
       await supabaseAdmin
         .from("project_routing")
-        .update({ status: 'bid_submitted' })
-        .eq("project_id", projectId)
-        .eq("vendor_id", vendorId);
+        .upsert({
+          project_id: projectId,
+          vendor_id: vendorId,
+          status: 'bid_submitted',
+          updated_at: new Date()
+        }, { onConflict: 'project_id, vendor_id' });
     }
 
     res.json({

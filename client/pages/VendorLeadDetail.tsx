@@ -7,6 +7,7 @@ import { AlertCircle, Loader2, ArrowLeft, Send, CheckCircle2 } from 'lucide-reac
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { getErrorMessage } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface Project {
   id: string;
