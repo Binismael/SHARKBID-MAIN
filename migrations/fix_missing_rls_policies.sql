@@ -14,16 +14,18 @@ DROP POLICY IF EXISTS "Businesses can invite vendors to their projects" ON proje
 
 -- 3. Define new policies
 
--- Admin Policy
+-- Admin Policy (Robust: checks JWT and profiles table)
 CREATE POLICY "Admins can manage all routing" ON project_routing
   FOR ALL TO authenticated
   USING (
     (auth.jwt() ->> 'role' = 'admin') OR
-    (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin')
+    (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin') OR
+    EXISTS (SELECT 1 FROM profiles WHERE profiles.user_id = auth.uid() AND profiles.role = 'admin')
   )
   WITH CHECK (
     (auth.jwt() ->> 'role' = 'admin') OR
-    (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin')
+    (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin') OR
+    EXISTS (SELECT 1 FROM profiles WHERE profiles.user_id = auth.uid() AND profiles.role = 'admin')
   );
 
 -- Vendor Policies
@@ -39,35 +41,33 @@ CREATE POLICY "Vendors can update their own routing" ON project_routing
   FOR UPDATE TO authenticated
   USING (vendor_id = auth.uid());
 
--- Business Policies
+-- Business Policies (Robust: allows upsert by combining INSERT and UPDATE)
 CREATE POLICY "Businesses can view routing for their projects" ON project_routing
   FOR SELECT TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM projects
-    WHERE projects.id = project_routing.project_id
-    AND projects.business_id = auth.uid()
-  ));
+  USING (
+    EXISTS (
+      SELECT 1 FROM projects
+      WHERE projects.id = project_routing.project_id
+      AND projects.business_id = auth.uid()
+    )
+  );
 
-CREATE POLICY "Businesses can invite vendors to their projects" ON project_routing
-  FOR INSERT TO authenticated
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM projects
-    WHERE projects.id = project_id
-    AND projects.business_id = auth.uid()
-  ));
-
-CREATE POLICY "Businesses can update routing for their projects" ON project_routing
-  FOR UPDATE TO authenticated
-  USING (EXISTS (
-    SELECT 1 FROM projects
-    WHERE projects.id = project_routing.project_id
-    AND projects.business_id = auth.uid()
-  ))
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM projects
-    WHERE projects.id = project_id
-    AND projects.business_id = auth.uid()
-  ));
+CREATE POLICY "Businesses can manage routing for their projects" ON project_routing
+  FOR ALL TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM projects
+      WHERE projects.id = project_routing.project_id
+      AND projects.business_id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM projects
+      WHERE projects.id = project_id
+      AND projects.business_id = auth.uid()
+    )
+  );
 
 -- 4. Fix RLS for vendor_responses to allow businesses to accept bids
 -- The previous policy only allowed vendors to update their bids
@@ -77,7 +77,22 @@ CREATE POLICY "Vendors and businesses can update bids" ON vendor_responses
   FOR UPDATE TO authenticated
   USING (
     vendor_id = auth.uid() OR
-    EXISTS (SELECT 1 FROM projects p WHERE p.id = project_id AND p.business_id = auth.uid())
+    EXISTS (SELECT 1 FROM projects p WHERE p.id = project_id AND p.business_id = auth.uid()) OR
+    EXISTS (SELECT 1 FROM profiles WHERE profiles.user_id = auth.uid() AND profiles.role = 'admin')
+  );
+
+DROP POLICY IF EXISTS "Admins can manage all bids" ON vendor_responses;
+CREATE POLICY "Admins can manage all bids" ON vendor_responses
+  FOR ALL TO authenticated
+  USING (
+    (auth.jwt() ->> 'role' = 'admin') OR
+    (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin') OR
+    EXISTS (SELECT 1 FROM profiles WHERE profiles.user_id = auth.uid() AND profiles.role = 'admin')
+  )
+  WITH CHECK (
+    (auth.jwt() ->> 'role' = 'admin') OR
+    (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin') OR
+    EXISTS (SELECT 1 FROM profiles WHERE profiles.user_id = auth.uid() AND profiles.role = 'admin')
   );
 
 -- 5. Fix RLS for project_activity (missing policies)
@@ -89,6 +104,7 @@ CREATE POLICY "Anyone involved in project can view activity" ON project_activity
   USING (
     auth.jwt() ->> 'role' = 'admin' OR
     auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR
+    EXISTS (SELECT 1 FROM profiles WHERE profiles.user_id = auth.uid() AND profiles.role = 'admin') OR
     user_id = auth.uid() OR
     EXISTS (
       SELECT 1 FROM projects p
@@ -114,6 +130,7 @@ CREATE POLICY "Anyone involved in project can view messages" ON project_messages
   USING (
     auth.jwt() ->> 'role' = 'admin' OR
     auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR
+    EXISTS (SELECT 1 FROM profiles WHERE profiles.user_id = auth.uid() AND profiles.role = 'admin') OR
     sender_id = auth.uid() OR
     EXISTS (
       SELECT 1 FROM projects p
@@ -130,25 +147,26 @@ CREATE POLICY "Anyone involved can insert messages" ON project_messages
   FOR INSERT TO authenticated
   WITH CHECK (sender_id = auth.uid());
 
--- 7. Fix RLS for projects (allow admins and involved parties to view)
-DROP POLICY IF EXISTS "Businesses can view their own projects" ON projects;
+-- 7. Fix RLS for projects (allow admins and involved parties to view/manage)
+DROP POLICY IF EXISTS "Anyone involved in project can view" ON projects;
 CREATE POLICY "Anyone involved in project can view" ON projects
   FOR SELECT TO authenticated
   USING (
     business_id = auth.uid() OR
     auth.jwt() ->> 'role' = 'admin' OR
     auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR
+    EXISTS (SELECT 1 FROM profiles WHERE profiles.user_id = auth.uid() AND profiles.role = 'admin') OR
     EXISTS (SELECT 1 FROM project_routing pr WHERE pr.project_id = projects.id AND pr.vendor_id = auth.uid())
   );
 
--- 7. Fix RLS for projects (allow admins to manage)
 DROP POLICY IF EXISTS "Businesses can update their own projects" ON projects;
 CREATE POLICY "Businesses and admins can update projects" ON projects
   FOR UPDATE TO authenticated
   USING (
     business_id = auth.uid() OR
     auth.jwt() ->> 'role' = 'admin' OR
-    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin'
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR
+    EXISTS (SELECT 1 FROM profiles WHERE profiles.user_id = auth.uid() AND profiles.role = 'admin')
   );
 
 DROP POLICY IF EXISTS "Businesses can delete their own projects" ON projects;
@@ -157,7 +175,8 @@ CREATE POLICY "Businesses and admins can delete projects" ON projects
   USING (
     business_id = auth.uid() OR
     auth.jwt() ->> 'role' = 'admin' OR
-    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin'
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR
+    EXISTS (SELECT 1 FROM profiles WHERE profiles.user_id = auth.uid() AND profiles.role = 'admin')
   );
 
 -- 8. Fix RLS for profiles (allow admins to manage)
@@ -166,11 +185,13 @@ CREATE POLICY "Admins can manage all profiles" ON profiles
   FOR ALL TO authenticated
   USING (
     auth.jwt() ->> 'role' = 'admin' OR
-    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin'
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR
+    EXISTS (SELECT 1 FROM profiles WHERE profiles.user_id = auth.uid() AND profiles.role = 'admin')
   )
   WITH CHECK (
     auth.jwt() ->> 'role' = 'admin' OR
-    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin'
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR
+    EXISTS (SELECT 1 FROM profiles WHERE profiles.user_id = auth.uid() AND profiles.role = 'admin')
   );
 
 -- 9. Grant access to service_categories and coverage_areas
