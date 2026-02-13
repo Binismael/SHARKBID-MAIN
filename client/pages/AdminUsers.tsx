@@ -226,12 +226,26 @@ export default function AdminUsers() {
                           size="sm"
                           variant="ghost"
                           onClick={() => navigate(`/admin/vendors/${u.id}`)}
-                          className="text-blue-600 hover:text-blue-700 gap-1"
+                          className="text-blue-600 hover:text-blue-700 gap-1 font-semibold"
                         >
-                          Details <ArrowRight className="h-3 w-3" />
+                          Manage <ArrowRight className="h-3 w-3" />
+                        </Button>
+                      ) : u.role === "business" ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => navigate(`/admin/users/business/${u.id}`)}
+                          className="text-indigo-600 hover:text-indigo-700 gap-1 font-semibold"
+                        >
+                          Manage <ArrowRight className="h-3 w-3" />
                         </Button>
                       ) : (
-                        <Button size="sm" variant="ghost" className="text-slate-400">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-slate-400 cursor-not-allowed"
+                          onClick={() => toast.info("Admin accounts are managed via database directly")}
+                        >
                           Manage
                         </Button>
                       )}
