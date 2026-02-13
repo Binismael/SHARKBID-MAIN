@@ -76,6 +76,8 @@ export function DashboardLayout({
     role === "admin" ? adminNav : role === "client" ? clientNav : creatorNav;
 
   const roleConfig = getRoleConfig(role);
+  const dashboardPath = role === "admin" ? "/admin/dashboard" : role === "client" ? "/client/dashboard" : "/creator/dashboard";
+  const isAtDashboard = location.pathname === dashboardPath;
 
   return (
     <div className="flex h-screen bg-background">
@@ -166,6 +168,18 @@ export function DashboardLayout({
           </div>
 
           <div className="flex items-center gap-3">
+            {!isAtDashboard && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(dashboardPath)}
+                className="hidden sm:flex items-center gap-2 text-primary border-primary/20 hover:bg-primary/5"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+            )}
+
             <Button
               variant="ghost"
               size="sm"

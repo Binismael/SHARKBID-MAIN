@@ -155,13 +155,15 @@ export default function ProjectDetail() {
       {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-6">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => navigate('/business/dashboard')}
-            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4"
+            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4 px-0"
           >
             <ArrowLeft size={20} />
             Back to Dashboard
-          </button>
+          </Button>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">{project.title}</h1>

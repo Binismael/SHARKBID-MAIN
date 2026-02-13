@@ -170,13 +170,15 @@ export default function CreateProjectForm() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => navigate('/business/dashboard')}
-            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4"
+            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4 px-0"
           >
             <ArrowLeft size={20} />
             Back to Dashboard
-          </button>
+          </Button>
           <h1 className="text-3xl font-bold mb-2">Create a New Project</h1>
           <p className="text-slate-600">
             Fill out the details below to post your project and find vendors
