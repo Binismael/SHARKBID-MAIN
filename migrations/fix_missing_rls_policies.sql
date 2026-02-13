@@ -17,8 +17,14 @@ DROP POLICY IF EXISTS "Businesses can invite vendors to their projects" ON proje
 -- Admin Policy
 CREATE POLICY "Admins can manage all routing" ON project_routing
   FOR ALL TO authenticated
-  USING (auth.jwt() ->> 'role' = 'admin')
-  WITH CHECK (auth.jwt() ->> 'role' = 'admin');
+  USING (
+    (auth.jwt() ->> 'role' = 'admin') OR
+    (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin')
+  )
+  WITH CHECK (
+    (auth.jwt() ->> 'role' = 'admin') OR
+    (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin')
+  );
 
 -- Vendor Policies
 CREATE POLICY "Vendors can view their own routing" ON project_routing
@@ -50,6 +56,19 @@ CREATE POLICY "Businesses can invite vendors to their projects" ON project_routi
     AND projects.business_id = auth.uid()
   ));
 
+CREATE POLICY "Businesses can update routing for their projects" ON project_routing
+  FOR UPDATE TO authenticated
+  USING (EXISTS (
+    SELECT 1 FROM projects
+    WHERE projects.id = project_routing.project_id
+    AND projects.business_id = auth.uid()
+  ))
+  WITH CHECK (EXISTS (
+    SELECT 1 FROM projects
+    WHERE projects.id = project_id
+    AND projects.business_id = auth.uid()
+  ));
+
 -- 4. Fix RLS for vendor_responses to allow businesses to accept bids
 -- The previous policy only allowed vendors to update their bids
 DROP POLICY IF EXISTS "Vendors can update their bids" ON vendor_responses;
@@ -69,10 +88,11 @@ CREATE POLICY "Anyone involved in project can view activity" ON project_activity
   FOR SELECT TO authenticated
   USING (
     auth.jwt() ->> 'role' = 'admin' OR
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR
     user_id = auth.uid() OR
     EXISTS (
       SELECT 1 FROM projects p
-      WHERE p.id = project_id 
+      WHERE p.id = project_id
       AND (p.business_id = auth.uid() OR p.selected_vendor_id = auth.uid())
     ) OR
     EXISTS (
@@ -93,10 +113,11 @@ CREATE POLICY "Anyone involved in project can view messages" ON project_messages
   FOR SELECT TO authenticated
   USING (
     auth.jwt() ->> 'role' = 'admin' OR
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR
     sender_id = auth.uid() OR
     EXISTS (
       SELECT 1 FROM projects p
-      WHERE p.id = project_id 
+      WHERE p.id = project_id
       AND (p.business_id = auth.uid() OR p.selected_vendor_id = auth.uid())
     ) OR
     EXISTS (
@@ -109,23 +130,48 @@ CREATE POLICY "Anyone involved can insert messages" ON project_messages
   FOR INSERT TO authenticated
   WITH CHECK (sender_id = auth.uid());
 
+-- 7. Fix RLS for projects (allow admins and involved parties to view)
+DROP POLICY IF EXISTS "Businesses can view their own projects" ON projects;
+CREATE POLICY "Anyone involved in project can view" ON projects
+  FOR SELECT TO authenticated
+  USING (
+    business_id = auth.uid() OR
+    auth.jwt() ->> 'role' = 'admin' OR
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin' OR
+    EXISTS (SELECT 1 FROM project_routing pr WHERE pr.project_id = projects.id AND pr.vendor_id = auth.uid())
+  );
+
 -- 7. Fix RLS for projects (allow admins to manage)
 DROP POLICY IF EXISTS "Businesses can update their own projects" ON projects;
 CREATE POLICY "Businesses and admins can update projects" ON projects
   FOR UPDATE TO authenticated
-  USING (business_id = auth.uid() OR auth.jwt() ->> 'role' = 'admin');
+  USING (
+    business_id = auth.uid() OR
+    auth.jwt() ->> 'role' = 'admin' OR
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin'
+  );
 
 DROP POLICY IF EXISTS "Businesses can delete their own projects" ON projects;
 CREATE POLICY "Businesses and admins can delete projects" ON projects
   FOR DELETE TO authenticated
-  USING (business_id = auth.uid() OR auth.jwt() ->> 'role' = 'admin');
+  USING (
+    business_id = auth.uid() OR
+    auth.jwt() ->> 'role' = 'admin' OR
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin'
+  );
 
 -- 8. Fix RLS for profiles (allow admins to manage)
 DROP POLICY IF EXISTS "Admins can manage all profiles" ON profiles;
 CREATE POLICY "Admins can manage all profiles" ON profiles
   FOR ALL TO authenticated
-  USING (auth.jwt() ->> 'role' = 'admin')
-  WITH CHECK (auth.jwt() ->> 'role' = 'admin');
+  USING (
+    auth.jwt() ->> 'role' = 'admin' OR
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin'
+  )
+  WITH CHECK (
+    auth.jwt() ->> 'role' = 'admin' OR
+    auth.jwt() -> 'user_metadata' ->> 'role' = 'admin'
+  );
 
 -- 9. Grant access to service_categories and coverage_areas
 DROP POLICY IF EXISTS "Authenticated users can view service categories" ON service_categories;
