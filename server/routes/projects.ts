@@ -92,51 +92,101 @@ export const handleGetProject: RequestHandler = async (req, res) => {
       return res.status(400).json({ error: "Missing projectId" });
     }
 
+    // 1. Fetch the project basic info first to avoid complex join errors
     const { data: project, error: projectError } = await supabaseAdmin
       .from("projects")
-      .select(
-        `
-        *,
-        service_categories (
-          id,
-          name
-        ),
-        vendor_responses (
-          id,
-          vendor_id,
-          bid_amount,
-          proposed_timeline,
-          response_notes,
-          status,
-          created_at,
-          profiles (
-            company_name,
-            contact_email
-          )
-        )
-      `
-      )
+      .select("*")
       .eq("id", projectId)
-      .single();
+      .maybeSingle();
 
-    if (projectError || !project) {
+    if (projectError) {
+      console.error("Database error fetching project:", projectError);
+      return res.status(500).json({ error: "Internal server error fetching project" });
+    }
+
+    if (!project) {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    // Check authorization: business owner, routed vendor, or admin
-    if (userId && project.business_id !== userId) {
+    // 2. Authorization check: business owner, routed vendor, or admin
+    let isAuthorized = false;
+    let isOwner = userId && project.business_id === userId;
+    let isRouted = false;
+
+    if (isOwner) {
+      isAuthorized = true;
+    } else if (userId) {
       // Check if this user is a routed vendor for this project
       const { data: routing, error: routingError } = await supabaseAdmin
         .from("project_routing")
-        .select("id")
+        .select("id, status")
         .eq("project_id", projectId)
         .eq("vendor_id", userId)
         .maybeSingle();
 
-      if (routingError || !routing) {
-        // Not the owner and not a routed vendor
-        return res.status(403).json({ error: "Not authorized to view this project" });
+      if (routing) {
+        isRouted = true;
+        isAuthorized = true;
       }
+    }
+
+    // Also allow viewing if project is 'open' (discovery mode for vendors)
+    if (!isAuthorized && project.status === "open") {
+      isAuthorized = true;
+    }
+
+    if (!isAuthorized) {
+      return res.status(403).json({ error: "Not authorized to view this project" });
+    }
+
+    // 3. Enrich project with service category
+    if (project.service_category_id) {
+      const { data: category } = await supabaseAdmin
+        .from("service_categories")
+        .select("id, name")
+        .eq("id", project.service_category_id)
+        .maybeSingle();
+
+      project.service_categories = category;
+    }
+
+    // 4. Fetch responses based on who's asking
+    if (isOwner) {
+      // Owner sees all bids
+      const { data: responses, error: respError } = await supabaseAdmin
+        .from("vendor_responses")
+        .select("*")
+        .eq("project_id", projectId);
+
+      if (responses && responses.length > 0) {
+        // Fetch profiles for these vendors manually
+        const vendorIds = responses.map(r => r.vendor_id);
+        const { data: profiles } = await supabaseAdmin
+          .from("profiles")
+          .select("user_id, company_name, contact_email")
+          .in("user_id", vendorIds);
+
+        const profileMap = (profiles || []).reduce((acc: any, p) => {
+          acc[p.user_id] = p;
+          return acc;
+        }, {});
+
+        project.vendor_responses = responses.map(r => ({
+          ...r,
+          vendor_profile: profileMap[r.vendor_id]
+        }));
+      } else {
+        project.vendor_responses = [];
+      }
+    } else if (userId) {
+      // Vendor only sees their own bid
+      const { data: responses } = await supabaseAdmin
+        .from("vendor_responses")
+        .select("*")
+        .eq("project_id", projectId)
+        .eq("vendor_id", userId);
+
+      project.vendor_responses = responses || [];
     }
 
     res.json(project);
