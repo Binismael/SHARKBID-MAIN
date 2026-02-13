@@ -109,7 +109,25 @@ CREATE POLICY "Anyone involved can insert messages" ON project_messages
   FOR INSERT TO authenticated
   WITH CHECK (sender_id = auth.uid());
 
--- 7. Grant access to service_categories and coverage_areas
+-- 7. Fix RLS for projects (allow admins to manage)
+DROP POLICY IF EXISTS "Businesses can update their own projects" ON projects;
+CREATE POLICY "Businesses and admins can update projects" ON projects
+  FOR UPDATE TO authenticated
+  USING (business_id = auth.uid() OR auth.jwt() ->> 'role' = 'admin');
+
+DROP POLICY IF EXISTS "Businesses can delete their own projects" ON projects;
+CREATE POLICY "Businesses and admins can delete projects" ON projects
+  FOR DELETE TO authenticated
+  USING (business_id = auth.uid() OR auth.jwt() ->> 'role' = 'admin');
+
+-- 8. Fix RLS for profiles (allow admins to manage)
+DROP POLICY IF EXISTS "Admins can manage all profiles" ON profiles;
+CREATE POLICY "Admins can manage all profiles" ON profiles
+  FOR ALL TO authenticated
+  USING (auth.jwt() ->> 'role' = 'admin')
+  WITH CHECK (auth.jwt() ->> 'role' = 'admin');
+
+-- 9. Grant access to service_categories and coverage_areas
 DROP POLICY IF EXISTS "Authenticated users can view service categories" ON service_categories;
 CREATE POLICY "Authenticated users can view service categories" ON service_categories
   FOR SELECT TO authenticated USING (true);
