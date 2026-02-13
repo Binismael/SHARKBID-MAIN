@@ -26,7 +26,7 @@ interface Project {
 }
 
 export default function BusinessVendors() {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [filteredVendors, setFilteredVendors] = useState<Vendor[]>([]);
@@ -34,7 +34,7 @@ export default function BusinessVendors() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  
+
   // For Invite Modal
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [selectedProject, setSelectedProject] = useState<string>('');
@@ -44,7 +44,7 @@ export default function BusinessVendors() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
+
         // Fetch only approved vendors
         const { data: vendorData, error: fetchError } = await supabase
           .from('profiles')
@@ -58,13 +58,19 @@ export default function BusinessVendors() {
 
         // Fetch my projects
         if (user) {
-          const { data: projectData } = await supabase
+          let query = supabase
             .from('projects')
             .select('id, title')
-            .eq('business_id', user.id)
             .neq('status', 'completed')
             .neq('status', 'cancelled');
-          
+
+          // Only filter by business_id if not an admin
+          if (userRole !== 'admin') {
+            query = query.eq('business_id', user.id);
+          }
+
+          const { data: projectData } = await query;
+
           setMyProjects(projectData || []);
         }
 
