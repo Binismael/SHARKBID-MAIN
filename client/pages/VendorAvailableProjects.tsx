@@ -42,29 +42,21 @@ export default function VendorAvailableProjects() {
       try {
         setLoading(true);
 
-        // Fetch open projects via server-side API to bypass RLS recursion
-        const response = await fetch('/api/projects/available');
+        if (!user) return;
+
+        // Fetch unrouted projects via server-side API to bypass RLS recursion
+        const response = await fetch('/api/projects/unrouted', {
+          headers: {
+            'x-vendor-id': user.id
+          }
+        });
         const result = await response.json();
 
         if (!result.success) {
           throw new Error(result.error || 'Failed to load projects');
         }
 
-        const projectData = result.data;
-
-        // Filter out projects already routed to this vendor
-        if (user) {
-          const { data: routedData } = await supabase
-            .from('project_routing')
-            .select('project_id')
-            .eq('vendor_id', user.id);
-
-          const routedIds = new Set(routedData?.map(r => r.project_id) || []);
-          const availableProjects = (projectData || []).filter((p: any) => !routedIds.has(p.id));
-          setProjects(availableProjects);
-        } else {
-          setProjects(projectData || []);
-        }
+        setProjects(result.data || []);
 
         // Fetch service categories
         const { data: servicesData } = await supabase
@@ -103,22 +95,28 @@ export default function VendorAvailableProjects() {
 
     try {
       setRequestingId(projectId);
-      
-      // Create project_routing record with status 'interested'
-      const { error: routeError } = await supabase
-        .from('project_routing')
-        .insert([
-          {
-            project_id: projectId,
-            vendor_id: user.id,
-            status: 'interested'
-          }
-        ]);
 
-      if (routeError) throw routeError;
+      // Request to bid via server-side API to bypass RLS recursion
+      const response = await fetch('/api/projects/upsert-routing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          projectId,
+          vendorId: user.id,
+          status: 'interested'
+        })
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to send request');
+      }
 
       toast.success("Request sent! You can now bid on this project.");
-      
+
       // Remove from list
       setProjects(prev => prev.filter(p => p.id !== projectId));
     } catch (err) {

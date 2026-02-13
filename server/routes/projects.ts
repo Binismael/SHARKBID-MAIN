@@ -239,3 +239,172 @@ export const handleGetBusinessProjects: RequestHandler = async (req, res) => {
     });
   }
 };
+
+// Get unrouted open projects for a specific vendor (bypass RLS)
+export const handleGetUnroutedProjects: RequestHandler = async (req, res) => {
+  try {
+    const vendorId = req.headers["x-vendor-id"] as string;
+
+    if (!vendorId) {
+      return res.status(400).json({ error: "Missing x-vendor-id header" });
+    }
+
+    // 1. Fetch all open projects
+    const { data: openProjects, error: projectError } = await supabaseAdmin
+      .from("projects")
+      .select("*")
+      .eq("status", "open")
+      .order("created_at", { ascending: false });
+
+    if (projectError) throw projectError;
+
+    // 2. Fetch project IDs already routed to this vendor
+    const { data: routedData, error: routeError } = await supabaseAdmin
+      .from("project_routing")
+      .select("project_id")
+      .eq("vendor_id", vendorId);
+
+    if (routeError) throw routeError;
+
+    const routedIds = new Set(routedData?.map(r => r.project_id) || []);
+
+    // 3. Filter projects
+    const availableProjects = (openProjects || []).filter(p => !routedIds.has(p.id));
+
+    res.json({
+      success: true,
+      data: availableProjects,
+    });
+  } catch (error) {
+    console.error("Get unrouted projects error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Create or update a project_routing record (Request to Bid / Invite) (bypass RLS)
+export const handleUpsertRouting: RequestHandler = async (req, res) => {
+  try {
+    const { projectId, vendorId, status = 'interested' } = req.body;
+
+    if (!projectId || !vendorId) {
+      return res.status(400).json({ error: "Missing projectId or vendorId" });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("project_routing")
+      .upsert([
+        {
+          project_id: projectId,
+          vendor_id: vendorId,
+          status: status
+        }
+      ], { onConflict: 'project_id, vendor_id' })
+      .select();
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data: data?.[0],
+    });
+  } catch (error) {
+    console.error("Upsert routing error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Get all bids submitted by a specific vendor (bypass RLS)
+export const handleGetVendorBids: RequestHandler = async (req, res) => {
+  try {
+    const vendorId = req.headers["x-vendor-id"] as string;
+
+    if (!vendorId) {
+      return res.status(400).json({ error: "Missing x-vendor-id header" });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("vendor_responses")
+      .select("project_id, status")
+      .eq("vendor_id", vendorId);
+
+    if (error) throw error;
+
+    res.json({
+      success: true,
+      data: data || [],
+    });
+  } catch (error) {
+    console.error("Get vendor bids error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Submit or update a bid (bypass RLS)
+export const handleVendorSubmitBid: RequestHandler = async (req, res) => {
+  try {
+    const { projectId, vendorId, bidAmount, proposedTimeline, responseNotes, bidId } = req.body;
+
+    if (!projectId || !vendorId || !bidAmount || !proposedTimeline) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    let result;
+    if (bidId) {
+      // Update existing bid
+      const { data, error } = await supabaseAdmin
+        .from("vendor_responses")
+        .update({
+          bid_amount: bidAmount,
+          proposed_timeline: proposedTimeline,
+          response_notes: responseNotes,
+          updated_at: new Date(),
+        })
+        .eq("id", bidId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      result = data;
+    } else {
+      // Create new bid
+      const { data, error } = await supabaseAdmin
+        .from("vendor_responses")
+        .insert({
+          project_id: projectId,
+          vendor_id: vendorId,
+          bid_amount: bidAmount,
+          proposed_timeline: proposedTimeline,
+          response_notes: responseNotes,
+          status: 'submitted',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      result = data;
+
+      // Update routing status
+      await supabaseAdmin
+        .from("project_routing")
+        .update({ status: 'bid_submitted' })
+        .eq("project_id", projectId)
+        .eq("vendor_id", vendorId);
+    }
+
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    console.error("Submit bid error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};

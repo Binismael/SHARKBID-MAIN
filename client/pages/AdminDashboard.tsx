@@ -75,46 +75,21 @@ export default function AdminDashboard() {
       try {
         setLoading(true);
 
-        // Fetch metrics
-        const [
-          { data: businessProfiles },
-          { data: vendorProfiles },
-          { data: projectsData },
-          { data: bidsData },
-          { data: routingData },
-        ] = await Promise.all([
-          supabase.from('profiles').select('id').eq('role', 'business'),
-          supabase.from('profiles').select('id, is_approved').eq('role', 'vendor'),
-          supabase.from('projects').select('id, status').order('created_at', { ascending: false }).limit(5),
-          supabase.from('vendor_responses').select('id'),
-          supabase.from('project_routing').select('id'),
-        ]);
-
-        const approvedVendors = vendorProfiles?.filter(v => v.is_approved).length || 0;
-        const totalBids = bidsData?.length || 0;
-        const totalRouted = routingData?.length || 0;
-        const totalProjects = projectsData?.length || 0;
-
-        const matchRate = totalProjects > 0 ? (totalRouted / totalProjects * 100).toFixed(1) : 0;
-
-        setMetrics({
-          total_businesses: businessProfiles?.length || 0,
-          total_vendors: vendorProfiles?.length || 0,
-          approved_vendors: approvedVendors,
-          pending_vendors: (vendorProfiles?.length || 0) - approvedVendors,
-          total_projects: totalProjects,
-          open_projects: projectsData?.filter(p => p.status === 'open').length || 0,
-          total_bids: totalBids,
-          match_rate: parseFloat(matchRate as string) || 0,
+        // Fetch metrics via Admin API to bypass RLS recursion
+        const response = await fetch("/api/admin/stats", {
+          headers: {
+            "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          }
         });
 
-        // Fetch recent projects
-        setRecentProjects(
-          projectsData?.map(p => ({
-            ...p,
-            routed_vendors: Math.floor(Math.random() * 5) + 1, // Placeholder
-          })) || []
-        );
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || "Failed to load stats");
+        }
+
+        setMetrics(result.data.metrics);
+        setRecentProjects(result.data.recentProjects);
 
         // Fetch pending vendors
         const { data: pendingData } = await supabase

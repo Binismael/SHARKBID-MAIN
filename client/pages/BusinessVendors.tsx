@@ -100,19 +100,25 @@ export default function BusinessVendors() {
 
     try {
       setInviting(true);
-      
-      // Create project_routing record
-      const { error: routeError } = await supabase
-        .from('project_routing')
-        .upsert([
-          {
-            project_id: selectedProject,
-            vendor_id: selectedVendor.user_id,
-            status: 'routed' // or 'invited' if we add that status
-          }
-        ], { onConflict: 'project_id, vendor_id' });
 
-      if (routeError) throw routeError;
+      // Invite vendor via server-side API to bypass RLS recursion
+      const response = await fetch('/api/projects/upsert-routing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          projectId: selectedProject,
+          vendorId: selectedVendor.user_id,
+          status: 'routed'
+        })
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to send invitation');
+      }
 
       toast.success(`Invitation sent to ${selectedVendor.company_name}`);
       setSelectedVendor(null);

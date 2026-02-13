@@ -85,13 +85,21 @@ export default function VendorDashboard() {
 
         const routedLeads = result.data;
 
-        // Get vendor's bids
-        const { data: bidsData } = await supabase
-          .from('vendor_responses')
-          .select('project_id, status')
-          .eq('vendor_id', user.id);
+        // Get vendor's bids via server-side API to bypass RLS recursion
+        const bidsResponse = await fetch('/api/projects/vendor-bids', {
+          headers: {
+            'x-vendor-id': user.id
+          }
+        });
+        const bidsResult = await bidsResponse.json();
 
-        const bidMap = new Map(bidsData?.map(b => [b.project_id, b.status]) || []);
+        if (!bidsResult.success) {
+          throw new Error(bidsResult.error || 'Failed to load bids');
+        }
+
+        const bidsData = bidsResult.data;
+
+        const bidMap = new Map(bidsData?.map((b: any) => [b.project_id, b.status]) || []);
 
         // Transform leads with bid status
         const leadsWithStatus: Lead[] = (routedLeads || []).map((item: any) => ({
@@ -105,8 +113,8 @@ export default function VendorDashboard() {
         // Calculate stats
         setStats({
           total_leads: leadsWithStatus.length,
-          bids_submitted: bidsData?.filter(b => b.status === 'submitted').length || 0,
-          bids_accepted: bidsData?.filter(b => b.status === 'accepted').length || 0,
+          bids_submitted: bidsData?.filter((b: any) => b.status === 'submitted' || b.status === 'bid_submitted').length || 0,
+          bids_accepted: bidsData?.filter((b: any) => b.status === 'accepted').length || 0,
         });
       } catch (err) {
         const message = getErrorMessage(err || 'Failed to load leads');

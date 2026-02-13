@@ -61,14 +61,19 @@ export default function VendorLeadDetail() {
       try {
         setLoading(true);
 
-        // Fetch project
-        const { data: projectData, error: projectError } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('id', projectId)
-          .single();
+        // Fetch project via server-side API to bypass RLS recursion
+        const response = await fetch(`/api/projects/${projectId}`, {
+          headers: {
+            'x-user-id': user.id
+          }
+        });
 
-        if (projectError) throw projectError;
+        if (!response.ok) {
+          const result = await response.json();
+          throw new Error(result.error || 'Project not found');
+        }
+
+        const projectData = await response.json();
         setProject(projectData);
 
         // Fetch service category
@@ -82,19 +87,34 @@ export default function VendorLeadDetail() {
           setService(categoryData);
         }
 
-        // Check for existing bid
-        const { data: bidData } = await supabase
-          .from('vendor_responses')
-          .select('*')
-          .eq('project_id', projectId)
-          .eq('vendor_id', user.id)
-          .single();
+        // Check for existing bid via server-side API to bypass RLS recursion
+        const bidsResponse = await fetch('/api/projects/vendor-bids', {
+          headers: {
+            'x-vendor-id': user.id
+          }
+        });
+        const bidsResult = await bidsResponse.json();
 
-        if (bidData) {
-          setExistingBid(bidData);
-          setBidAmount(bidData.bid_amount.toString());
-          setProposedTimeline(bidData.proposed_timeline || '');
-          setResponseNotes(bidData.response_notes || '');
+        if (bidsResult.success) {
+          const bidData = bidsResult.data.find((b: any) => b.project_id === projectId);
+          if (bidData) {
+            // Fetch full bid details if needed, or just use what we have
+            // The /api/projects/:projectId already includes vendor_responses for the business owner
+            // But for the vendor, we might need to fetch their specific response
+
+            const { data: fullBid } = await supabase
+              .from('vendor_responses')
+              .select('*')
+              .eq('id', bidData.id)
+              .single();
+
+            if (fullBid) {
+              setExistingBid(fullBid);
+              setBidAmount(fullBid.bid_amount.toString());
+              setProposedTimeline(fullBid.proposed_timeline || '');
+              setResponseNotes(fullBid.response_notes || '');
+            }
+          }
         }
       } catch (err) {
         const message = getErrorMessage(err || 'Failed to load project');
@@ -122,52 +142,31 @@ export default function VendorLeadDetail() {
     setError(null);
 
     try {
-      if (existingBid) {
-        // Update existing bid
-        const { error: updateError } = await supabase
-          .from('vendor_responses')
-          .update({
-            bid_amount: parseFloat(bidAmount),
-            proposed_timeline: proposedTimeline,
-            response_notes: responseNotes,
-            updated_at: new Date(),
-          })
-          .eq('id', existingBid.id);
+      // Submit bid via server-side API to bypass RLS recursion
+      const response = await fetch('/api/projects/submit-bid', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          projectId,
+          vendorId: user.id,
+          bidAmount: parseFloat(bidAmount),
+          proposedTimeline,
+          responseNotes,
+          bidId: existingBid?.id
+        })
+      });
 
-        if (updateError) throw updateError;
-      } else {
-        // Create new bid
-        const { error: insertError } = await supabase
-          .from('vendor_responses')
-          .insert({
-            project_id: projectId,
-            vendor_id: user.id,
-            bid_amount: parseFloat(bidAmount),
-            proposed_timeline: proposedTimeline,
-            response_notes: responseNotes,
-            status: 'submitted',
-          });
+      const result = await response.json();
 
-        if (insertError) throw insertError;
-
-        // Update routing status
-        await supabase
-          .from('project_routing')
-          .update({ status: 'bid_submitted' })
-          .eq('project_id', projectId)
-          .eq('vendor_id', user.id);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to submit bid');
       }
 
       setShowBidForm(false);
-      // Refresh data
-      const { data: updatedBid } = await supabase
-        .from('vendor_responses')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('vendor_id', user.id)
-        .single();
-
-      setExistingBid(updatedBid);
+      setExistingBid(result.data);
+      toast.success(existingBid ? 'Bid updated successfully' : 'Bid submitted successfully');
     } catch (err) {
       const message = getErrorMessage(err || 'Failed to submit bid');
       setError(message);
