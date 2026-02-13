@@ -633,11 +633,9 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
         .eq("vendor_id", vendorId)
         .maybeSingle();
 
-      if (response) {
-        query = query.or(`sender_id.eq.${vendorId},and(sender_id.eq.${project.business_id},vendor_response_id.eq.${response.id})`);
-      } else {
-        query = query.eq("sender_id", vendorId);
-      }
+      // Simplified filter: messages linked to this vendor's bid OR messages between owner and vendor without a link
+      // This ensures business messages always show up even if the link is missing.
+      query = query.or(`vendor_response_id.eq.${response?.id || '00000000-0000-0000-0000-000000000000'},and(sender_id.eq.${project.business_id},sender_id.neq.${userId}),and(sender_id.eq.${vendorId})`);
     }
 
     const { data: messages, error: msgError } = await query.order("created_at", { ascending: true });

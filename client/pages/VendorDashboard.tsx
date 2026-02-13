@@ -71,7 +71,30 @@ export default function VendorDashboard() {
           setProfileComplete(true);
         }
 
-        // Fetch routed leads for this vendor via server-side API to bypass RLS recursion
+        // 1. Fetch vendor's bids via server-side API
+        const bidsResponse = await fetch('/api/projects/vendor-bids', {
+          headers: {
+            'x-vendor-id': user.id
+          }
+        });
+        const bidsResult = await bidsResponse.json();
+
+        if (!bidsResult.success) {
+          throw new Error(bidsResult.error || 'Failed to load bids');
+        }
+
+        const bidsData = bidsResult.data;
+        const bidMap = new Map(bidsData?.map((b: any) => [b.project_id, b.status]) || []);
+
+        // 2. Fetch projects where this vendor is the selected vendor
+        const { data: assignedProjects, error: assignedError } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('selected_vendor_id', user.id);
+
+        if (assignedError) throw assignedError;
+
+        // 3. Fetch routed leads for this vendor via server-side API
         const response = await fetch('/api/projects/routed', {
           headers: {
             'x-user-id': user.id
@@ -85,36 +108,44 @@ export default function VendorDashboard() {
 
         const routedLeads = result.data;
 
-        // Get vendor's bids via server-side API to bypass RLS recursion
-        const bidsResponse = await fetch('/api/projects/vendor-bids', {
-          headers: {
-            'x-vendor-id': user.id
+        // 4. Combine and deduplicate projects
+        const allProjectsMap = new Map();
+
+        // Add routed projects
+        (routedLeads || []).forEach((item: any) => {
+          if (item.projects) {
+            allProjectsMap.set(item.projects.id, {
+              ...item.projects,
+              routed_at: item.routed_at,
+              bid_status: bidMap.get(item.projects.id) || 'not_bid',
+            });
           }
         });
-        const bidsResult = await bidsResponse.json();
 
-        if (!bidsResult.success) {
-          throw new Error(bidsResult.error || 'Failed to load bids');
-        }
+        // Add assigned projects (ensure they have correct status if not in routing)
+        (assignedProjects || []).forEach((p: any) => {
+          if (!allProjectsMap.has(p.id)) {
+            allProjectsMap.set(p.id, {
+              ...p,
+              bid_status: bidMap.get(p.id) || 'accepted',
+            });
+          } else {
+            // Update status if it's accepted in bids but maybe not in routing
+            const existing = allProjectsMap.get(p.id);
+            if (bidMap.get(p.id) === 'accepted' || p.selected_vendor_id === user.id) {
+              existing.bid_status = 'accepted';
+            }
+          }
+        });
 
-        const bidsData = bidsResult.data;
-
-        const bidMap = new Map(bidsData?.map((b: any) => [b.project_id, b.status]) || []);
-
-        // Transform leads with bid status
-        const leadsWithStatus: Lead[] = (routedLeads || []).map((item: any) => ({
-          ...item.projects,
-          routed_at: item.routed_at,
-          bid_status: bidMap.get(item.projects.id) || 'not_bid',
-        }));
-
-        setLeads(leadsWithStatus);
+        const combinedLeads = Array.from(allProjectsMap.values());
+        setLeads(combinedLeads);
 
         // Calculate stats
         setStats({
-          total_leads: leadsWithStatus.length,
+          total_leads: combinedLeads.length,
           bids_submitted: bidsData?.filter((b: any) => b.status === 'submitted' || b.status === 'bid_submitted').length || 0,
-          bids_accepted: bidsData?.filter((b: any) => b.status === 'accepted').length || 0,
+          bids_accepted: (assignedProjects?.length || 0) || bidsData?.filter((b: any) => b.status === 'accepted').length || 0,
         });
       } catch (err) {
         const message = getErrorMessage(err || 'Failed to load leads');
