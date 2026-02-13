@@ -33,10 +33,12 @@ export function getErrorMessage(err: unknown): string {
 
     // Try to safely stringify
     try {
-      // If it's a Supabase error or similar, it might have internal properties
-      // We want to avoid just "[object Object]"
       const stringified = JSON.stringify(err);
-      if (stringified === '{}' && String(err) === '[object Object]') {
+      if ((stringified === '{}' || stringified === '[]') && String(err).includes('[object')) {
+        return 'An unexpected error occurred';
+      }
+      // If stringified contains [object Object], it's not a useful error message
+      if (stringified.includes('[object Object]')) {
         return 'An unexpected error occurred';
       }
       return stringified;
@@ -45,5 +47,9 @@ export function getErrorMessage(err: unknown): string {
     }
   }
 
-  return String(err);
+  const finalMessage = String(err);
+  if (finalMessage.includes('[object Object]')) {
+    return 'An unexpected error occurred';
+  }
+  return finalMessage;
 }

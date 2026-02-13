@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { getErrorMessage } from "@/lib/utils";
 import { AlertCircle, Mail, Lock, ArrowRight, Sparkles, Layers, Zap, CheckCircle2 } from "lucide-react";
 
 export default function Login() {
@@ -39,7 +40,12 @@ export default function Login() {
       await signIn(email, password);
     } catch (error) {
       console.error("Login error:", error);
-      setError("Login failed. Please check your credentials.");
+      const message = getErrorMessage(error);
+      if (message.includes("Invalid login credentials") || message.includes("Invalid")) {
+        setError("Invalid email or password. Please try again.");
+      } else {
+        setError(message || "Login failed. Please check your credentials.");
+      }
     } finally {
       setLoading(false);
     }
