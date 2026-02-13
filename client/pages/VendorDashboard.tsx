@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, TrendingUp, AlertCircle, Loader2, Eye, CheckCircle2, Clock, LogOut, ArrowLeft, Briefcase } from 'lucide-react';
+import { Plus, TrendingUp, AlertCircle, Loader2, Eye, CheckCircle2, Clock, LogOut, ArrowLeft, Briefcase, MessageSquare, Inbox } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { getErrorMessage } from '@/lib/utils';
@@ -169,7 +169,7 @@ export default function VendorDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 pb-20">
       {/* Header */}
       <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
         <div className="container mx-auto px-4 py-8">
@@ -194,6 +194,13 @@ export default function VendorDashboard() {
               >
                 <Briefcase className="h-4 w-4" />
                 Available Projects
+              </Button>
+              <Button
+                variant="outline"
+                className="gap-2 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20"
+              >
+                <MessageSquare className="h-4 w-4" />
+                Messages
               </Button>
               <Button
                 onClick={() => navigate('/vendor/profile')}
@@ -228,19 +235,22 @@ export default function VendorDashboard() {
         )}
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {statCards.map((stat) => {
             const Icon = stat.icon;
             return (
-              <div key={stat.label} className={`bg-gradient-to-br ${stat.gradient} rounded-lg p-6 border border-transparent hover:shadow-lg transition-all duration-200`}>
+              <div key={stat.label} className={`bg-gradient-to-br ${stat.gradient} rounded-2xl p-6 border border-white/50 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 group cursor-default`}>
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">{stat.label}</p>
-                    <p className="text-4xl font-bold mt-3 text-slate-900 dark:text-white">{stat.value}</p>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-2">{stat.description}</p>
+                    <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-tight">{stat.label}</p>
+                    <p className="text-5xl font-black mt-3 text-slate-900 dark:text-white tracking-tighter">{stat.value}</p>
+                    <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mt-2 flex items-center gap-1">
+                      <span className={`w-1.5 h-1.5 rounded-full ${stat.accentColor}`}></span>
+                      {stat.description}
+                    </p>
                   </div>
-                  <div className={`${stat.accentColor} rounded-lg p-3 opacity-80`}>
-                    <Icon className="h-6 w-6 text-white" />
+                  <div className={`${stat.accentColor} rounded-2xl p-4 shadow-lg group-hover:scale-110 transition-transform`}>
+                    <Icon className="h-7 w-7 text-white" />
                   </div>
                 </div>
               </div>
@@ -259,39 +269,83 @@ export default function VendorDashboard() {
           </Card>
         )}
 
+        {/* Active Projects */}
+        {leads.some(l => l.bid_status === 'bid_accepted') && (
+          <div className="mb-12">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
+              </div>
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Active Projects</h2>
+            </div>
+            <div className="grid gap-5">
+              {leads.filter(l => l.bid_status === 'bid_accepted').map((lead) => (
+                <Card
+                  key={lead.id}
+                  className="p-6 border-l-4 border-l-green-500 bg-white dark:bg-slate-900 shadow-md hover:shadow-xl transition-all cursor-pointer"
+                  onClick={() => navigate(`/vendor/lead/${lead.id}`)}
+                >
+                  <div className="flex items-start justify-between gap-6">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{lead.title}</h3>
+                        <span className="text-xs px-3 py-1 rounded-full font-bold bg-green-100 text-green-800 uppercase">
+                          Active & Secured
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{lead.description}</p>
+                      <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-2">
+                          <MessageSquare className="h-4 w-4 text-blue-500" />
+                          <span className="text-sm font-medium text-blue-600">Messages active</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-500">
+                          <Clock className="h-4 w-4" />
+                          <span className="text-sm">Started {new Date(lead.routed_at || lead.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/vendor/lead/${lead.id}`);
+                      }}
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      Open Workspace
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Leads List */}
         <div>
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Your Leads</h2>
-            <p className="text-slate-600 dark:text-slate-400 mt-2">Opportunities matched to your services and coverage areas</p>
+            <h2 className="text-3xl font-bold text-slate-900 dark:text-white">New Opportunities</h2>
+            <p className="text-slate-600 dark:text-slate-400 mt-2">Projects matched to your profile seeking proposals</p>
           </div>
 
           {loading ? (
             <Card className="p-16 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
               <Loader2 className="h-10 w-10 animate-spin text-blue-600 dark:text-blue-400" />
             </Card>
-          ) : leads.length === 0 ? (
+          ) : leads.filter(l => l.bid_status !== 'bid_accepted').length === 0 ? (
             <Card className="p-12 text-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-dashed border-2 border-slate-300 dark:border-slate-700">
               <div className="bg-blue-100 dark:bg-blue-900/30 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
-                <Eye className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                <Inbox className="h-8 w-8 text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">No leads yet</h3>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">No new leads</h3>
               <p className="text-slate-600 dark:text-slate-400 mb-8 max-w-md mx-auto">
-                {profileComplete
-                  ? "Get ready! You'll see matched leads here when businesses post projects in your service categories and coverage areas."
-                  : "Complete your profile to unlock matched leads from businesses in your industry."}
+                All caught up! We'll notify you when new projects matching your profile are posted.
               </p>
-              <Button
-                onClick={() => navigate('/vendor/profile')}
-                className={`gap-2 ${profileComplete ? 'bg-gradient-to-r from-slate-200 to-slate-300 text-slate-900 hover:from-slate-300 hover:to-slate-400' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'}`}
-              >
-                <Plus className="h-4 w-4" />
-                {profileComplete ? 'View Profile' : 'Set Up Profile'}
-              </Button>
             </Card>
           ) : (
             <div className="grid gap-5">
-              {leads.map((lead) => {
+              {leads.filter(l => l.bid_status !== 'bid_accepted').map((lead) => {
                 const badge = getBidBadge(lead.bid_status);
                 const isNotBid = lead.bid_status === 'not_bid';
 
