@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, Lock, Layers, BarChart3, Sparkles, CheckCircle2, TrendingUp, Users, Gauge, Target, Globe, Play, Rocket, Award, Clock } from "lucide-react";
+import { ArrowRight, Zap, Lock, Layers, BarChart3, Sparkles, CheckCircle2, TrendingUp, Users, UserPlus, Gauge, Target, Globe, Play, Rocket, Award, Clock } from "lucide-react";
 
 export default function Index() {
   return (
@@ -365,9 +365,9 @@ export default function Index() {
                 <ArrowRight className="h-5 w-5" />
               </Link>
             </Button>
-            <Button variant="outline" size="lg" asChild className="h-14 px-8 border-2 border-white text-white hover:bg-white/10 font-semibold text-lg">
+            <Button variant="outline" size="lg" asChild className="h-14 px-8 border-2 border-white text-white bg-transparent hover:bg-white/10 font-semibold text-lg">
               <Link to="/signup" className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
+                <UserPlus className="h-5 w-5" />
                 Join as Vendor
               </Link>
             </Button>
