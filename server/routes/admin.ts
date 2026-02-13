@@ -178,4 +178,77 @@ router.get("/admin/project-assignments/:projectId", async (req: Request, res: Re
   }
 });
 
+// GET /api/admin/routings
+router.get("/admin/routings", async (req: Request, res: Response) => {
+  try {
+    console.log("[ADMIN] Fetching all project routings");
+
+    // Use service role to bypass RLS
+    const { data, error } = await supabaseAdmin
+      .from("project_routing")
+      .select(`
+        id,
+        project_id,
+        vendor_id,
+        routed_at,
+        status,
+        projects(id, title, budget_max)
+      `)
+      .order("routed_at", { ascending: false });
+
+    if (error) {
+      console.error("[ADMIN] Supabase error fetching routings:", error);
+      return res.status(400).json({
+        error: error.message || "Failed to fetch routings",
+        success: false,
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: data || [],
+    });
+  } catch (error) {
+    console.error("[ADMIN] Error in get routings endpoint:", error);
+    return res.status(500).json({
+      error: "Internal server error",
+      message: error instanceof Error ? error.message : "Unknown error",
+      success: false,
+    });
+  }
+});
+
+// GET /api/admin/projects
+router.get("/admin/projects", async (req: Request, res: Response) => {
+  try {
+    console.log("[ADMIN] Fetching all projects");
+
+    // Use service role to bypass RLS
+    const { data, error } = await supabaseAdmin
+      .from("projects")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("[ADMIN] Supabase error fetching projects:", error);
+      return res.status(400).json({
+        error: error.message || "Failed to fetch projects",
+        success: false,
+      });
+    }
+
+    return res.json({
+      success: true,
+      data: data || [],
+    });
+  } catch (error) {
+    console.error("[ADMIN] Error in get projects endpoint:", error);
+    return res.status(500).json({
+      error: "Internal server error",
+      message: error instanceof Error ? error.message : "Unknown error",
+      success: false,
+    });
+  }
+});
+
 export default router;

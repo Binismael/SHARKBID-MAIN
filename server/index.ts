@@ -4,7 +4,7 @@ import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { handleAIIntake } from "./routes/ai-intake";
 import { handleTriggerRouting } from "./routes/lead-routing";
-import { handlePublishProject, handleGetProject } from "./routes/projects";
+import { handlePublishProject, handleGetProject, handleGetAvailableProjects, handleGetRoutedLeads, handleGetBusinessProjects } from "./routes/projects";
 import { handleCreateProject } from "./routes/create-project";
 import emailRouter from "./routes/email";
 import adminRouter from "./routes/admin";
@@ -31,6 +31,9 @@ export function createServer() {
   // Project routes
   app.post("/api/projects/create", handleCreateProject);
   app.post("/api/projects/publish", handlePublishProject);
+  app.get("/api/projects/available", handleGetAvailableProjects);
+  app.get("/api/projects/routed", handleGetRoutedLeads);
+  app.get("/api/projects/business", handleGetBusinessProjects);
   app.get("/api/projects/:projectId", handleGetProject);
 
   // Lead routing (manual trigger for testing)

@@ -41,15 +41,16 @@ export default function VendorAvailableProjects() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        
-        // Fetch open projects
-        const { data: projectData, error: fetchError } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('status', 'open')
-          .order('created_at', { ascending: false });
 
-        if (fetchError) throw fetchError;
+        // Fetch open projects via server-side API to bypass RLS recursion
+        const response = await fetch('/api/projects/available');
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to load projects');
+        }
+
+        const projectData = result.data;
 
         // Filter out projects already routed to this vendor
         if (user) {
@@ -57,9 +58,9 @@ export default function VendorAvailableProjects() {
             .from('project_routing')
             .select('project_id')
             .eq('vendor_id', user.id);
-          
+
           const routedIds = new Set(routedData?.map(r => r.project_id) || []);
-          const availableProjects = (projectData || []).filter(p => !routedIds.has(p.id));
+          const availableProjects = (projectData || []).filter((p: any) => !routedIds.has(p.id));
           setProjects(availableProjects);
         } else {
           setProjects(projectData || []);
@@ -69,7 +70,7 @@ export default function VendorAvailableProjects() {
         const { data: servicesData } = await supabase
           .from('service_categories')
           .select('id, name');
-        
+
         const serviceMap = servicesData?.reduce((acc: Record<string, string>, s) => {
           acc[s.id] = s.name;
           return acc;

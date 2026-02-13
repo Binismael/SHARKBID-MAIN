@@ -138,3 +138,104 @@ export const handleGetProject: RequestHandler = async (req, res) => {
     });
   }
 };
+
+// Get available projects for vendors (bypass RLS)
+export const handleGetAvailableProjects: RequestHandler = async (_req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("projects")
+      .select("*")
+      .eq("status", "open")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    res.json({
+      success: true,
+      data: data || [],
+    });
+  } catch (error) {
+    console.error("Get available projects error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Get routed leads for a specific vendor (bypass RLS)
+export const handleGetRoutedLeads: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.headers["x-user-id"] as string;
+
+    if (!userId) {
+      return res.status(400).json({ error: "Missing x-user-id header" });
+    }
+
+    const { data: routedLeads, error: routeError } = await supabaseAdmin
+      .from("project_routing")
+      .select(`
+        id,
+        project_id,
+        routed_at,
+        status,
+        projects (
+          id,
+          title,
+          description,
+          service_category_id,
+          budget_min,
+          budget_max,
+          project_zip,
+          project_state,
+          created_at
+        )
+      `)
+      .eq("vendor_id", userId)
+      .order("routed_at", { ascending: false });
+
+    if (routeError) throw routeError;
+
+    res.json({
+      success: true,
+      data: routedLeads || [],
+    });
+  } catch (error) {
+    console.error("Get routed leads error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Get projects for a specific business (bypass RLS)
+export const handleGetBusinessProjects: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.headers["x-user-id"] as string;
+
+    if (!userId) {
+      return res.status(400).json({ error: "Missing x-user-id header" });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("projects")
+      .select("*")
+      .eq("business_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    res.json({
+      success: true,
+      data: data || [],
+    });
+  } catch (error) {
+    console.error("Get business projects error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};

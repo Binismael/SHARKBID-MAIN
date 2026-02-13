@@ -43,29 +43,23 @@ export default function AdminRouting() {
       try {
         setLoading(true);
 
-        // Fetch project_routing data with projects
-        const { data, error } = await supabase
-          .from("project_routing")
-          .select(
-            `
-            id,
-            project_id,
-            vendor_id,
-            routed_at,
-            status,
-            projects(id, title, budget_max)
-          `
-          )
-          .order("routed_at", { ascending: false });
+        // Fetch project_routing data via Admin API to bypass RLS recursion
+        const response = await fetch("/api/admin/routings", {
+          headers: {
+            "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          }
+        });
 
-        if (error) {
-          console.error("Error fetching routings:", getErrorMessage(error));
-          toast.error("Failed to load routings");
-          return;
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || "Failed to load routings");
         }
 
+        const data = result.data;
+
         // Get unique vendor IDs
-        const vendorIds = [...new Set(data?.map(r => r.vendor_id) || [])];
+        const vendorIds = [...new Set(data?.map((r: any) => r.vendor_id) || [])];
 
         // Fetch vendor profiles
         let vendorProfiles: Record<string, any> = {};
@@ -86,7 +80,7 @@ export default function AdminRouting() {
         }
 
         // Combine the data
-        const routingsWithProfiles = data?.map(routing => ({
+        const routingsWithProfiles = data?.map((routing: any) => ({
           ...routing,
           profiles: vendorProfiles[routing.vendor_id] || { company_name: "Unknown Vendor", contact_email: "N/A" }
         })) || [];

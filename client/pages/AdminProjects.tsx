@@ -58,13 +58,20 @@ export default function AdminProjects() {
       try {
         setLoading(true);
 
-        // Fetch projects
-        const { data: projectsData, error: projectsError } = await supabase
-          .from("projects")
-          .select("*")
-          .order("created_at", { ascending: false });
+        // Fetch projects via Admin API to bypass RLS recursion
+        const response = await fetch("/api/admin/projects", {
+          headers: {
+            "Authorization": `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          }
+        });
 
-        if (projectsError) throw projectsError;
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || "Failed to load projects");
+        }
+
+        const projectsData = result.data;
 
         // Fetch service categories
         const { data: servicesData, error: servicesError } = await supabase
@@ -82,7 +89,7 @@ export default function AdminProjects() {
 
         // Fetch business profiles
         if (projectsData && projectsData.length > 0) {
-          const businessIds = [...new Set(projectsData.map((p) => p.business_id))];
+          const businessIds = [...new Set(projectsData.map((p: any) => p.business_id))];
           const { data: businessesData, error: businessesError } = await supabase
             .from("profiles")
             .select("id, company_name")

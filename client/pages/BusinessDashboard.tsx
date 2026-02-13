@@ -48,14 +48,20 @@ export default function BusinessDashboard() {
     const fetchProjects = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('business_id', user.id)
-          .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        setProjects(data || []);
+        // Fetch projects via server-side API to bypass RLS recursion
+        const response = await fetch('/api/projects/business', {
+          headers: {
+            'x-user-id': user.id
+          }
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to load projects');
+        }
+
+        setProjects(result.data || []);
       } catch (err) {
         const message = getErrorMessage(err || 'Failed to load projects');
         setError(message);

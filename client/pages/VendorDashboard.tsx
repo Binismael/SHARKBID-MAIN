@@ -71,30 +71,19 @@ export default function VendorDashboard() {
           setProfileComplete(true);
         }
 
-        // Fetch routed leads for this vendor
-        const { data: routedLeads, error: routeError } = await supabase
-          .from('project_routing')
-          .select(`
-            id,
-            project_id,
-            routed_at,
-            status,
-            projects (
-              id,
-              title,
-              description,
-              service_category_id,
-              budget_min,
-              budget_max,
-              project_zip,
-              project_state,
-              created_at
-            )
-          `)
-          .eq('vendor_id', user.id)
-          .order('routed_at', { ascending: false });
+        // Fetch routed leads for this vendor via server-side API to bypass RLS recursion
+        const response = await fetch('/api/projects/routed', {
+          headers: {
+            'x-user-id': user.id
+          }
+        });
+        const result = await response.json();
 
-        if (routeError) throw routeError;
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to load leads');
+        }
+
+        const routedLeads = result.data;
 
         // Get vendor's bids
         const { data: bidsData } = await supabase

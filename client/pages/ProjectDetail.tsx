@@ -64,33 +64,23 @@ export default function ProjectDetail() {
       try {
         setLoading(true);
 
-        // Fetch project
-        const { data: projectData, error: fetchError } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('id', projectId)
-          .eq('business_id', user.id)
-          .single();
+        // Fetch project via server API to bypass RLS recursion
+        const response = await fetch(`/api/projects/${projectId}`, {
+          headers: {
+            'x-user-id': user.id
+          }
+        });
 
-        if (fetchError) {
-          console.error('Error fetching project:', fetchError);
-          setError('Project not found or you do not have permission to view it');
-          setLoading(false);
-          return;
+        if (!response.ok) {
+          const result = await response.json();
+          throw new Error(result.error || 'Project not found');
         }
 
+        const projectData = await response.json();
         setProject(projectData);
 
-        // Fetch bids
-        const { data: bidsData } = await supabase
-          .from('vendor_responses')
-          .select(`
-            *,
-            vendor_profile:profiles!vendor_id(company_name, contact_email)
-          `)
-          .eq('project_id', projectId);
-
-        setBids(bidsData || []);
+        // Bids are already included in the response from handleGetProject
+        setBids(projectData.vendor_responses || []);
 
         setError(null);
       } catch (err) {
