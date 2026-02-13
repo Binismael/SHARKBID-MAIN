@@ -191,6 +191,14 @@ export default function VendorDashboard() {
                 Back to Website
               </Button>
               <Button
+                onClick={() => navigate('/vendor/projects')}
+                variant="outline"
+                className="gap-2 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-950/20"
+              >
+                <Briefcase className="h-4 w-4" />
+                Available Projects
+              </Button>
+              <Button
                 onClick={() => navigate('/vendor/profile')}
                 className={`gap-2 ${profileComplete ? 'bg-slate-200 text-slate-900 hover:bg-slate-300' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'}`}
               >

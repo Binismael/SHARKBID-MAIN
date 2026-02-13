@@ -83,7 +83,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       setError(null);
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -97,6 +97,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (signUpError) {
         throw signUpError;
+      }
+
+      if (authData.user) {
+        // Insert into profiles table
+        const { error: profileError } = await supabase.from("profiles").insert([
+          {
+            user_id: authData.user.id,
+            role,
+            company_name: role === "business" ? displayName : displayName || "New User",
+            contact_email: email,
+            is_approved: role === "admin" ? true : false,
+          },
+        ]);
+
+        if (profileError) {
+          console.error("Error creating profile:", profileError);
+          // We don't throw here to avoid failing the whole signup if profile creation fails
+          // though it's better if it doesn't fail.
+        }
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Sign up failed";

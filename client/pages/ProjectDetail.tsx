@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Edit2, Trash2, Loader2, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
@@ -23,9 +23,24 @@ interface Project {
   business_size: string;
   special_requirements: string;
   status: string;
+  selected_vendor_id: string | null;
   created_at: string;
   updated_at: string;
   published_at: string;
+}
+
+interface Bid {
+  id: string;
+  vendor_id: string;
+  bid_amount: number;
+  proposed_timeline: string;
+  response_notes: string;
+  status: string;
+  created_at: string;
+  vendor_profile?: {
+    company_name: string;
+    contact_email: string;
+  };
 }
 
 export default function ProjectDetail() {
@@ -33,9 +48,11 @@ export default function ProjectDetail() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
+  const [bids, setBids] = useState<Bid[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [assigning, setAssigning] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || !projectId) {
@@ -43,10 +60,12 @@ export default function ProjectDetail() {
       return;
     }
 
-    const fetchProject = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const { data, error: fetchError } = await supabase
+
+        // Fetch project
+        const { data: projectData, error: fetchError } = await supabase
           .from('projects')
           .select('*')
           .eq('id', projectId)
@@ -60,7 +79,19 @@ export default function ProjectDetail() {
           return;
         }
 
-        setProject(data);
+        setProject(projectData);
+
+        // Fetch bids
+        const { data: bidsData } = await supabase
+          .from('vendor_responses')
+          .select(`
+            *,
+            vendor_profile:profiles!vendor_id(company_name, contact_email)
+          `)
+          .eq('project_id', projectId);
+
+        setBids(bidsData || []);
+
         setError(null);
       } catch (err) {
         const message = getErrorMessage(err || 'Failed to load project');
@@ -71,8 +102,45 @@ export default function ProjectDetail() {
       }
     };
 
-    fetchProject();
+    fetchData();
   }, [user, projectId, navigate]);
+
+  const handleAssignVendor = async (vendorId: string, bidId?: string) => {
+    if (!project || !window.confirm('Are you sure you want to assign this vendor to your project?')) {
+      return;
+    }
+
+    try {
+      setAssigning(vendorId);
+
+      // Update project with selected vendor
+      const { error: updateError } = await supabase
+        .from('projects')
+        .update({
+          selected_vendor_id: vendorId,
+          status: 'selected'
+        })
+        .eq('id', project.id);
+
+      if (updateError) throw updateError;
+
+      // Update bid status if exists
+      if (bidId) {
+        await supabase
+          .from('vendor_responses')
+          .update({ status: 'accepted', is_selected: true })
+          .eq('id', bidId);
+      }
+
+      toast.success('Vendor assigned successfully!');
+      setProject({ ...project, selected_vendor_id: vendorId, status: 'selected' });
+    } catch (err) {
+      const message = getErrorMessage(err || 'Failed to assign vendor');
+      toast.error(message);
+    } finally {
+      setAssigning(null);
+    }
+  };
 
   const handleDelete = async () => {
     if (!project || !window.confirm('Are you sure you want to delete this project?')) {
@@ -219,6 +287,72 @@ export default function ProjectDetail() {
                 <p className="text-muted-foreground whitespace-pre-wrap">{project.special_requirements}</p>
               </Card>
             )}
+
+            {/* Bids Received */}
+            <div className="pt-4">
+              <h2 className="text-2xl font-bold mb-6">Vendor Proposals</h2>
+              {bids.length === 0 ? (
+                <Card className="p-12 text-center bg-muted/20 border-dashed">
+                  <p className="text-muted-foreground">No proposals received yet.</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate('/business/vendors')}
+                    className="mt-4"
+                  >
+                    Browse & Invite Vendors
+                  </Button>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {bids.map((bid) => {
+                    const isSelected = project.selected_vendor_id === bid.vendor_id;
+                    return (
+                      <Card key={bid.id} className={`p-6 transition-all ${isSelected ? 'border-primary ring-1 ring-primary' : ''}`}>
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-lg font-bold">{bid.vendor_profile?.company_name || 'Expert Vendor'}</h3>
+                              {isSelected && (
+                                <span className="px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-bold uppercase">
+                                  Selected Vendor
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-4">{bid.response_notes}</p>
+
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase">Bid Amount</p>
+                                <p className="font-bold text-lg text-primary">${bid.bid_amount.toLocaleString()}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase">Timeline</p>
+                                <p className="font-semibold text-sm">{bid.proposed_timeline}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {!project.selected_vendor_id ? (
+                            <Button
+                              onClick={() => handleAssignVendor(bid.vendor_id, bid.id)}
+                              disabled={!!assigning}
+                              className="bg-primary hover:bg-primary/90 font-bold"
+                            >
+                              {assigning === bid.vendor_id ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Accept Proposal'}
+                            </Button>
+                          ) : isSelected && (
+                            <div className="flex items-center gap-2 text-green-600 font-bold">
+                              <CheckCircle2 className="h-5 w-5" />
+                              Assigned
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Sidebar */}

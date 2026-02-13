@@ -29,7 +29,9 @@ import AdminVendorDetail from "./pages/AdminVendorDetail";
 import AdminProjects from "./pages/AdminProjects";
 import AdminRouting from "./pages/AdminRouting";
 import AdminUsers from "./pages/AdminUsers";
+import BusinessVendors from "./pages/BusinessVendors";
 import VendorDashboard from "./pages/VendorDashboard";
+import VendorAvailableProjects from "./pages/VendorAvailableProjects";
 import VendorProfile from "./pages/VendorProfile";
 import VendorLeadDetail from "./pages/VendorLeadDetail";
 import CreateProjectForm from "./pages/CreateProjectForm";
@@ -78,6 +80,14 @@ const AppRoutes = () => (
         </ProtectedRoute>
       }
     />
+    <Route
+      path="/business/vendors"
+      element={
+        <ProtectedRoute requiredRole="business">
+          <BusinessVendors />
+        </ProtectedRoute>
+      }
+    />
 
     {/* Vendor Portal Routes */}
     <Route
@@ -101,6 +111,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute requiredRole="vendor">
           <VendorLeadDetail />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/vendor/projects"
+      element={
+        <ProtectedRoute requiredRole="vendor">
+          <VendorAvailableProjects />
         </ProtectedRoute>
       }
     />

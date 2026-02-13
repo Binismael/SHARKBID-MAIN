@@ -140,6 +140,14 @@ export default function BusinessDashboard() {
                 Back to Website
               </Button>
               <Button
+                onClick={() => navigate('/business/vendors')}
+                variant="outline"
+                className="gap-2 border-primary/20 hover:bg-primary/5 text-primary"
+              >
+                <Users className="h-4 w-4" />
+                Browse Vendors
+              </Button>
+              <Button
                 onClick={() => navigate('/business/projects/create')}
                 variant="outline"
                 className="gap-2"
