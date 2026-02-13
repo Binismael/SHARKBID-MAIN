@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
+import { getErrorMessage } from "./utils";
 
 interface AuthContextType {
   session: Session | null;
@@ -118,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Sign up failed";
+      const message = getErrorMessage(err);
       setError(message);
       throw err;
     }
@@ -136,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw signInError;
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Sign in failed";
+      const message = getErrorMessage(err);
       setError(message);
       throw err;
     }
@@ -150,7 +151,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw signOutError;
       }
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Sign out failed";
+      const message = getErrorMessage(err);
       setError(message);
       throw err;
     }

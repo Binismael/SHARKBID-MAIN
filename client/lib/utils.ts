@@ -1,6 +1,8 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+import { getErrorMessage } from "./utils";
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -31,9 +33,15 @@ export function getErrorMessage(err: unknown): string {
 
     // Try to safely stringify
     try {
-      return JSON.stringify(err);
+      // If it's a Supabase error or similar, it might have internal properties
+      // We want to avoid just "[object Object]"
+      const stringified = JSON.stringify(err);
+      if (stringified === '{}' && String(err) === '[object Object]') {
+        return 'An unexpected error occurred';
+      }
+      return stringified;
     } catch {
-      return '[object]';
+      return 'An unexpected error occurred';
     }
   }
 
