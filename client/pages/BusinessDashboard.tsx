@@ -20,7 +20,7 @@ interface Project {
 }
 
 export default function BusinessDashboard() {
-  const { user, signOut } = useAuth();
+  const { user, signOut, userRole } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
