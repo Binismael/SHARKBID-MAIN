@@ -36,6 +36,7 @@ import VendorDashboard from "./pages/VendorDashboard";
 import VendorAvailableProjects from "./pages/VendorAvailableProjects";
 import VendorProfile from "./pages/VendorProfile";
 import VendorLeadDetail from "./pages/VendorLeadDetail";
+import VendorMessages from "./pages/VendorMessages";
 import CreatorApply from "./pages/CreatorApply";
 import CreateProjectForm from "./pages/CreateProjectForm";
 import ProjectDetail from "./pages/ProjectDetail";
@@ -122,6 +123,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute requiredRole="vendor">
           <VendorLeadDetail />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/vendor/messages"
+      element={
+        <ProtectedRoute requiredRole="vendor">
+          <VendorMessages />
         </ProtectedRoute>
       }
     />

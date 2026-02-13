@@ -19,7 +19,7 @@ interface Lead {
   project_state: string;
   created_at: string;
   routed_at?: string;
-  bid_status?: 'not_bid' | 'bid_submitted' | 'bid_accepted';
+  bid_status?: 'not_bid' | 'submitted' | 'accepted' | 'bid_submitted' | 'bid_accepted';
 }
 
 interface BidStats {
@@ -161,7 +161,9 @@ export default function VendorDashboard() {
   const getBidBadge = (status?: string) => {
     const badges: Record<string, { bg: string; text: string; label: string }> = {
       'not_bid': { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Not Bid' },
+      'submitted': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Bid Submitted' },
       'bid_submitted': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Bid Submitted' },
+      'accepted': { bg: 'bg-green-100', text: 'text-green-800', label: 'Accepted' },
       'bid_accepted': { bg: 'bg-green-100', text: 'text-green-800', label: 'Accepted' },
     };
     const badge = badges[status || 'not_bid'];
@@ -196,6 +198,7 @@ export default function VendorDashboard() {
                 Available Projects
               </Button>
               <Button
+                onClick={() => navigate('/vendor/messages')}
                 variant="outline"
                 className="gap-2 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20"
               >
@@ -270,7 +273,7 @@ export default function VendorDashboard() {
         )}
 
         {/* Active Projects */}
-        {leads.some(l => l.bid_status === 'bid_accepted') && (
+        {leads.some(l => l.bid_status === 'accepted' || l.bid_status === 'bid_accepted') && (
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
@@ -279,7 +282,7 @@ export default function VendorDashboard() {
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Active Projects</h2>
             </div>
             <div className="grid gap-5">
-              {leads.filter(l => l.bid_status === 'bid_accepted').map((lead) => (
+              {leads.filter(l => l.bid_status === 'accepted' || l.bid_status === 'bid_accepted').map((lead) => (
                 <Card
                   key={lead.id}
                   className="p-6 border-l-4 border-l-green-500 bg-white dark:bg-slate-900 shadow-md hover:shadow-xl transition-all cursor-pointer"
@@ -288,7 +291,7 @@ export default function VendorDashboard() {
                   <div className="flex items-start justify-between gap-6">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-3">
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{lead.title}</h3>
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white flex-1">{lead.title}</h3>
                         <span className="text-xs px-3 py-1 rounded-full font-bold bg-green-100 text-green-800 uppercase">
                           Active & Secured
                         </span>
@@ -306,7 +309,7 @@ export default function VendorDashboard() {
                       </div>
                     </div>
                     <Button
-                      className="bg-green-600 hover:bg-green-700 text-white gap-2"
+                      className="bg-green-600 hover:bg-green-700 text-white gap-2 shrink-0"
                       onClick={(e) => {
                         e.stopPropagation();
                         navigate(`/vendor/lead/${lead.id}`);
@@ -333,7 +336,7 @@ export default function VendorDashboard() {
             <Card className="p-16 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
               <Loader2 className="h-10 w-10 animate-spin text-blue-600 dark:text-blue-400" />
             </Card>
-          ) : leads.filter(l => l.bid_status !== 'bid_accepted').length === 0 ? (
+          ) : leads.filter(l => l.bid_status !== 'accepted' && l.bid_status !== 'bid_accepted').length === 0 ? (
             <Card className="p-12 text-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-dashed border-2 border-slate-300 dark:border-slate-700">
               <div className="bg-blue-100 dark:bg-blue-900/30 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
                 <Inbox className="h-8 w-8 text-blue-600 dark:text-blue-400" />
@@ -345,7 +348,7 @@ export default function VendorDashboard() {
             </Card>
           ) : (
             <div className="grid gap-5">
-              {leads.filter(l => l.bid_status !== 'bid_accepted').map((lead) => {
+              {leads.filter(l => l.bid_status !== 'accepted' && l.bid_status !== 'bid_accepted').map((lead) => {
                 const badge = getBidBadge(lead.bid_status);
                 const isNotBid = lead.bid_status === 'not_bid';
 
