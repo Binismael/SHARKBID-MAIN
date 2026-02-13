@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, TrendingUp, AlertCircle, Loader2, Eye, CheckCircle2, Clock, LogOut } from 'lucide-react';
+import { Plus, TrendingUp, AlertCircle, Loader2, Eye, CheckCircle2, Clock, LogOut, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { getErrorMessage } from '@/lib/utils';
@@ -182,6 +182,14 @@ export default function VendorDashboard() {
               <p className="text-slate-600 dark:text-slate-400 mt-2">Manage your leads and grow your business</p>
             </div>
             <div className="flex items-center gap-3">
+              <Button
+                onClick={() => navigate("/")}
+                variant="outline"
+                className="gap-2 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Website
+              </Button>
               <Button
                 onClick={() => navigate('/vendor/profile')}
                 className={`gap-2 ${profileComplete ? 'bg-slate-200 text-slate-900 hover:bg-slate-300' : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800'}`}

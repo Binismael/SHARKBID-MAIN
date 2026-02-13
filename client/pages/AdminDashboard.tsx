@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { AlertCircle, Loader2, Users, FileText, TrendingUp, CheckCircle2, Clock, XCircle, ArrowRight, Shield } from 'lucide-react';
+import { AlertCircle, Loader2, Users, FileText, TrendingUp, CheckCircle2, Clock, XCircle, ArrowRight, Shield, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { getErrorMessage } from '@/lib/utils';
+import { useAuth } from '@/lib/auth-context';
+import { toast } from 'sonner';
 
 interface Metrics {
   total_businesses: number;
@@ -36,6 +38,7 @@ interface RecentVendor {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { signOut, user } = useAuth();
   const [metrics, setMetrics] = useState<Metrics>({
     total_businesses: 0,
     total_vendors: 0,
@@ -50,6 +53,22 @@ export default function AdminDashboard() {
   const [pendingVendors, setPendingVendors] = useState<RecentVendor[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setIsSigningOut(true);
+      await signOut();
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (err) {
+      const message = getErrorMessage(err || 'Failed to logout');
+      toast.error(message);
+      console.error('Logout error:', err);
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -169,10 +188,39 @@ export default function AdminDashboard() {
       {/* Header */}
       <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Admin Dashboard
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">Marketplace overview and management</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Admin Dashboard
+              </h1>
+              <p className="text-slate-600 dark:text-slate-400 mt-2">Marketplace overview and management</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/")}
+                className="gap-2 border-slate-200 dark:border-slate-800"
+              >
+                <ArrowRight className="h-4 w-4 rotate-180" />
+                Back to Website
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                disabled={isSigningOut}
+                className="gap-2 text-red-600 border-red-100 hover:bg-red-50 dark:border-red-900/30 dark:hover:bg-red-950/30"
+              >
+                {isSigningOut ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <LogOut className="h-4 w-4" />
+                )}
+                Logout
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 

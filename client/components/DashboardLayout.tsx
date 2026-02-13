@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Menu, LogOut, Sparkles, X, Home, FileText, Settings, Zap, DollarSign, LayoutGrid, Users, BarChart3, Sliders, User, Lock } from "lucide-react";
+import { Menu, LogOut, Sparkles, X, Home, FileText, Settings, Zap, DollarSign, LayoutGrid, Users, BarChart3, Sliders, User, Lock, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
@@ -166,6 +166,16 @@ export function DashboardLayout({
           </div>
 
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="hidden sm:flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Website
+            </Button>
+
             <NotificationBell />
 
             <div className="h-8 w-px bg-border"></div>
