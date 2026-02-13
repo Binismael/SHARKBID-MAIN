@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, User, Building, Shield, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { Search, Filter, User, Building, Shield, ArrowRight, Loader2, AlertCircle, ArrowLeft } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getErrorMessage } from "@/lib/utils";
 import { toast } from "sonner";
@@ -72,6 +72,15 @@ export default function AdminUsers() {
       {/* Header */}
       <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
         <div className="container mx-auto px-4 py-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/admin/dashboard")}
+            className="mb-4 gap-2 text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
             User Management
           </h1>

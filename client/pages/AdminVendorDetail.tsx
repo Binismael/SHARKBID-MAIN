@@ -207,7 +207,7 @@ export default function AdminVendorDetail() {
             className="mb-4 gap-2 border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            Back to Dashboard
           </Button>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Vendor Details

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Send, Loader2, Check, AlertCircle } from 'lucide-react';
+import { Send, Loader2, Check, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -243,6 +243,15 @@ export default function BusinessIntake() {
       {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/business/dashboard")}
+            className="mb-4 gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
           <h1 className="text-2xl font-bold">Describe Your Project</h1>
           <p className="text-muted-foreground">Chat with our AI assistant to create a project that vendors can bid on</p>
         </div>

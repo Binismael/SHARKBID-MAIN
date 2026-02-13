@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { AlertCircle, Loader2, Save, X, Plus } from 'lucide-react';
+import { AlertCircle, Loader2, Save, X, Plus, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { getErrorMessage } from '@/lib/utils';
@@ -209,6 +209,15 @@ export default function VendorProfile() {
       {/* Header */}
       <div className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/vendor/dashboard")}
+            className="mb-4 gap-2 text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
           <h1 className="text-3xl font-bold">Vendor Profile</h1>
           <p className="text-muted-foreground mt-1">Set up your services and coverage area to receive matching leads</p>
         </div>

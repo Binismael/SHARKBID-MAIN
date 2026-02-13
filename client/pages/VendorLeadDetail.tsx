@@ -206,7 +206,7 @@ export default function VendorLeadDetail() {
             className="gap-2 mb-4"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Leads
+            Back to Dashboard
           </Button>
           <h1 className="text-3xl font-bold">{project.title}</h1>
           <p className="text-muted-foreground mt-1">{service?.name || 'Service'}</p>
