@@ -123,10 +123,20 @@ export const handleGetProject: RequestHandler = async (req, res) => {
       return res.status(404).json({ error: "Project not found" });
     }
 
-    // Check authorization: business owner or admin
+    // Check authorization: business owner, routed vendor, or admin
     if (userId && project.business_id !== userId) {
-      // Could add admin check here
-      return res.status(403).json({ error: "Not authorized to view this project" });
+      // Check if this user is a routed vendor for this project
+      const { data: routing, error: routingError } = await supabaseAdmin
+        .from("project_routing")
+        .select("id")
+        .eq("project_id", projectId)
+        .eq("vendor_id", userId)
+        .maybeSingle();
+
+      if (routingError || !routing) {
+        // Not the owner and not a routed vendor
+        return res.status(403).json({ error: "Not authorized to view this project" });
+      }
     }
 
     res.json(project);
@@ -328,7 +338,7 @@ export const handleGetVendorBids: RequestHandler = async (req, res) => {
 
     const { data, error } = await supabaseAdmin
       .from("vendor_responses")
-      .select("project_id, status")
+      .select("*")
       .eq("vendor_id", vendorId);
 
     if (error) throw error;
@@ -403,6 +413,105 @@ export const handleVendorSubmitBid: RequestHandler = async (req, res) => {
     });
   } catch (error) {
     console.error("Submit bid error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Assign a vendor to a project (bypass RLS)
+export const handleAssignVendor: RequestHandler = async (req, res) => {
+  try {
+    const { projectId, vendorId, bidId } = req.body;
+    const userId = req.headers["x-user-id"] as string;
+
+    if (!projectId || !vendorId || !userId) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Verify ownership via admin client
+    const { data: project, error: fetchError } = await supabaseAdmin
+      .from("projects")
+      .select("business_id")
+      .eq("id", projectId)
+      .single();
+
+    if (fetchError || !project || project.business_id !== userId) {
+      return res.status(403).json({ error: "Not authorized to modify this project" });
+    }
+
+    // Update project
+    const { error: updateError } = await supabaseAdmin
+      .from("projects")
+      .update({
+        selected_vendor_id: vendorId,
+        status: 'selected'
+      })
+      .eq("id", projectId);
+
+    if (updateError) throw updateError;
+
+    // Update bid status if provided
+    if (bidId) {
+      await supabaseAdmin
+        .from("vendor_responses")
+        .update({ status: 'accepted', is_selected: true })
+        .eq("id", bidId);
+    }
+
+    res.json({
+      success: true,
+      message: "Vendor assigned successfully"
+    });
+  } catch (error) {
+    console.error("Assign vendor error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Delete a project (bypass RLS)
+export const handleDeleteProject: RequestHandler = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const userId = req.headers["x-user-id"] as string;
+
+    if (!projectId || !userId) {
+      return res.status(400).json({ error: "Missing projectId or userId" });
+    }
+
+    // Verify ownership
+    const { data: project, error: fetchError } = await supabaseAdmin
+      .from("projects")
+      .select("business_id")
+      .eq("id", projectId)
+      .single();
+
+    if (fetchError || !project || project.business_id !== userId) {
+      return res.status(403).json({ error: "Not authorized to delete this project" });
+    }
+
+    // Delete project-related data first (if cascade delete is not set)
+    await supabaseAdmin.from('project_activity').delete().eq('project_id', projectId);
+    await supabaseAdmin.from('project_messages').delete().eq('project_id', projectId);
+    await supabaseAdmin.from('vendor_responses').delete().eq('project_id', projectId);
+    await supabaseAdmin.from('project_routing').delete().eq('project_id', projectId);
+
+    // Delete project
+    const { error: deleteError } = await supabaseAdmin
+      .from("projects")
+      .delete()
+      .eq("id", projectId);
+
+    if (deleteError) throw deleteError;
+
+    res.json({
+      success: true,
+      message: "Project deleted successfully"
+    });
+  } catch (error) {
+    console.error("Delete project error:", error);
     res.status(500).json({
       error: error instanceof Error ? error.message : "Unknown error",
     });

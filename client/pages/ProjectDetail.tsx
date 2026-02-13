@@ -103,23 +103,24 @@ export default function ProjectDetail() {
     try {
       setAssigning(vendorId);
 
-      // Update project with selected vendor
-      const { error: updateError } = await supabase
-        .from('projects')
-        .update({
-          selected_vendor_id: vendorId,
-          status: 'selected'
+      // Assign vendor via server API to bypass RLS recursion
+      const response = await fetch('/api/projects/assign-vendor', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id
+        },
+        body: JSON.stringify({
+          projectId: project.id,
+          vendorId,
+          bidId
         })
-        .eq('id', project.id);
+      });
 
-      if (updateError) throw updateError;
+      const result = await response.json();
 
-      // Update bid status if exists
-      if (bidId) {
-        await supabase
-          .from('vendor_responses')
-          .update({ status: 'accepted', is_selected: true })
-          .eq('id', bidId);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to assign vendor');
       }
 
       toast.success('Vendor assigned successfully!');
@@ -139,14 +140,18 @@ export default function ProjectDetail() {
 
     setDeleting(true);
     try {
-      const { error: deleteError } = await supabase
-        .from('projects')
-        .delete()
-        .eq('id', project.id)
-        .eq('business_id', user?.id);
+      // Delete project via server API to bypass RLS recursion
+      const response = await fetch(`/api/projects/${project.id}`, {
+        method: 'DELETE',
+        headers: {
+          'x-user-id': user?.id || ''
+        }
+      });
 
-      if (deleteError) {
-        throw deleteError;
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to delete project');
       }
 
       toast.success('Project deleted successfully');

@@ -98,22 +98,10 @@ export default function VendorLeadDetail() {
         if (bidsResult.success) {
           const bidData = bidsResult.data.find((b: any) => b.project_id === projectId);
           if (bidData) {
-            // Fetch full bid details if needed, or just use what we have
-            // The /api/projects/:projectId already includes vendor_responses for the business owner
-            // But for the vendor, we might need to fetch their specific response
-
-            const { data: fullBid } = await supabase
-              .from('vendor_responses')
-              .select('*')
-              .eq('id', bidData.id)
-              .single();
-
-            if (fullBid) {
-              setExistingBid(fullBid);
-              setBidAmount(fullBid.bid_amount.toString());
-              setProposedTimeline(fullBid.proposed_timeline || '');
-              setResponseNotes(fullBid.response_notes || '');
-            }
+            setExistingBid(bidData);
+            setBidAmount(bidData.bid_amount.toString());
+            setProposedTimeline(bidData.proposed_timeline || '');
+            setResponseNotes(bidData.response_notes || '');
           }
         }
       } catch (err) {
