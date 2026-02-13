@@ -68,7 +68,7 @@ export default function AdminProjects() {
         const result = await response.json();
 
         if (!result.success) {
-          throw new Error(result.error || "Failed to load projects");
+          throw result.error || "Failed to load projects";
         }
 
         const projectsData = result.data;

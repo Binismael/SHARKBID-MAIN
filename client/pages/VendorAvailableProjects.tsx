@@ -53,7 +53,7 @@ export default function VendorAvailableProjects() {
         const result = await response.json();
 
         if (!result.success) {
-          throw new Error(result.error || 'Failed to load projects');
+          throw result.error || 'Failed to load projects';
         }
 
         setProjects(result.data || []);
@@ -112,7 +112,7 @@ export default function VendorAvailableProjects() {
       const result = await response.json();
 
       if (!result.success) {
-        throw new Error(result.error || 'Failed to send request');
+        throw result.error || 'Failed to send request';
       }
 
       toast.success("Request sent! You can now bid on this project.");

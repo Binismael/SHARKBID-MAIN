@@ -85,7 +85,7 @@ export default function AdminDashboard() {
         const result = await response.json();
 
         if (!result.success) {
-          throw new Error(result.error || "Failed to load stats");
+          throw result.error || "Failed to load stats";
         }
 
         setMetrics(result.data.metrics);

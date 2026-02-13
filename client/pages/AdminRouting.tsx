@@ -53,7 +53,7 @@ export default function AdminRouting() {
         const result = await response.json();
 
         if (!result.success) {
-          throw new Error(result.error || "Failed to load routings");
+          throw result.error || "Failed to load routings";
         }
 
         const data = result.data;
