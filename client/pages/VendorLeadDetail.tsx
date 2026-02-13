@@ -3,11 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { AlertCircle, Loader2, ArrowLeft, Send, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, Loader2, ArrowLeft, Send, CheckCircle2, MessageSquare } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { getErrorMessage } from '@/lib/utils';
 import { toast } from 'sonner';
+import ProjectMessages from '@/components/ProjectMessages';
 
 interface Project {
   id: string;
@@ -267,6 +268,17 @@ export default function VendorLeadDetail() {
                 )}
               </div>
             </Card>
+          )}
+
+          {/* Messaging System */}
+          {existingBid && (
+            <div className="pt-8">
+              <div className="flex items-center gap-2 mb-6">
+                <MessageSquare className="h-6 w-6 text-primary" />
+                <h2 className="text-2xl font-bold">Messages</h2>
+              </div>
+              <ProjectMessages projectId={project.id} />
+            </div>
           )}
         </div>
 

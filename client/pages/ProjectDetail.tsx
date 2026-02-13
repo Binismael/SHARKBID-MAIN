@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Edit2, Trash2, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, Loader2, AlertCircle, CheckCircle2, MessageSquare } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
+import ProjectMessages from '@/components/ProjectMessages';
 
 interface Project {
   id: string;
@@ -348,6 +349,17 @@ export default function ProjectDetail() {
                 </div>
               )}
             </div>
+
+            {/* Messaging System */}
+            {project.selected_vendor_id && (
+              <div className="pt-8">
+                <div className="flex items-center gap-2 mb-6">
+                  <MessageSquare className="h-6 w-6 text-primary" />
+                  <h2 className="text-2xl font-bold">Messages</h2>
+                </div>
+                <ProjectMessages projectId={project.id} vendorId={project.selected_vendor_id} />
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}

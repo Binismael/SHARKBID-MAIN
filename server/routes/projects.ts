@@ -570,3 +570,186 @@ export const handleDeleteProject: RequestHandler = async (req, res) => {
     });
   }
 };
+
+// Get messages for a project
+export const handleGetMessages: RequestHandler = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const userId = req.headers["x-user-id"] as string;
+    const targetVendorId = req.query.vendorId as string;
+
+    if (!projectId || !userId) {
+      return res.status(400).json({ error: "Missing projectId or userId" });
+    }
+
+    const { data: project, error: projectError } = await supabaseAdmin
+      .from("projects")
+      .select("business_id, selected_vendor_id")
+      .eq("id", projectId)
+      .single();
+
+    if (projectError || !project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    const isOwner = project.business_id === userId;
+    let vendorId = isOwner ? targetVendorId : userId;
+
+    if (!isOwner) {
+      // If not owner, verify this user is a vendor for this project
+      const { data: routing } = await supabaseAdmin
+        .from("project_routing")
+        .select("id")
+        .eq("project_id", projectId)
+        .eq("vendor_id", userId)
+        .maybeSingle();
+
+      if (!routing) {
+        return res.status(403).json({ error: "Not authorized to view messages" });
+      }
+    }
+
+    // Filter messages:
+    // 1. Project ID must match
+    // 2. Either (sender is owner and recipient/context is vendorId) OR (sender is vendorId)
+    // Actually, let's use a simpler approach:
+    // If vendorId is provided (or inferred), show messages where (sender=owner AND context_vendor=vendorId) OR (sender=vendorId)
+    // We'll use vendor_response_id if we want to be strict, but for now we'll use a custom query logic.
+
+    // Since we don't have a formal recipient_id, we'll use the presence of vendorId to filter.
+    // We should probably add vendor_id to project_messages for easier filtering.
+    // For now, we'll assume messages between owner and vendorId are what we want.
+
+    let query = supabaseAdmin
+      .from("project_messages")
+      .select("*")
+      .eq("project_id", projectId);
+
+    if (vendorId) {
+      const { data: response } = await supabaseAdmin
+        .from("vendor_responses")
+        .select("id")
+        .eq("project_id", projectId)
+        .eq("vendor_id", vendorId)
+        .maybeSingle();
+
+      if (response) {
+        query = query.or(`sender_id.eq.${vendorId},and(sender_id.eq.${project.business_id},vendor_response_id.eq.${response.id})`);
+      } else {
+        query = query.eq("sender_id", vendorId);
+      }
+    }
+
+    const { data: messages, error: msgError } = await query.order("created_at", { ascending: true });
+
+    if (msgError) throw msgError;
+
+    if (messages && messages.length > 0) {
+      const senderIds = Array.from(new Set(messages.map(m => m.sender_id)));
+      const { data: profiles } = await supabaseAdmin
+        .from("profiles")
+        .select("user_id, company_name, contact_email, role")
+        .in("user_id", senderIds);
+
+      const profileMap = (profiles || []).reduce((acc: any, p) => {
+        acc[p.user_id] = p;
+        return acc;
+      }, {});
+
+      const enrichedMessages = messages.map(m => ({
+        ...m,
+        profiles: profileMap[m.sender_id]
+      }));
+
+      return res.json({
+        success: true,
+        data: enrichedMessages,
+      });
+    }
+
+    res.json({
+      success: true,
+      data: messages || [],
+    });
+  } catch (error) {
+    console.error("Get messages error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
+// Send a message
+export const handleSendMessage: RequestHandler = async (req, res) => {
+  try {
+    const { projectId, messageText, vendorId: targetVendorId } = req.body;
+    const userId = req.headers["x-user-id"] as string;
+
+    if (!projectId || !messageText || !userId) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const { data: project } = await supabaseAdmin
+      .from("projects")
+      .select("business_id, selected_vendor_id")
+      .eq("id", projectId)
+      .single();
+
+    if (!project) return res.status(404).json({ error: "Project not found" });
+
+    const isOwner = project.business_id === userId;
+    const vendorId = isOwner ? targetVendorId : userId;
+
+    if (!isOwner) {
+      const { data: routing } = await supabaseAdmin
+        .from("project_routing")
+        .select("id")
+        .eq("project_id", projectId)
+        .eq("vendor_id", userId)
+        .maybeSingle();
+
+      if (!routing) return res.status(403).json({ error: "Not authorized" });
+    }
+
+    // Find vendor_response_id to link the message
+    const { data: response } = await supabaseAdmin
+      .from("vendor_responses")
+      .select("id")
+      .eq("project_id", projectId)
+      .eq("vendor_id", vendorId || '')
+      .maybeSingle();
+
+    const { data: message, error } = await supabaseAdmin
+      .from("project_messages")
+      .insert({
+        project_id: projectId,
+        sender_id: userId,
+        message_text: messageText,
+        vendor_response_id: response?.id || null
+      })
+      .select("*")
+      .single();
+
+    if (error) throw error;
+
+    // Fetch sender profile
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("company_name, contact_email, role")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    res.json({
+      success: true,
+      data: {
+        ...message,
+        profiles: profile
+      },
+    });
+  } catch (error) {
+    console.error("Send message error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};

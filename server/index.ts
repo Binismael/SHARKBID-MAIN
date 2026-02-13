@@ -4,7 +4,7 @@ import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { handleAIIntake } from "./routes/ai-intake";
 import { handleTriggerRouting } from "./routes/lead-routing";
-import { handlePublishProject, handleGetProject, handleGetAvailableProjects, handleGetRoutedLeads, handleGetBusinessProjects, handleGetUnroutedProjects, handleUpsertRouting, handleGetVendorBids, handleVendorSubmitBid, handleAssignVendor, handleDeleteProject } from "./routes/projects";
+import { handlePublishProject, handleGetProject, handleGetAvailableProjects, handleGetRoutedLeads, handleGetBusinessProjects, handleGetUnroutedProjects, handleUpsertRouting, handleGetVendorBids, handleVendorSubmitBid, handleAssignVendor, handleDeleteProject, handleGetMessages, handleSendMessage } from "./routes/projects";
 import { handleCreateProject } from "./routes/create-project";
 import emailRouter from "./routes/email";
 import adminRouter from "./routes/admin";
@@ -40,6 +40,8 @@ export function createServer() {
   app.post("/api/projects/submit-bid", handleVendorSubmitBid);
   app.post("/api/projects/assign-vendor", handleAssignVendor);
   app.delete("/api/projects/:projectId", handleDeleteProject);
+  app.get("/api/projects/:projectId/messages", handleGetMessages);
+  app.post("/api/projects/:projectId/messages", handleSendMessage);
   app.get("/api/projects/:projectId", handleGetProject);
 
   // Lead routing (manual trigger for testing)
