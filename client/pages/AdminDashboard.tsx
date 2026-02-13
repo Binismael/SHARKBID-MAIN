@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { AlertCircle, Loader2, Users, FileText, TrendingUp, CheckCircle2, Clock, XCircle, ArrowRight } from 'lucide-react';
+import { AlertCircle, Loader2, Users, FileText, TrendingUp, CheckCircle2, Clock, XCircle, ArrowRight, Shield } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { getErrorMessage } from '@/lib/utils';
@@ -322,28 +322,93 @@ export default function AdminDashboard() {
               </div>
             </div>
 
+            {/* Quick Actions & System Info */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+              <div className="lg:col-span-2">
+                <div className="bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 p-8 shadow-sm h-full">
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">Marketplace Control Panel</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                      <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-2">
+                        <Users className="w-4 h-4 text-blue-500" />
+                        User Access
+                      </h3>
+                      <p className="text-sm text-slate-500 mb-4">Manage permissions and roles for all platform users.</p>
+                      <Button variant="outline" size="sm" onClick={() => navigate('/admin/users')} className="w-full">
+                        Manage Users
+                      </Button>
+                    </div>
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                      <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-2">
+                        <TrendingUp className="w-4 h-4 text-purple-500" />
+                        Routing Logic
+                      </h3>
+                      <p className="text-sm text-slate-500 mb-4">Configure how projects are automatically routed to vendors.</p>
+                      <Button variant="outline" size="sm" onClick={() => navigate('/admin/routing')} className="w-full">
+                        Configure Routing
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-lg p-8 shadow-lg h-full text-white">
+                  <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-blue-400" />
+                    System Status
+                  </h2>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between py-2 border-b border-slate-700">
+                      <span className="text-slate-400">Database</span>
+                      <span className="text-green-400 font-mono text-sm">Operational</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-slate-700">
+                      <span className="text-slate-400">AI Intake</span>
+                      <span className="text-green-400 font-mono text-sm">Operational</span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-slate-700">
+                      <span className="text-slate-400">Lead Routing</span>
+                      <span className="text-green-400 font-mono text-sm">Operational</span>
+                    </div>
+                    <div className="mt-8 pt-4">
+                      <p className="text-xs text-slate-400 mb-2">Logged in as Administrator</p>
+                      <p className="text-sm font-mono truncate opacity-60">Admin Role Verified</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Management Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Button
-                onClick={() => navigate('/admin/vendors')}
-                className="gap-2 h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all"
+                onClick={() => navigate('/admin/users')}
+                className="gap-2 h-12 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md hover:shadow-lg transition-all"
               >
                 <Users className="h-5 w-5" />
+                Manage Users
+              </Button>
+              <Button
+                onClick={() => navigate('/admin/vendors')}
+                className="gap-2 h-12 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm hover:shadow-md"
+              >
+                <CheckCircle2 className="h-5 w-5 text-green-600" />
                 Manage Vendors
               </Button>
               <Button
                 onClick={() => navigate('/admin/projects')}
-                className="gap-2 h-12 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
+                className="gap-2 h-12 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm hover:shadow-md"
               >
-                <FileText className="h-5 w-5" />
+                <FileText className="h-5 w-5 text-blue-600" />
                 View All Projects
               </Button>
               <Button
                 onClick={() => navigate('/admin/routing')}
-                className="gap-2 h-12 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all"
+                className="gap-2 h-12 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border-2 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm hover:shadow-md"
               >
-                <TrendingUp className="h-5 w-5" />
-                Routing Configuration
+                <TrendingUp className="h-5 w-5 text-purple-600" />
+                Routing Config
               </Button>
             </div>
           </>

@@ -28,6 +28,7 @@ import AdminVendors from "./pages/AdminVendors";
 import AdminVendorDetail from "./pages/AdminVendorDetail";
 import AdminProjects from "./pages/AdminProjects";
 import AdminRouting from "./pages/AdminRouting";
+import AdminUsers from "./pages/AdminUsers";
 import VendorDashboard from "./pages/VendorDashboard";
 import VendorProfile from "./pages/VendorProfile";
 import VendorLeadDetail from "./pages/VendorLeadDetail";
@@ -143,6 +144,14 @@ const AppRoutes = () => (
       element={
         <ProtectedRoute requiredRole="admin">
           <AdminRouting />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/admin/users"
+      element={
+        <ProtectedRoute requiredRole="admin">
+          <AdminUsers />
         </ProtectedRoute>
       }
     />
