@@ -107,14 +107,15 @@ export default function BusinessIntake() {
       });
 
       if (!response.ok) {
-        let errorMessage = `Server error: ${response.status}`;
         try {
           const errorData = await response.json();
-          errorMessage = errorData.error || errorData.message || errorMessage;
+          throw errorData.error || errorData.message || `Server error: ${response.status}`;
         } catch (e) {
-          // Could not parse error response
+          if (e instanceof Error || typeof e === 'string' || (typeof e === 'object' && e !== null)) {
+            throw e;
+          }
         }
-        throw new Error(errorMessage);
+        throw new Error(`Server error: ${response.status}`);
       }
 
       const data = await response.json();
