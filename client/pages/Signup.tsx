@@ -102,7 +102,7 @@ export default function Signup() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
-            <Logo variant="light" className="h-14" />
+            <Logo variant="light" className="h-24" />
           </div>
           <h1 className="text-4xl font-bold text-white mb-2">Join Sharkbid</h1>
           <p className="text-blue-100">

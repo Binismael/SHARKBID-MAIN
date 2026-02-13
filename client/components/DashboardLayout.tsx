@@ -92,7 +92,7 @@ export function DashboardLayout({
         {/* Logo */}
         <div className="p-6 border-b border-border">
           <Link to="/" className="flex items-center gap-3 font-bold">
-            <Logo variant="dark" />
+            <Logo variant="dark" className={cn(sidebarOpen ? "h-12" : "h-10")} />
             {sidebarOpen && (
               <div>
                 <span className="text-xs text-muted-foreground block">

@@ -65,7 +65,7 @@ export default function Login() {
           <div className="hidden md:block text-white space-y-8 pl-8">
             <div>
               <div className="mb-6">
-                <Logo variant="light" className="h-14" />
+                <Logo variant="light" className="h-24" />
               </div>
               <h2 className="text-4xl font-bold mb-4">Welcome to Sharkbid</h2>
               <p className="text-blue-100 text-lg">
@@ -123,7 +123,7 @@ export default function Login() {
             {/* Mobile Header */}
             <div className="md:hidden text-center mb-8">
               <div className="flex justify-center mb-4">
-                <Logo variant="light" className="h-12" />
+                <Logo variant="light" className="h-20" />
               </div>
               <h1 className="text-3xl font-bold text-white mb-2">Sharkbid</h1>
               <p className="text-sm text-blue-100">Business-to-Vendor Matching Platform</p>

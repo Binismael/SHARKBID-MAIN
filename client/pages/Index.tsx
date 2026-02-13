@@ -10,7 +10,7 @@ export default function Index() {
       <nav className="border-b border-border/50 backdrop-blur-md sticky top-0 z-50 bg-background/80">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <Logo variant="dark" />
+            <Logo variant="dark" className="h-16" />
           </Link>
           <div className="flex items-center gap-4">
             <Link to="/login" className="text-foreground hover:text-primary transition font-medium">
@@ -390,7 +390,7 @@ export default function Index() {
             {/* Brand */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <Logo variant="dark" className="h-8" />
+                <Logo variant="dark" className="h-14" />
               </div>
               <p className="text-sm text-muted-foreground">The B2B marketplace powered by intelligent matching.</p>
             </div>
