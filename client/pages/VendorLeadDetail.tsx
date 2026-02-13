@@ -149,6 +149,13 @@ export default function VendorLeadDetail() {
           });
 
         if (insertError) throw insertError;
+
+        // Update routing status
+        await supabase
+          .from('project_routing')
+          .update({ status: 'bid_submitted' })
+          .eq('project_id', projectId)
+          .eq('vendor_id', user.id);
       }
 
       setShowBidForm(false);

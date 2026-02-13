@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, BarChart3, TrendingUp, AlertCircle, Loader2, Clock, CheckCircle2, MessageSquare, Eye, LogOut, User, ArrowLeft } from 'lucide-react';
+import { Plus, BarChart3, TrendingUp, AlertCircle, Loader2, Clock, CheckCircle2, MessageSquare, Eye, LogOut, User, Users, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';

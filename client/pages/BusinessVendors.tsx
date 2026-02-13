@@ -213,7 +213,7 @@ export default function BusinessVendors() {
                         </Button>
                         <Button
                           variant="outline"
-                          onClick={() => navigate(`/vendor/profile/${vendor.id}`)} // If we have a public profile
+                          onClick={() => navigate(`/business/vendors/${vendor.id}`)}
                           className="px-4 border-slate-200 dark:border-slate-700"
                         >
                           View Profile
