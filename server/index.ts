@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config({ override: true });
 import express from "express";
 import cors from "cors";
+import proxy from "express-http-proxy";
 import { handleDemo } from "./routes/demo";
 import { handleAIIntake } from "./routes/ai-intake";
 import { handleTriggerRouting } from "./routes/lead-routing";
@@ -13,6 +14,20 @@ import adminRouter from "./routes/admin";
 
 export function createServer() {
   const app = express();
+
+  // Supabase Proxy (Must come before body parsers to avoid issues with large payloads or multipart)
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://kpytttekmeoeqskfopqj.supabase.co";
+  const cleanSupabaseUrl = supabaseUrl.endsWith('/') ? supabaseUrl.slice(0, -1) : supabaseUrl;
+
+  app.use("/supabase", proxy(cleanSupabaseUrl, {
+    proxyReqPathResolver: (req) => {
+      return req.url; // Forward the rest of the path
+    },
+    proxyReqOptDecorator: (proxyReqOpts) => {
+      // Ensure origin and referer are handled if needed by Supabase
+      return proxyReqOpts;
+    }
+  }));
 
   // Middleware
   app.use(cors());

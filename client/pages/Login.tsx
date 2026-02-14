@@ -32,17 +32,6 @@ export default function Login() {
     e.preventDefault();
     setError("");
 
-    // Debug connectivity
-    try {
-      console.log("Login: Testing Supabase connectivity...");
-      const testRes = await fetch("https://kpytttekmeoeqskfopqj.supabase.co/rest/v1/health", {
-        headers: { 'apikey': 'placeholder' } // Just to test reachability
-      });
-      console.log("Login: Connectivity test status:", testRes.status);
-    } catch (e) {
-      console.warn("Login: Connectivity test failed (expected if blocked or no key):", e);
-    }
-
     if (!email || !password) {
       setError("Please fill in all fields");
       return;

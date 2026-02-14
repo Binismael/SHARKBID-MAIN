@@ -18,30 +18,28 @@ const rawKey =
   import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ||
   "";
 
-// Clean the URL (remove trailing slash)
-const supabaseUrl = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl;
+// Use proxied URL for browser requests to avoid fetch interception/CORS issues
+// Using a relative path "/supabase" which is proxied by Vite (dev) and Express (prod)
+const supabaseUrl = "/supabase";
 const supabaseAnonKey = rawKey;
 
-if (!supabaseUrl || !supabaseAnonKey || isPlaceholder(supabaseUrl) || isPlaceholder(supabaseAnonKey)) {
-  console.error("❌ Supabase configuration missing or invalid!", {
-    url: supabaseUrl ? (isPlaceholder(supabaseUrl) ? "PLACEHOLDER" : "PRESENT") : "MISSING",
-    key: supabaseAnonKey ? (isPlaceholder(supabaseAnonKey) ? "PLACEHOLDER" : "PRESENT") : "MISSING"
+if (isPlaceholder(rawKey)) {
+  console.error("❌ Supabase Anon Key missing or invalid!", {
+    key: rawKey ? "PLACEHOLDER" : "MISSING"
   });
 } else {
-  console.log("✅ Supabase initialized for client:", supabaseUrl);
+  console.log("✅ Supabase client initialized via proxy: /supabase");
 }
 
-// In case fetch is overridden, we log it but use it.
-// If it fails, the user will see it in the console.
 export const supabase = createClient(
-  supabaseUrl || "https://placeholder.supabase.co",
+  supabaseUrl,
   supabaseAnonKey || "placeholder",
   {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      storage: window.localStorage // Explicitly use localStorage
+      storage: window.localStorage
     }
   }
 );

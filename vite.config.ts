@@ -16,6 +16,11 @@ export default defineConfig(({ mode }) => ({
         target: 'http://127.0.0.1:5173',
         changeOrigin: true,
       },
+      '/supabase': {
+        target: 'https://kpytttekmeoeqskfopqj.supabase.co',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/supabase/, ''),
+      },
     },
   },
   build: {
