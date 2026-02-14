@@ -121,14 +121,14 @@ export default function VendorProfile() {
 
         setServices(categoriesData || []);
 
-        // Fetch vendor profile
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
+        // Fetch vendor profile via server-side API to bypass RLS recursion
+        const response = await fetch('/api/profiles/me', {
+          headers: { 'x-user-id': user.id }
+        });
+        const result = await response.json();
 
-        if (profileData) {
+        if (result.success && result.data) {
+          const profileData = result.data;
           setProfile(profileData);
 
           // vendor_services should contain service category IDs
@@ -209,10 +209,14 @@ export default function VendorProfile() {
 
       const coverageAreaIds = coverageData?.map(item => item.id) || [];
 
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .upsert({
-          user_id: user.id,
+      // Update profile via server-side API to bypass RLS recursion
+      const response = await fetch('/api/profiles/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id
+        },
+        body: JSON.stringify({
           role: 'vendor',
           company_name: profile.company_name,
           company_description: profile.company_description,
@@ -224,9 +228,14 @@ export default function VendorProfile() {
           vendor_services: selectedServices,
           vendor_coverage_areas: coverageAreaIds,
           is_approved: false,
-        }, { onConflict: 'user_id' });
+        })
+      });
 
-      if (updateError) throw updateError;
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update profile');
+      }
 
       setSuccess(true);
       setTimeout(() => {

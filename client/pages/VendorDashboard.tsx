@@ -81,6 +81,17 @@ export default function VendorDashboard() {
         // Check vendor profile with timeout to avoid hanging on RLS issues
         const fetchProfile = async () => {
           try {
+            // Use server-side API to bypass RLS recursion
+            const response = await fetch('/api/profiles/me', {
+              headers: { 'x-user-id': user.id }
+            });
+            const result = await response.json();
+
+            if (result.success && result.data) {
+              return result.data;
+            }
+
+            // Fallback to direct supabase fetch if API fails
             const profilePromise = supabase
               .from('profiles')
               .select('vendor_services')
@@ -88,19 +99,25 @@ export default function VendorDashboard() {
               .maybeSingle();
 
             const timeoutPromise = new Promise((_, reject) =>
-              setTimeout(() => reject(new Error("Timeout")), 5000)
+              setTimeout(() => reject(new Error("Timeout")), 3000)
             );
 
-            const result = await Promise.race([profilePromise, timeoutPromise]) as any;
-            return result.data;
+            const resultRace = await Promise.race([profilePromise, timeoutPromise]) as any;
+            return resultRace.data;
           } catch (e) {
             console.error("Dashboard profile fetch timeout or exception:", e);
             return null;
           }
         };
 
-        const [profileData, bidsResult, assignedResult, leadsResult] = await Promise.all([
-          fetchProfile(),
+        // Check profile separately so it doesn't block the leads/stats
+        fetchProfile().then(profileData => {
+          if (profileData?.vendor_services && profileData.vendor_services.length > 0) {
+            setProfileComplete(true);
+          }
+        });
+
+        const [bidsResult, assignedResult, leadsResult] = await Promise.all([
           fetchWithTimeout('/api/projects/vendor-bids', { headers: { 'x-vendor-id': user.id } }),
           fetchWithTimeout('/api/projects/vendor', { headers: { 'x-user-id': user.id } }),
           fetchWithTimeout('/api/projects/routed', { headers: { 'x-user-id': user.id } })
@@ -108,10 +125,6 @@ export default function VendorDashboard() {
           console.error("Parallel fetch error:", err);
           throw new Error("One or more requests failed. Please refresh.");
         });
-
-        if (profileData?.vendor_services && profileData.vendor_services.length > 0) {
-          setProfileComplete(true);
-        }
 
         if (bidsResult && assignedResult && leadsResult) {
           const bidsData = bidsResult.data;

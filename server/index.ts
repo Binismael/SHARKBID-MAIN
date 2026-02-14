@@ -4,6 +4,7 @@ import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { handleAIIntake } from "./routes/ai-intake";
 import { handleTriggerRouting } from "./routes/lead-routing";
+import { handleGetMyProfile, handleUpdateProfile } from "./routes/profiles";
 import { handlePublishProject, handleGetProject, handleGetAvailableProjects, handleGetRoutedLeads, handleGetVendorThreads, handleGetBusinessProjects, handleGetVendorProjects, handleGetUnroutedProjects, handleUpsertRouting, handleGetVendorBids, handleVendorSubmitBid, handleAssignVendor, handleDeleteProject, handleGetMessages, handleSendMessage, handleVendorUpdateStatus } from "./routes/projects";
 import { handleCreateProject } from "./routes/create-project";
 import emailRouter from "./routes/email";
@@ -27,6 +28,10 @@ export function createServer() {
 
   // AI Intake route
   app.post("/api/ai-intake", handleAIIntake);
+
+  // Profile routes
+  app.get("/api/profiles/me", handleGetMyProfile);
+  app.post("/api/profiles/update", handleUpdateProfile);
 
   // Project routes
   app.post("/api/projects/create", handleCreateProject);

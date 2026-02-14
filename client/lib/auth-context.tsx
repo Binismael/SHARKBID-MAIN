@@ -34,24 +34,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const fetchProfileWithTimeout = async (userId: string, metadataRole: any) => {
       try {
-        // Use Promise.race for timeout since supabase-js doesn't natively support AbortController in queries yet
-        const profilePromise = supabase
+        // Try fetching via server-side API first (bypasses RLS recursion)
+        const apiPromise = fetch('/api/profiles/me', {
+          headers: { 'x-user-id': userId }
+        }).then(res => res.json());
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), 3000)
+        );
+
+        const result = await Promise.race([apiPromise, timeoutPromise]) as any;
+
+        if (result && result.success && result.data) {
+          return result.data.role as "admin" | "business" | "vendor";
+        }
+
+        // Fallback to direct supabase fetch if API fails or is missing
+        const { data: profile } = await supabase
           .from("profiles")
           .select("role")
           .eq("user_id", userId)
           .maybeSingle();
-
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout")), 5000)
-        );
-
-        const result = await Promise.race([profilePromise, timeoutPromise]) as any;
-        const { data: profile, error: profileError } = result;
-
-        if (profileError) {
-          console.error("Profile fetch error:", profileError);
-          return (metadataRole || "business") as "admin" | "business" | "vendor";
-        }
 
         return (profile?.role || metadataRole || "business") as "admin" | "business" | "vendor";
       } catch (err) {
@@ -71,18 +74,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setSession(currentSession);
             setUser(currentSession.user);
 
-            // Set initial role from metadata immediately so app isn't blocked
+            // Set initial role from metadata immediately
             const initialRole = (currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
             setUserRole(initialRole);
 
-            // Then try to fetch fresh role from profile with timeout
-            const role = await fetchProfileWithTimeout(currentSession.user.id, initialRole);
-            if (mounted) setUserRole(role);
+            // IMPORTANT: Set loading to false NOW so the app can render
+            // based on the metadata role while we fetch the fresh profile in the background
+            setLoading(false);
+
+            // Fetch fresh role in background without blocking
+            fetchProfileWithTimeout(currentSession.user.id, initialRole).then(role => {
+              if (mounted) setUserRole(role);
+            });
           }
+        } else {
+          if (mounted) setLoading(false);
         }
       } catch (err) {
         console.error("Auth check error:", err);
-      } finally {
         if (mounted) setLoading(false);
       }
     };
@@ -103,17 +112,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const initialRole = (currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
           setUserRole(initialRole);
 
-          // Only show loading for fresh sign-ins or if we don't have a role yet
-          if (event === 'SIGNED_IN' && !userRole) {
-            setLoading(true);
-          }
+          // If we have a user and an initial role, we can stop the main loading spinner
+          setLoading(false);
 
-          try {
-            const role = await fetchProfileWithTimeout(currentSession.user.id, initialRole);
+          // Update profile in background
+          fetchProfileWithTimeout(currentSession.user.id, initialRole).then(role => {
             if (mounted) setUserRole(role);
-          } finally {
-            if (mounted) setLoading(false);
-          }
+          });
         }
       } else if (event === 'SIGNED_OUT') {
         setSession(null);
