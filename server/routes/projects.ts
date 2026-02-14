@@ -234,6 +234,72 @@ export const handleGetAvailableProjects: RequestHandler = async (_req, res) => {
   }
 };
 
+// Get all message threads for a vendor (Inbox)
+export const handleGetVendorThreads: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.headers["x-user-id"] as string;
+
+    if (!userId) {
+      return res.status(400).json({ error: "Missing x-user-id header" });
+    }
+
+    // We want to find all unique project IDs where:
+    // 1. Vendor is routed
+    // 2. Vendor has a bid
+    // 3. Vendor has messages
+
+    const [routing, responses, messages] = await Promise.all([
+      supabaseAdmin
+        .from("project_routing")
+        .select("project_id")
+        .eq("vendor_id", userId),
+      supabaseAdmin
+        .from("vendor_responses")
+        .select("project_id")
+        .eq("vendor_id", userId),
+      supabaseAdmin
+        .from("project_messages")
+        .select("project_id")
+        .eq("vendor_id", userId)
+    ]);
+
+    const projectIds = new Set([
+      ...(routing.data?.map(r => r.project_id) || []),
+      ...(responses.data?.map(r => r.project_id) || []),
+      ...(messages.data?.map(m => m.project_id) || [])
+    ]);
+
+    if (projectIds.size === 0) {
+      return res.json({ success: true, data: [] });
+    }
+
+    // Fetch project details for these IDs
+    const { data: projects, error: projectError } = await supabaseAdmin
+      .from("projects")
+      .select(`
+        id,
+        title,
+        description,
+        status,
+        created_at
+      `)
+      .in("id", Array.from(projectIds))
+      .order("created_at", { ascending: false });
+
+    if (projectError) throw projectError;
+
+    res.json({
+      success: true,
+      data: projects || [],
+    });
+  } catch (error) {
+    console.error("Get vendor threads error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
 // Get routed leads for a specific vendor (bypass RLS)
 export const handleGetRoutedLeads: RequestHandler = async (req, res) => {
   try {
@@ -647,8 +713,8 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
 
     if (!isOwner && !isAdmin) {
       // If not owner or admin, verify this user is a vendor for this project
-      // Check routing, responses, or selection
-      const [{ data: routing }, { data: response }] = await Promise.all([
+      // Check routing, responses, selection, or existing messages
+      const [{ data: routing }, { data: response }, { data: hasMessages }] = await Promise.all([
         supabaseAdmin
           .from("project_routing")
           .select("id")
@@ -660,26 +726,26 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
           .select("id")
           .eq("project_id", projectId)
           .eq("vendor_id", userId)
+          .maybeSingle(),
+        supabaseAdmin
+          .from("project_messages")
+          .select("id")
+          .eq("project_id", projectId)
+          .eq("vendor_id", userId)
+          .limit(1)
           .maybeSingle()
       ]);
 
       const isSelectedVendor = project.selected_vendor_id === userId;
 
-      if (!routing && !response && !isSelectedVendor) {
+      if (!routing && !response && !isSelectedVendor && !hasMessages) {
         return res.status(403).json({ error: "Not authorized to view messages" });
       }
     }
 
     // Filter messages:
     // 1. Project ID must match
-    // 2. Either (sender is owner and recipient/context is vendorId) OR (sender is vendorId)
-    // Actually, let's use a simpler approach:
-    // If vendorId is provided (or inferred), show messages where (sender=owner AND context_vendor=vendorId) OR (sender=vendorId)
-    // We'll use vendor_response_id if we want to be strict, but for now we'll use a custom query logic.
-
-    // Since we don't have a formal recipient_id, we'll use the presence of vendorId to filter.
-    // We should probably add vendor_id to project_messages for easier filtering.
-    // For now, we'll assume messages between owner and vendorId are what we want.
+    // 2. Either (sender is owner/admin and recipient/context is vendorId) OR (sender is vendorId)
 
     let query = supabaseAdmin
       .from("project_messages")
@@ -687,19 +753,13 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
       .eq("project_id", projectId);
 
     if (vendorId || isAdmin) {
-      const { data: response } = await supabaseAdmin
-        .from("vendor_responses")
-        .select("id")
-        .eq("project_id", projectId)
-        .eq("vendor_id", vendorId || '')
-        .maybeSingle();
-
-      // Simplified filter: messages linked to this vendor's bid OR messages between owner and vendor without a link
-      // For Admin, if no vendorId is provided, they see everything for this project
+      // If Admin, if no vendorId is provided, they see everything for this project
       if (isAdmin && !vendorId) {
         query = query.eq("project_id", projectId);
       } else {
-        query = query.or(`vendor_response_id.eq.${response?.id || '00000000-0000-0000-0000-000000000000'},and(sender_id.eq.${project.business_id},sender_id.neq.${userId}),and(sender_id.eq.${vendorId})`);
+        // Show messages where vendor_id matches OR sender is the vendor
+        // This covers messages sent to the vendor and messages sent by the vendor
+        query = query.or(`vendor_id.eq.${vendorId},sender_id.eq.${vendorId}`);
       }
     }
 
@@ -880,7 +940,7 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
 
     if (!isOwner && !isAdmin) {
       // Verify vendor authorization
-      const [{ data: routing }, { data: response }] = await Promise.all([
+      const [{ data: routing }, { data: response }, { data: hasMessages }] = await Promise.all([
         supabaseAdmin
           .from("project_routing")
           .select("id")
@@ -892,17 +952,24 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
           .select("id")
           .eq("project_id", projectId)
           .eq("vendor_id", userId)
+          .maybeSingle(),
+        supabaseAdmin
+          .from("project_messages")
+          .select("id")
+          .eq("project_id", projectId)
+          .eq("vendor_id", userId)
+          .limit(1)
           .maybeSingle()
       ]);
 
       const isSelectedVendor = project.selected_vendor_id === userId;
 
-      if (!routing && !response && !isSelectedVendor) {
+      if (!routing && !response && !isSelectedVendor && !hasMessages) {
         return res.status(403).json({ error: "Not authorized" });
       }
     }
 
-    // Find vendor_response_id to link the message
+    // Find vendor_response_id to link the message (optional)
     const { data: response } = await supabaseAdmin
       .from("vendor_responses")
       .select("id")
@@ -915,6 +982,7 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
       .insert({
         project_id: projectId,
         sender_id: userId,
+        vendor_id: vendorId || null,
         message_text: messageText || "",
         vendor_response_id: response?.id || null,
         image_url: imageUrl || null

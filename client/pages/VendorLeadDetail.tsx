@@ -51,6 +51,7 @@ export default function VendorLeadDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [existingBid, setExistingBid] = useState<ExistingBid | null>(null);
+  const [hasMessages, setHasMessages] = useState(false);
   const [showBidForm, setShowBidForm] = useState(false);
 
   // Form state
@@ -109,6 +110,17 @@ export default function VendorLeadDetail() {
             setProposedTimeline(bidData.proposed_timeline || '');
             setResponseNotes(bidData.response_notes || '');
           }
+        }
+
+        // Check for existing messages
+        const msgsResponse = await fetch(`/api/projects/${projectId}/messages`, {
+          headers: {
+            'x-user-id': user.id
+          }
+        });
+        const msgsResult = await msgsResponse.json();
+        if (msgsResult.success && msgsResult.data && msgsResult.data.length > 0) {
+          setHasMessages(true);
         }
       } catch (err) {
         const message = getErrorMessage(err || 'Failed to load project');
@@ -371,7 +383,7 @@ export default function VendorLeadDetail() {
             )}
 
             {/* Messaging System */}
-            {(existingBid || project.selected_vendor_id === user.id) && (
+            {(existingBid || project.selected_vendor_id === user.id || hasMessages) && (
               <section className="pt-12 space-y-6">
                 <div className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />

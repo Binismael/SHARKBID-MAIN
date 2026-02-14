@@ -4,7 +4,7 @@ import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { handleAIIntake } from "./routes/ai-intake";
 import { handleTriggerRouting } from "./routes/lead-routing";
-import { handlePublishProject, handleGetProject, handleGetAvailableProjects, handleGetRoutedLeads, handleGetBusinessProjects, handleGetVendorProjects, handleGetUnroutedProjects, handleUpsertRouting, handleGetVendorBids, handleVendorSubmitBid, handleAssignVendor, handleDeleteProject, handleGetMessages, handleSendMessage, handleVendorUpdateStatus } from "./routes/projects";
+import { handlePublishProject, handleGetProject, handleGetAvailableProjects, handleGetRoutedLeads, handleGetVendorThreads, handleGetBusinessProjects, handleGetVendorProjects, handleGetUnroutedProjects, handleUpsertRouting, handleGetVendorBids, handleVendorSubmitBid, handleAssignVendor, handleDeleteProject, handleGetMessages, handleSendMessage, handleVendorUpdateStatus } from "./routes/projects";
 import { handleCreateProject } from "./routes/create-project";
 import emailRouter from "./routes/email";
 import adminRouter from "./routes/admin";
@@ -34,6 +34,7 @@ export function createServer() {
   app.get("/api/projects/available", handleGetAvailableProjects);
   app.get("/api/projects/unrouted", handleGetUnroutedProjects);
   app.get("/api/projects/routed", handleGetRoutedLeads);
+  app.get("/api/projects/vendor-threads", handleGetVendorThreads);
   app.get("/api/projects/business", handleGetBusinessProjects);
   app.get("/api/projects/vendor", handleGetVendorProjects);
   app.post("/api/projects/upsert-routing", handleUpsertRouting);

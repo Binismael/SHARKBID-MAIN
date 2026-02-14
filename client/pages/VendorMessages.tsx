@@ -28,28 +28,28 @@ export default function VendorMessages() {
     const fetchThreads = async () => {
       try {
         setLoading(true);
-        
-        // 1. Get routed leads
-        const routedResponse = await fetch('/api/projects/routed', {
+
+        // Fetch all relevant threads for the vendor
+        const threadsResponse = await fetch('/api/projects/vendor-threads', {
           headers: { 'x-user-id': user.id }
         });
-        const routedResult = await routedResponse.json();
+        const threadsResult = await threadsResponse.json();
 
-        // 2. Get bids
+        // Still get bids to show status
         const bidsResponse = await fetch('/api/projects/vendor-bids', {
           headers: { 'x-vendor-id': user.id }
         });
         const bidsResult = await bidsResponse.json();
 
-        if (routedResult.success && bidsResult.success) {
+        if (threadsResult.success && bidsResult.success) {
           const bidMap = new Map(bidsResult.data.map((b: any) => [b.project_id, b.status]));
-          
-          const threadData = routedResult.data.map((item: any) => ({
-            id: item.projects.id,
-            title: item.projects.title,
-            description: item.projects.description,
-            status: item.projects.status,
-            bid_status: bidMap.get(item.projects.id) || 'no_bid'
+
+          const threadData = threadsResult.data.map((project: any) => ({
+            id: project.id,
+            title: project.title,
+            description: project.description,
+            status: project.status,
+            bid_status: bidMap.get(project.id) || 'no_bid'
           }));
 
           setThreads(threadData);
