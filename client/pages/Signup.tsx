@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { getErrorMessage } from "@/lib/utils";
-import { Sparkles, ArrowRight, Building2, Briefcase, Shield, CheckCircle2, Zap, AlertCircle, ShieldCheck } from "lucide-react";
+import { Sparkles, ArrowRight, Building2, Briefcase, Shield, CheckCircle2, Zap, AlertCircle, ShieldCheck, Loader2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
