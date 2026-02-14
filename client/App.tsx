@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth-context";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { AIAssistant } from "@/components/AIAssistant";
 
 // Public pages
 import Index from "./pages/Index";
@@ -241,6 +242,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AppRoutes />
+          <AIAssistant />
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>

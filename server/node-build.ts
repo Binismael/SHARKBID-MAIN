@@ -1,7 +1,7 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import { createServer } from "./index";
-import * as express from "express";
+import express from "express";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -20,7 +20,7 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-app.get("*", (req, res) => {
+app.get("/:path(.*)", (req, res) => {
   // Don't serve index.html for API routes
   if (req.path.startsWith("/api/")) {
     return res.status(404).json({ error: "API endpoint not found" });

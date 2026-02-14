@@ -5,13 +5,15 @@ const router = Router();
 
 // Create Supabase client with service role key (bypasses RLS)
 // Only use in secure server context, NEVER expose the key to client
-const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const supabaseUrl = process.env.VITE_SB_SUPABASE_URL || "";
+const serviceRoleKey = process.env.SB_SUPABASE_SERVICE_ROLE_KEY || "";
 
 console.log(`[ADMIN] Supabase URL: ${supabaseUrl ? "configured" : "NOT configured"}`);
 console.log(`[ADMIN] Service Role Key: ${serviceRoleKey ? "configured" : "NOT configured"}`);
 
-const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+const supabaseAdmin = (supabaseUrl && serviceRoleKey)
+  ? createClient(supabaseUrl, serviceRoleKey)
+  : null;
 
 // Middleware to verify admin user (basic check)
 async function verifyAdmin(req: Request, res: Response, next: Function) {

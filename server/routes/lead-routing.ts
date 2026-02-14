@@ -1,14 +1,16 @@
 import { RequestHandler } from "express";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const supabaseUrl = process.env.VITE_SB_SUPABASE_URL || "";
+const supabaseServiceKey = process.env.SB_SUPABASE_SERVICE_ROLE_KEY || "";
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.warn("⚠️ [LEAD-ROUTING] Supabase credentials missing. Lead routing will fail.");
 }
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseAdmin = (supabaseUrl && supabaseServiceKey)
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
 
 interface MatchedVendor {
   vendor_id: string;
@@ -57,6 +59,9 @@ async function checkServiceMatch(
 
 // Main routing function
 async function routeProjectToVendors(projectId: string): Promise<MatchedVendor[]> {
+  if (!supabaseAdmin) {
+    throw new Error("Supabase admin client not initialized. Check credentials.");
+  }
   try {
     // 1. Fetch project details
     const { data: project, error: projectError } = await supabaseAdmin

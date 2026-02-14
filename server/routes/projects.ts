@@ -2,14 +2,16 @@ import { RequestHandler } from "express";
 import { createClient } from "@supabase/supabase-js";
 import { routeProjectToVendors } from "./lead-routing";
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const supabaseUrl = process.env.VITE_SB_SUPABASE_URL || "";
+const supabaseServiceKey = process.env.SB_SUPABASE_SERVICE_ROLE_KEY || "";
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.warn("⚠️ [PROJECTS] Supabase credentials missing. Project endpoints will fail.");
 }
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseAdmin = (supabaseUrl && supabaseServiceKey)
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
 
 // Publish a project (change status from draft to open and route to vendors)
 export const handlePublishProject: RequestHandler = async (req, res) => {

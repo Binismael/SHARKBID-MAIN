@@ -1,14 +1,16 @@
 import { RequestHandler } from "express";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const supabaseUrl = process.env.VITE_SB_SUPABASE_URL || "";
+const supabaseServiceKey = process.env.SB_SUPABASE_SERVICE_ROLE_KEY || "";
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.warn("⚠️ [PROFILES] Supabase credentials missing. Profile endpoints will fail.");
 }
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseAdmin = (supabaseUrl && supabaseServiceKey)
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
 
 export const handleGetMyProfile: RequestHandler = async (req, res) => {
   try {
