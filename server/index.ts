@@ -29,22 +29,33 @@ export function createServer() {
       const targetUrl = (process.env.VITE_SUPABASE_URL || "https://kpytttekmeoeqskfopqj.supabase.co").replace(/\/$/, "");
       const url = `${targetUrl}${req.url}`;
 
-      console.log(`[PROXY] Manual Fetch: ${req.method} ${req.originalUrl} -> ${url}`);
-
       const headers: Record<string, string> = {};
       Object.entries(req.headers).forEach(([key, value]) => {
-        if (value && typeof value === 'string' && key !== 'host' && key !== 'connection') {
-          headers[key] = value;
+        if (key === 'host' || key === 'connection' || key === 'content-length') return;
+        if (value) {
+          headers[key] = Array.isArray(value) ? value.join(', ') : value;
         }
       });
-      headers['host'] = new URL(targetUrl).host;
 
-      console.log(`[PROXY] Sending Headers:`, Object.keys(headers));
+      // Ensure the host is set to the target Supabase host
+      const targetHost = new URL(targetUrl).host;
+      headers['host'] = targetHost;
+
+      // Fail-safe: If apikey is missing or placeholder, use the one from environment
+      const envAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+      if (envAnonKey && (!headers['apikey'] || headers['apikey'] === 'placeholder' || headers['apikey'].includes('your-'))) {
+        headers['apikey'] = envAnonKey;
+
+        // Only overwrite authorization if it's missing, or if it's the anon key placeholder
+        if (!headers['authorization'] || headers['authorization'].includes('placeholder') || headers['authorization'].includes('your-')) {
+          headers['authorization'] = `Bearer ${envAnonKey}`;
+        }
+      }
 
       const response = await fetch(url, {
         method: req.method,
         headers,
-        body: ['GET', 'HEAD'].includes(req.method) ? undefined : (typeof req.body === 'string' ? req.body : JSON.stringify(req.body)),
+        body: ['GET', 'HEAD'].includes(req.method) ? undefined : (typeof req.body === 'object' ? JSON.stringify(req.body) : req.body),
       });
 
       const buffer = await response.arrayBuffer();
