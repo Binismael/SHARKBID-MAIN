@@ -61,4 +61,21 @@ ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE project_routing ENABLE ROW LEVEL SECURITY;
 
 -- 6. Ensure other tables are also fixed if needed
--- (profiles already had a simple 'true' for select, which is good)
+-- profiles recursion fix: avoid SELECT 1 FROM profiles inside the policy
+DROP POLICY IF EXISTS "profiles_read" ON profiles;
+DROP POLICY IF EXISTS "profiles_admin_all" ON profiles;
+
+CREATE POLICY "profiles_read" ON profiles
+  FOR SELECT TO authenticated
+  USING (true);
+
+CREATE POLICY "profiles_admin_all" ON profiles
+  FOR ALL TO authenticated
+  USING (
+    auth.uid() = user_id OR
+    (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin')
+  )
+  WITH CHECK (
+    auth.uid() = user_id OR
+    (auth.jwt() -> 'user_metadata' ->> 'role' = 'admin')
+  );

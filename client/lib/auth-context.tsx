@@ -30,6 +30,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Check if user is already logged in on mount
   useEffect(() => {
+    let mounted = true;
+
+    const fetchProfileWithTimeout = async (userId: string, metadataRole: any) => {
+      try {
+        // Use Promise.race for timeout since supabase-js doesn't natively support AbortController in queries yet
+        const profilePromise = supabase
+          .from("profiles")
+          .select("role")
+          .eq("user_id", userId)
+          .maybeSingle();
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), 5000)
+        );
+
+        const result = await Promise.race([profilePromise, timeoutPromise]) as any;
+        const { data: profile, error: profileError } = result;
+
+        if (profileError) {
+          console.error("Profile fetch error:", profileError);
+          return (metadataRole || "business") as "admin" | "business" | "vendor";
+        }
+
+        return (profile?.role || metadataRole || "business") as "admin" | "business" | "vendor";
+      } catch (err) {
+        console.error("Profile fetch timeout or exception:", err);
+        return (metadataRole || "business") as "admin" | "business" | "vendor";
+      }
+    };
+
     const checkAuth = async () => {
       try {
         const {
@@ -37,34 +67,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } = await supabase.auth.getSession();
 
         if (currentSession?.user) {
-          setSession(currentSession);
-          setUser(currentSession.user);
+          if (mounted) {
+            setSession(currentSession);
+            setUser(currentSession.user);
 
-          try {
-            // Fetch role from profile table as source of truth
-            const { data: profile, error: profileError } = await supabase
-              .from("profiles")
-              .select("role")
-              .eq("user_id", currentSession.user.id)
-              .maybeSingle();
+            // Set initial role from metadata immediately so app isn't blocked
+            const initialRole = (currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
+            setUserRole(initialRole);
 
-            if (profileError) {
-              console.error("Profile fetch error during checkAuth:", profileError);
-            }
-
-            const role = (profile?.role || currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
-            setUserRole(role);
-          } catch (profileErr) {
-            console.error("Catch error during profile fetch in checkAuth:", profileErr);
-            // Fallback to metadata
-            const role = (currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
-            setUserRole(role);
+            // Then try to fetch fresh role from profile with timeout
+            const role = await fetchProfileWithTimeout(currentSession.user.id, initialRole);
+            if (mounted) setUserRole(role);
           }
         }
       } catch (err) {
         console.error("Auth check error:", err);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
@@ -73,41 +92,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
-      setLoading(true); // Re-trigger loading on state change
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      if (!mounted) return;
 
-      if (currentSession?.user) {
-        setSession(currentSession);
-        setUser(currentSession.user);
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        if (currentSession?.user) {
+          setSession(currentSession);
+          setUser(currentSession.user);
 
-        try {
-          // Fetch role from profile table as source of truth
-          const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("user_id", currentSession.user.id)
-            .maybeSingle();
+          const initialRole = (currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
+          setUserRole(initialRole);
 
-          if (profileError) {
-            console.error("Profile fetch error during onAuthStateChange:", profileError);
+          // Only show loading for fresh sign-ins or if we don't have a role yet
+          if (event === 'SIGNED_IN' && !userRole) {
+            setLoading(true);
           }
 
-          const role = (profile?.role || currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
-          setUserRole(role);
-        } catch (profileErr) {
-          console.error("Catch error during profile fetch in onAuthStateChange:", profileErr);
-          const role = (currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
-          setUserRole(role);
+          try {
+            const role = await fetchProfileWithTimeout(currentSession.user.id, initialRole);
+            if (mounted) setUserRole(role);
+          } finally {
+            if (mounted) setLoading(false);
+          }
         }
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         setSession(null);
         setUser(null);
         setUserRole(null);
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => {
+      mounted = false;
       subscription?.unsubscribe();
     };
   }, []);
