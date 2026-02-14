@@ -4,26 +4,24 @@ import { createClient } from "@supabase/supabase-js";
 const isPlaceholder = (val: string | undefined) => 
   !val || val.includes("your-") || val.includes("__") || val.length < 20;
 
-// Try multiple environment variable names
-const supabaseUrl = !isPlaceholder(import.meta.env.VITE_SB_SUPABASE_URL)
-  ? import.meta.env.VITE_SB_SUPABASE_URL
-  : (import.meta.env.VITE_SUPABASE_URL || "");
+const rawUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SB_SUPABASE_URL || "";
+const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SB_SUPABASE_ANON_KEY || "";
 
-const supabaseAnonKey = !isPlaceholder(import.meta.env.VITE_SB_SUPABASE_ANON_KEY)
-  ? import.meta.env.VITE_SB_SUPABASE_ANON_KEY
-  : (import.meta.env.VITE_SUPABASE_ANON_KEY || "");
+const supabaseUrl = !isPlaceholder(rawUrl) ? rawUrl : "";
+const supabaseAnonKey = !isPlaceholder(rawKey) ? rawKey : "";
 
-// Always require real credentials
-if (!supabaseUrl || !supabaseAnonKey || isPlaceholder(supabaseUrl) || isPlaceholder(supabaseAnonKey)) {
-  console.error("❌ Supabase credentials missing or invalid:", {
-    url: supabaseUrl ? "present" : "missing",
-    key: supabaseAnonKey ? "present" : "missing",
-    isUrlPlaceholder: isPlaceholder(supabaseUrl),
-    isKeyPlaceholder: isPlaceholder(supabaseAnonKey)
-  });
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error("❌ Supabase configuration missing!");
 }
 
 export const supabase = createClient(
-  supabaseUrl || "https://placeholder.supabase.co", 
-  supabaseAnonKey || "placeholder"
+  supabaseUrl || "https://placeholder.supabase.co",
+  supabaseAnonKey || "placeholder",
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  }
 );
