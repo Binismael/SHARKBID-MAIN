@@ -5,8 +5,8 @@ const router = Router();
 
 // Create Supabase client with service role key (bypasses RLS)
 // Only use in secure server context, NEVER expose the key to client
-const supabaseUrl = process.env.VITE_SUPABASE_URL_APP || "";
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY_APP || "";
+const supabaseUrl = process.env.VITE_SB_SUPABASE_URL || "";
+const serviceRoleKey = process.env.SB_SUPABASE_SERVICE_ROLE_KEY || "";
 
 console.log(`[ADMIN] Supabase URL: ${supabaseUrl ? "configured" : "NOT configured"}`);
 console.log(`[ADMIN] Service Role Key: ${serviceRoleKey ? "configured" : "NOT configured"}`);
