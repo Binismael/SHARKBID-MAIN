@@ -916,10 +916,11 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
         profiles: profile
       },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Send message error:", error);
+    const errorMessage = error?.message || error?.error_description || "Unknown error";
     res.status(500).json({
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: errorMessage,
     });
   }
 };
