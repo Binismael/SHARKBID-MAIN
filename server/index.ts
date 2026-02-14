@@ -15,25 +15,6 @@ import adminRouter from "./routes/admin";
 export function createServer() {
   const app = express();
 
-  // Supabase Proxy (Must come before body parsers to avoid issues with large payloads or multipart)
-  const supabaseUrl = process.env.VITE_SUPABASE_URL || "https://kpytttekmeoeqskfopqj.supabase.co";
-  const cleanSupabaseUrl = supabaseUrl.endsWith('/') ? supabaseUrl.slice(0, -1) : supabaseUrl;
-
-  app.use("/supabase", proxy(cleanSupabaseUrl, {
-    proxyReqPathResolver: (req) => {
-      return req.url; // Forward the rest of the path
-    },
-    proxyReqOptDecorator: (proxyReqOpts, _srcReq) => {
-      // Ensure apikey header is preserved if already set by client
-      // or set it here if needed. supabase-js sets it on the client.
-      return proxyReqOpts;
-    },
-    userResHeaderDecorator: (headers, _userReq, _userRes, _proxyReq, _proxyRes) => {
-      // Handle CORS headers from Supabase if needed
-      return headers;
-    }
-  }));
-
   // Middleware
   app.use(cors());
   app.use(express.json());

@@ -18,25 +18,23 @@ const rawKey =
   import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ||
   "";
 
-// Use proxied URL for browser requests to avoid fetch interception/CORS issues
-// We use a full URL because supabase-js validates it must start with http/https
-const supabaseUrl = typeof window !== 'undefined'
-  ? `${window.location.origin}/supabase`
-  : "https://placeholder.supabase.co";
-
+// Clean the URL (remove trailing slash)
+const supabaseUrl = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl;
 const supabaseAnonKey = rawKey;
 
-if (isPlaceholder(rawKey)) {
-  console.error("❌ Supabase Anon Key missing or invalid!", {
-    key: rawKey ? "PLACEHOLDER" : "MISSING"
+if (!supabaseUrl || !supabaseAnonKey || isPlaceholder(supabaseUrl) || isPlaceholder(supabaseAnonKey)) {
+  console.error("❌ Supabase configuration missing or invalid!", {
+    url: supabaseUrl ? (isPlaceholder(supabaseUrl) ? "PLACEHOLDER" : "PRESENT") : "MISSING",
+    key: supabaseAnonKey ? (isPlaceholder(supabaseAnonKey) ? "PLACEHOLDER" : "PRESENT") : "MISSING"
   });
 } else {
-  console.log("✅ Supabase client initialized via proxy:", supabaseUrl);
-  console.log("✅ Anon Key Length:", rawKey?.length);
+  console.log("✅ Supabase initialized directly:", supabaseUrl);
+  // Log a tiny bit of the key for debugging without exposing it
+  console.log("✅ Anon Key fragment:", supabaseAnonKey.substring(0, 10) + "..." + supabaseAnonKey.substring(supabaseAnonKey.length - 5));
 }
 
 export const supabase = createClient(
-  supabaseUrl,
+  supabaseUrl || "https://placeholder.supabase.co",
   supabaseAnonKey || "placeholder",
   {
     auth: {
