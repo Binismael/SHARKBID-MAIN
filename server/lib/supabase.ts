@@ -1,7 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
-import "dotenv/config";
+import dotenv from "dotenv";
 
-export const isPlaceholder = (val: string | undefined) => 
+dotenv.config({ override: true });
+
+export const isPlaceholder = (val: string | undefined) =>
   !val || val.includes("your-") || val.includes("__") || val.length < 20;
 
 // Try multiple environment variable names
