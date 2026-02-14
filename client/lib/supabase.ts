@@ -19,8 +19,11 @@ const rawKey =
   "";
 
 // Use proxied URL for browser requests to avoid fetch interception/CORS issues
-// Using a relative path "/supabase" which is proxied by Vite (dev) and Express (prod)
-const supabaseUrl = "/supabase";
+// We use a full URL because supabase-js validates it must start with http/https
+const supabaseUrl = typeof window !== 'undefined'
+  ? `${window.location.origin}/supabase`
+  : "https://placeholder.supabase.co";
+
 const supabaseAnonKey = rawKey;
 
 if (isPlaceholder(rawKey)) {
@@ -28,7 +31,7 @@ if (isPlaceholder(rawKey)) {
     key: rawKey ? "PLACEHOLDER" : "MISSING"
   });
 } else {
-  console.log("✅ Supabase client initialized via proxy: /supabase");
+  console.log("✅ Supabase client initialized via proxy:", supabaseUrl);
 }
 
 export const supabase = createClient(
