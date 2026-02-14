@@ -38,17 +38,6 @@ export default function Index() {
             <Logo variant="light" className="h-12" />
           </Link>
           
-          <div className="hidden md:flex items-center gap-12">
-            {['Services', 'Network', 'Transparency', 'Pricing'].map((item) => (
-              <Link 
-                key={item} 
-                to={`#${item.toLowerCase()}`} 
-                className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-white transition-colors"
-              >
-                {item}
-              </Link>
-            ))}
-          </div>
 
           <div className="flex items-center gap-6">
             <Link to="/login" className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-white transition-colors">
