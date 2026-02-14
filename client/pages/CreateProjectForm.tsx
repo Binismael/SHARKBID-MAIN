@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Briefcase, Calendar, DollarSign, MapPin, Building2, FileText, ChevronRight, Sparkles } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { getErrorMessage } from '@/lib/utils';
+import { getErrorMessage, cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface FormData {
   title: string;
@@ -166,231 +167,321 @@ export default function CreateProjectForm() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 pb-20">
+      {/* Background Decor */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500/5 blur-[120px]" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-500/5 blur-[120px]" />
+      </div>
+
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6">
         {/* Header */}
-        <div className="mb-8">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/business/dashboard')}
-            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4 px-0"
+        <div className="pt-12 mb-10">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
           >
-            <ArrowLeft size={20} />
-            Back to Dashboard
-          </Button>
-          <h1 className="text-3xl font-bold mb-2">Create a New Project</h1>
-          <p className="text-slate-600">
-            Fill out the details below to post your project and find vendors
-          </p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/business/dashboard')}
+              className="group flex items-center gap-2 text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 mb-6 px-0 transition-colors"
+            >
+              <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
+              <span className="text-xs font-black uppercase tracking-[0.2em]">Dashboard</span>
+            </Button>
+          </motion.div>
+
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div className="h-10 w-10 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20 rotate-3">
+                  <Briefcase className="h-5 w-5 text-white" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400">Project Launchpad</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-white uppercase leading-none">
+                Post <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">New Project</span>
+              </h1>
+              <p className="text-slate-500 dark:text-slate-400 mt-4 text-sm font-medium max-w-lg">
+                Connect with top-tier vendors by providing clear project specifications.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="hidden md:block"
+            >
+              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm flex items-center gap-4">
+                <div className="h-10 w-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  <Sparkles className="h-5 w-5 text-amber-500" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Quick Tip</p>
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Detailed briefs get 3x more bids.</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
 
-        <Card className="p-6 md:p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Project Title */}
-            <div>
-              <label className="block text-sm font-semibold mb-2">
-                Project Title <span className="text-red-500">*</span>
-              </label>
-              <Input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="e.g., Q4 Payroll System Implementation"
-                required
-              />
-            </div>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card className="p-0 border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden">
+            <form onSubmit={handleSubmit} className="divide-y divide-slate-100 dark:divide-slate-800">
+              {/* Section 1: Core Info */}
+              <div className="p-8 md:p-12 space-y-10">
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Core Specifications</h2>
+                </div>
 
-            {/* Service Category */}
-            <div>
-              <label className="block text-sm font-semibold mb-2">
-                Service Category <span className="text-red-500">*</span>
-              </label>
-              <select
-                name="service_category"
-                value={formData.service_category}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              >
-                <option value="">Select a category...</option>
-                {SERVICE_CATEGORIES.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                  {/* Project Title */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Project Title *</label>
+                    </div>
+                    <div className="relative group">
+                      <Input
+                        type="text"
+                        name="title"
+                        value={formData.title}
+                        onChange={handleChange}
+                        placeholder="e.g., Q4 Payroll Implementation"
+                        className="h-14 bg-slate-50 dark:bg-slate-800/50 border-transparent focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-500/5 rounded-2xl transition-all text-sm font-bold placeholder:text-slate-300 dark:placeholder:text-slate-600"
+                        required
+                      />
+                    </div>
+                  </div>
 
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-semibold mb-2">
-                Project Description
-              </label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                placeholder="Describe your project in detail..."
-                rows={4}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                  {/* Service Category */}
+                  <div className="space-y-4">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Industry Vertical *</label>
+                    <div className="relative">
+                      <select
+                        name="service_category"
+                        value={formData.service_category}
+                        onChange={handleChange}
+                        className="w-full h-14 pl-4 pr-10 bg-slate-50 dark:bg-slate-800/50 border-transparent border-none focus:ring-4 focus:ring-blue-500/5 rounded-2xl text-sm font-bold appearance-none transition-all dark:text-white"
+                        required
+                      >
+                        <option value="">Select Domain...</option>
+                        {SERVICE_CATEGORIES.map(category => (
+                          <option key={category} value={category}>{category}</option>
+                        ))}
+                      </select>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <ChevronRight className="h-4 w-4 rotate-90" />
+                      </div>
+                    </div>
+                  </div>
 
-            {/* Budget */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  Budget Min ($)
-                </label>
-                <Input
-                  type="number"
-                  name="budget_min"
-                  value={formData.budget_min}
-                  onChange={handleChange}
-                  placeholder="10000"
-                />
+                  {/* Description */}
+                  <div className="md:col-span-2 space-y-4">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Detailed Brief</label>
+                    <textarea
+                      name="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      placeholder="Define the scope, objectives, and deliverables..."
+                      rows={5}
+                      className="w-full p-5 bg-slate-50 dark:bg-slate-800/50 border-transparent border-none focus:ring-4 focus:ring-blue-500/5 rounded-[2rem] text-sm font-bold transition-all resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 dark:text-white"
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  Budget Max ($)
-                </label>
-                <Input
-                  type="number"
-                  name="budget_max"
-                  value={formData.budget_max}
-                  onChange={handleChange}
-                  placeholder="50000"
-                />
-              </div>
-            </div>
 
-            {/* Timeline */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  Start Date
-                </label>
-                <Input
-                  type="date"
-                  name="timeline_start"
-                  value={formData.timeline_start}
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  End Date
-                </label>
-                <Input
-                  type="date"
-                  name="timeline_end"
-                  value={formData.timeline_end}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
+              {/* Section 2: Logistics & Finance */}
+              <div className="p-8 md:p-12 space-y-10 bg-slate-50/30 dark:bg-slate-800/20">
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Logistics & Budgeting</h2>
+                </div>
 
-            {/* Location */}
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  City
-                </label>
-                <Input
-                  type="text"
-                  name="project_city"
-                  value={formData.project_city}
-                  onChange={handleChange}
-                  placeholder="e.g., New York"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  State <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="project_state"
-                  value={formData.project_state}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Select...</option>
-                  {STATES.map(state => (
-                    <option key={state} value={state}>{state}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  ZIP Code
-                </label>
-                <Input
-                  type="text"
-                  name="project_zip"
-                  value={formData.project_zip}
-                  onChange={handleChange}
-                  placeholder="10001"
-                />
-              </div>
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                  {/* Budget */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="h-3 w-3 text-emerald-500" />
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Financial Range ($)</label>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        type="number"
+                        name="budget_min"
+                        value={formData.budget_min}
+                        onChange={handleChange}
+                        placeholder="Min"
+                        className="h-12 bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 focus:ring-4 focus:ring-emerald-500/5 rounded-xl text-xs font-bold"
+                      />
+                      <Input
+                        type="number"
+                        name="budget_max"
+                        value={formData.budget_max}
+                        onChange={handleChange}
+                        placeholder="Max"
+                        className="h-12 bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 focus:ring-4 focus:ring-emerald-500/5 rounded-xl text-xs font-bold"
+                      />
+                    </div>
+                  </div>
 
-            {/* Company Size */}
-            <div>
-              <label className="block text-sm font-semibold mb-2">
-                Company Size
-              </label>
-              <Input
-                type="text"
-                name="business_size"
-                value={formData.business_size}
-                onChange={handleChange}
-                placeholder="e.g., 50-100 employees"
-              />
-            </div>
+                  {/* Timeline */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-3 w-3 text-orange-500" />
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Execution Window</label>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input
+                        type="date"
+                        name="timeline_start"
+                        value={formData.timeline_start}
+                        onChange={handleChange}
+                        className="h-12 bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 focus:ring-4 focus:ring-orange-500/5 rounded-xl text-xs font-bold uppercase"
+                      />
+                      <Input
+                        type="date"
+                        name="timeline_end"
+                        value={formData.timeline_end}
+                        onChange={handleChange}
+                        className="h-12 bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 focus:ring-4 focus:ring-orange-500/5 rounded-xl text-xs font-bold uppercase"
+                      />
+                    </div>
+                  </div>
 
-            {/* Special Requirements */}
-            <div>
-              <label className="block text-sm font-semibold mb-2">
-                Special Requirements
-              </label>
-              <textarea
-                name="special_requirements"
-                value={formData.special_requirements}
-                onChange={handleChange}
-                placeholder="Any specific requirements or preferences..."
-                rows={3}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                  {/* Location */}
+                  <div className="md:col-span-2 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-3 w-3 text-rose-500" />
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Deployment Location</label>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <Input
+                        type="text"
+                        name="project_city"
+                        value={formData.project_city}
+                        onChange={handleChange}
+                        placeholder="City"
+                        className="h-12 bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 focus:ring-4 focus:ring-rose-500/5 rounded-xl text-xs font-bold"
+                      />
+                      <div className="relative">
+                        <select
+                          name="project_state"
+                          value={formData.project_state}
+                          onChange={handleChange}
+                          className="w-full h-12 pl-4 pr-10 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 focus:ring-4 focus:ring-rose-500/5 rounded-xl text-xs font-bold appearance-none dark:text-white"
+                          required
+                        >
+                          <option value="">State...</option>
+                          {STATES.map(state => (
+                            <option key={state} value={state}>{state}</option>
+                          ))}
+                        </select>
+                        <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 rotate-90 text-slate-400 pointer-events-none" />
+                      </div>
+                      <Input
+                        type="text"
+                        name="project_zip"
+                        value={formData.project_zip}
+                        onChange={handleChange}
+                        placeholder="ZIP"
+                        className="h-12 bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 focus:ring-4 focus:ring-rose-500/5 rounded-xl text-xs font-bold"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-            {/* Submit Buttons */}
-            <div className="flex gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate('/business/dashboard')}
-                disabled={loading}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-                className="flex-1"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating Project...
-                  </>
-                ) : (
-                  'Create Project'
-                )}
-              </Button>
-            </div>
-          </form>
-        </Card>
+              {/* Section 3: Final Details */}
+              <div className="p-8 md:p-12 space-y-10">
+                <div className="flex items-center gap-3">
+                  <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                  <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Additional Context</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                  {/* Company Size */}
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-3 w-3 text-indigo-500" />
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Organization Scale</label>
+                    </div>
+                    <Input
+                      type="text"
+                      name="business_size"
+                      value={formData.business_size}
+                      onChange={handleChange}
+                      placeholder="e.g., 250+ Employees"
+                      className="h-14 bg-slate-50 dark:bg-slate-800/50 border-transparent focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-indigo-500/5 rounded-2xl text-sm font-bold transition-all placeholder:text-slate-300 dark:placeholder:text-slate-600 dark:text-white"
+                    />
+                  </div>
+
+                  {/* Special Requirements */}
+                  <div className="md:col-span-2 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-3 w-3 text-slate-400" />
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Special Requirements</label>
+                    </div>
+                    <textarea
+                      name="special_requirements"
+                      value={formData.special_requirements}
+                      onChange={handleChange}
+                      placeholder="Add any specific constraints, compliance needs, or vendor preferences..."
+                      rows={3}
+                      className="w-full p-5 bg-slate-50 dark:bg-slate-800/50 border-transparent border-none focus:ring-4 focus:ring-slate-500/5 rounded-[2rem] text-sm font-bold transition-all resize-none placeholder:text-slate-300 dark:placeholder:text-slate-600 dark:text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Submission Footer */}
+              <div className="p-8 md:p-12 bg-slate-50 dark:bg-slate-800/40 flex flex-col sm:flex-row gap-4 justify-between items-center">
+                <div className="text-center sm:text-left">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Confirmation</p>
+                  <p className="text-xs font-bold text-slate-600 dark:text-slate-400">Ensure all specifications are accurate before publishing.</p>
+                </div>
+                <div className="flex gap-4 w-full sm:w-auto">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => navigate('/business/dashboard')}
+                    disabled={loading}
+                    className="flex-1 sm:flex-none h-14 px-8 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                  >
+                    Discard
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 sm:flex-none h-14 px-12 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-xl shadow-blue-500/20 text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95"
+                  >
+                    {loading ? (
+                      <div className="flex items-center gap-3">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Processing...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <span>Launch Project</span>
+                        <ChevronRight className="h-4 w-4" />
+                      </div>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );
