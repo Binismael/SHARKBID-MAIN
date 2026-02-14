@@ -838,10 +838,10 @@ export const handleVendorUpdateStatus: RequestHandler = async (req, res) => {
 // Send a message
 export const handleSendMessage: RequestHandler = async (req, res) => {
   try {
-    const { projectId, messageText, vendorId: targetVendorId } = req.body;
+    const { projectId, messageText, vendorId: targetVendorId, imageUrl } = req.body;
     const userId = req.headers["x-user-id"] as string;
 
-    if (!projectId || !messageText || !userId) {
+    if (!projectId || (!messageText && !imageUrl) || !userId) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -893,8 +893,9 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
       .insert({
         project_id: projectId,
         sender_id: userId,
-        message_text: messageText,
-        vendor_response_id: response?.id || null
+        message_text: messageText || "",
+        vendor_response_id: response?.id || null,
+        image_url: imageUrl || null
       })
       .select("*")
       .single();

@@ -2,17 +2,19 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Loader2, Send, User, MessageCircle } from 'lucide-react';
+import { Loader2, Send, User, MessageCircle, Paperclip, Image as ImageIcon, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { getErrorMessage } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/lib/supabase';
 
 interface Message {
   id: string;
   project_id: string;
   sender_id: string;
   message_text: string;
+  image_url?: string;
   created_at: string;
   profiles?: {
     company_name: string;
@@ -33,7 +35,62 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
   const [sending, setSending] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        setError('Only image files are allowed');
+        return;
+      }
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeSelectedFile = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    try {
+      setUploadingImage(true);
+      const timestamp = Date.now();
+      const fileName = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      const bucketPath = `messages/${fileName}`;
+
+      const { data, error: uploadError } = await supabase.storage
+        .from("assets")
+        .upload(bucketPath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("assets")
+        .getPublicUrl(data.path);
+
+      return publicUrl;
+    } catch (err) {
+      console.error("Image upload error:", err);
+      setError(getErrorMessage(err || "Failed to upload image"));
+      return null;
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -76,10 +133,21 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim() || !user || !projectId || sending) return;
+    if ((!newMessage.trim() && !selectedFile) || !user || !projectId || sending) return;
 
     setSending(true);
+    setError(null);
+
     try {
+      let imageUrl = null;
+      if (selectedFile) {
+        imageUrl = await uploadImage(selectedFile);
+        if (!imageUrl) {
+          setSending(false);
+          return;
+        }
+      }
+
       const response = await fetch(`/api/projects/${projectId}/messages`, {
         method: 'POST',
         headers: {
@@ -89,6 +157,7 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
         body: JSON.stringify({
           projectId,
           messageText: newMessage.trim(),
+          imageUrl,
           vendorId // Include vendorId in the request
         })
       });
@@ -97,6 +166,7 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
       if (result.success) {
         setMessages([...messages, result.data]);
         setNewMessage('');
+        removeSelectedFile();
       } else {
         setError(getErrorMessage(result.error || 'Failed to send message'));
       }
@@ -178,7 +248,19 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
                       : "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-[2rem] rounded-tl-none border border-slate-100 dark:border-slate-700 hover:shadow-lg"
                   )}
                 >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">{msg.message_text}</p>
+                  {msg.image_url && (
+                    <div className="mb-3 overflow-hidden rounded-2xl border border-white/10 shadow-lg">
+                      <img
+                        src={msg.image_url}
+                        alt="Message attachment"
+                        className="max-w-full h-auto object-cover hover:scale-105 transition-transform duration-500 cursor-pointer"
+                        onClick={() => window.open(msg.image_url, '_blank')}
+                      />
+                    </div>
+                  )}
+                  {msg.message_text && (
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">{msg.message_text}</p>
+                  )}
 
                   <div className={cn(
                     "absolute bottom-0 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap py-1 px-2 bg-slate-900 text-white text-[8px] font-black uppercase tracking-widest rounded-full shadow-2xl",
@@ -204,7 +286,45 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
       </div>
 
       <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+        {previewUrl && (
+          <div className="mb-4 relative inline-block group">
+            <div className="h-24 w-24 rounded-2xl overflow-hidden border-2 border-blue-500/30 shadow-2xl relative">
+              <img src={previewUrl} alt="Preview" className="h-full w-full object-cover" />
+              {uploadingImage && (
+                <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center backdrop-blur-sm">
+                  <Loader2 className="h-6 w-6 animate-spin text-white" />
+                </div>
+              )}
+            </div>
+            <button
+              onClick={removeSelectedFile}
+              className="absolute -top-2 -right-2 bg-rose-500 text-white rounded-full p-1.5 shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-rose-600 active:scale-90"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+
         <form onSubmit={handleSendMessage} className="flex gap-3 items-end bg-slate-50 dark:bg-slate-800/50 p-3 rounded-[2.5rem] border border-slate-200/50 dark:border-slate-700/50 focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:ring-4 focus-within:ring-blue-500/5 transition-all duration-300">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            accept="image/*"
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            className={cn(
+              "h-12 w-12 rounded-full shrink-0 transition-all active:scale-95",
+              selectedFile ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "text-slate-400 hover:text-slate-600"
+            )}
+          >
+            <Paperclip className="h-5 w-5" />
+          </Button>
           <textarea
             placeholder="Write a message..."
             value={newMessage}
@@ -222,7 +342,7 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
           <Button
             type="submit"
             size="icon"
-            disabled={sending || !newMessage.trim()}
+            disabled={sending || (!newMessage.trim() && !selectedFile)}
             className="h-12 w-12 rounded-full bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-500/30 shrink-0 transition-transform active:scale-95"
           >
             {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5 -rotate-12 translate-x-0.5" />}
