@@ -111,9 +111,10 @@ export const handleGetProject: RequestHandler = async (req, res) => {
     // 2. Authorization check: business owner, routed vendor, or admin
     let isAuthorized = false;
     let isOwner = userId && project.business_id === userId;
+    let isSelectedVendor = userId && project.selected_vendor_id === userId;
     let isRouted = false;
 
-    if (isOwner) {
+    if (isOwner || isSelectedVendor) {
       isAuthorized = true;
     } else if (userId) {
       // Check if this user is a routed vendor for this project

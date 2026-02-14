@@ -86,6 +86,14 @@ export const handleCreateProject: RequestHandler = async (req, res) => {
       });
     }
 
+    // Log activity
+    await supabaseAdmin.from("project_activity").insert({
+      project_id: project.id,
+      user_id: userId,
+      action: "created",
+      details: { source: "api_create" },
+    });
+
     // Trigger lead routing
     try {
       // Route project to matching vendors

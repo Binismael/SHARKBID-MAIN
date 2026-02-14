@@ -166,26 +166,17 @@ export default function BusinessIntake() {
 
     setSubmitting(true);
     try {
-      // Get service category ID
-      const { data: categoryData } = await supabase
-        .from('service_categories')
-        .select('id')
-        .eq('name', projectData.service_category)
-        .single();
-
-      if (!categoryData) {
-        throw new Error('Invalid service category');
-      }
-
-      // Create project in Supabase
-      const { data: project, error: projectError } = await supabase
-        .from('projects')
-        .insert({
-          business_id: user.id,
+      // Create project via server API to bypass RLS recursion
+      const response = await fetch('/api/projects/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id,
+        },
+        body: JSON.stringify({
           title: projectData.title || 'Untitled Project',
           description: projectData.description || '',
-          service_category_id: categoryData.id,
-          project_details: projectData,
+          service_category: projectData.service_category,
           timeline_start: projectData.timeline_start,
           timeline_end: projectData.timeline_end,
           budget_min: projectData.budget_min,
@@ -193,37 +184,15 @@ export default function BusinessIntake() {
           project_zip: projectData.project_zip,
           project_city: projectData.project_city,
           project_state: projectData.project_state,
-          status: 'draft',
-        })
-        .select()
-        .single();
-
-      if (projectError) {
-        throw projectError;
-      }
-
-      // Log activity
-      await supabase
-        .from('project_activity')
-        .insert({
-          project_id: project.id,
-          user_id: user.id,
-          action: 'created',
-          details: { source: 'ai_intake_chat' },
-        });
-
-      // Publish the project (triggers lead routing)
-      const publishResponse = await fetch('/api/projects/publish', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-id': user.id,
-        },
-        body: JSON.stringify({ projectId: project.id }),
+          business_size: projectData.business_size,
+          special_requirements: projectData.special_requirements,
+        }),
       });
 
-      if (!publishResponse.ok) {
-        throw new Error('Failed to publish project');
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw result.error || 'Failed to submit project';
       }
 
       // Redirect to dashboard
