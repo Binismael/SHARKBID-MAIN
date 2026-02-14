@@ -246,7 +246,7 @@ export const handleGetVendorThreads: RequestHandler = async (req, res) => {
     // We want to find all unique project IDs where:
     // 1. Vendor is routed
     // 2. Vendor has a bid
-    // 3. Vendor has messages
+    // 3. Vendor has messages (either sent by them or explicitly for them)
 
     const [routing, responses, messages] = await Promise.all([
       supabaseAdmin
@@ -257,16 +257,31 @@ export const handleGetVendorThreads: RequestHandler = async (req, res) => {
         .from("vendor_responses")
         .select("project_id")
         .eq("vendor_id", userId),
+      // For messages, we check if they are the sender,
+      // as vendor_id might not exist yet
       supabaseAdmin
         .from("project_messages")
         .select("project_id")
-        .eq("vendor_id", userId)
+        .eq("sender_id", userId)
     ]);
+
+    // Also check for messages explicitly for them via vendor_id if column exists
+    // We'll do this as a separate step to avoid failing the whole promise
+    let vendorSpecificMessageIds: any[] = [];
+    const { data: vendorData, error: vendorError } = await supabaseAdmin
+      .from("project_messages")
+      .select("project_id")
+      .eq("vendor_id", userId);
+
+    if (vendorData && !vendorError) {
+      vendorSpecificMessageIds = vendorData;
+    }
 
     const projectIds = new Set([
       ...(routing.data?.map(r => r.project_id) || []),
       ...(responses.data?.map(r => r.project_id) || []),
-      ...(messages.data?.map(m => m.project_id) || [])
+      ...(messages.data?.map(m => m.project_id) || []),
+      ...(vendorSpecificMessageIds.map(m => m.project_id) || [])
     ]);
 
     if (projectIds.size === 0) {
@@ -753,47 +768,47 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
       .eq("project_id", projectId);
 
     if (vendorId || isAdmin) {
-      // If Admin, if no vendorId is provided, they see everything for this project
+      // For Admin, if no vendorId is provided, they see everything for this project
       if (isAdmin && !vendorId) {
         query = query.eq("project_id", projectId);
       } else {
-        // Show messages where vendor_id matches OR sender is the vendor
-        // This covers messages sent to the vendor and messages sent by the vendor
-        query = query.or(`vendor_id.eq.${vendorId},sender_id.eq.${vendorId}`);
+        // We'll try to use the most comprehensive filter, but fallback if vendor_id column is missing
+        const { data: response } = await supabaseAdmin
+          .from("vendor_responses")
+          .select("id")
+          .eq("project_id", projectId)
+          .eq("vendor_id", vendorId || '')
+          .maybeSingle();
+
+        const responseId = response?.id || '00000000-0000-0000-0000-000000000000';
+
+        // Try with vendor_id column first
+        const { data: messages, error: msgError } = await query
+          .or(`vendor_id.eq.${vendorId},sender_id.eq.${vendorId},and(sender_id.eq.${project.business_id},vendor_response_id.eq.${responseId})`)
+          .order("created_at", { ascending: true });
+
+        if (msgError && msgError.code === '42703') {
+          // Fallback if column missing: use vendor_response_id and sender_id only
+          const { data: fallbackMessages, error: fallbackError } = await supabaseAdmin
+            .from("project_messages")
+            .select("*")
+            .eq("project_id", projectId)
+            .or(`vendor_response_id.eq.${responseId},sender_id.eq.${vendorId},and(sender_id.eq.${project.business_id},vendor_response_id.eq.${responseId})`)
+            .order("created_at", { ascending: true });
+
+          if (fallbackError) throw fallbackError;
+          return respondWithEnrichedMessages(res, fallbackMessages, supabaseAdmin);
+        }
+
+        if (msgError) throw msgError;
+        return respondWithEnrichedMessages(res, messages, supabaseAdmin);
       }
     }
 
     const { data: messages, error: msgError } = await query.order("created_at", { ascending: true });
 
     if (msgError) throw msgError;
-
-    if (messages && messages.length > 0) {
-      const senderIds = Array.from(new Set(messages.map(m => m.sender_id)));
-      const { data: profiles } = await supabaseAdmin
-        .from("profiles")
-        .select("user_id, company_name, contact_email, role")
-        .in("user_id", senderIds);
-
-      const profileMap = (profiles || []).reduce((acc: any, p) => {
-        acc[p.user_id] = p;
-        return acc;
-      }, {});
-
-      const enrichedMessages = messages.map(m => ({
-        ...m,
-        profiles: profileMap[m.sender_id]
-      }));
-
-      return res.json({
-        success: true,
-        data: enrichedMessages,
-      });
-    }
-
-    res.json({
-      success: true,
-      data: messages || [],
-    });
+    return respondWithEnrichedMessages(res, messages, supabaseAdmin);
   } catch (error) {
     console.error("Get messages error:", error);
     res.status(500).json({
@@ -801,6 +816,37 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
     });
   }
 };
+
+// Helper function to enrich messages with profiles
+async function respondWithEnrichedMessages(res: any, messages: any[] | null, supabaseAdmin: any) {
+  if (messages && messages.length > 0) {
+    const senderIds = Array.from(new Set(messages.map(m => m.sender_id)));
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id, company_name, contact_email, role")
+      .in("user_id", senderIds);
+
+    const profileMap = (profiles || []).reduce((acc: any, p: any) => {
+      acc[p.user_id] = p;
+      return acc;
+    }, {});
+
+    const enrichedMessages = messages.map(m => ({
+      ...m,
+      profiles: profileMap[m.sender_id]
+    }));
+
+    return res.json({
+      success: true,
+      data: enrichedMessages,
+    });
+  }
+
+  res.json({
+    success: true,
+    data: messages || [],
+  });
+}
 
 // Vendor update project or routing status (Decline or Complete)
 export const handleVendorUpdateStatus: RequestHandler = async (req, res) => {
@@ -977,18 +1023,36 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
       .eq("vendor_id", vendorId || '')
       .maybeSingle();
 
-    const { data: message, error } = await supabaseAdmin
+    // Prepare insert data, but handle missing vendor_id column gracefully
+    const insertData: any = {
+      project_id: projectId,
+      sender_id: userId,
+      message_text: messageText || "",
+      vendor_response_id: response?.id || null,
+      image_url: imageUrl || null
+    };
+
+    // Only add vendor_id if we have reason to believe the column exists
+    // or we can just try and catch. But since we're in a handler,
+    // we'll try to insert and if it fails due to missing column, we retry without it.
+
+    let { data: message, error } = await supabaseAdmin
       .from("project_messages")
-      .insert({
-        project_id: projectId,
-        sender_id: userId,
-        vendor_id: vendorId || null,
-        message_text: messageText || "",
-        vendor_response_id: response?.id || null,
-        image_url: imageUrl || null
-      })
+      .insert({ ...insertData, vendor_id: vendorId || null })
       .select("*")
       .single();
+
+    if (error && error.code === '42703') {
+      // Column doesn't exist yet, retry without vendor_id
+      const { data: retryMessage, error: retryError } = await supabaseAdmin
+        .from("project_messages")
+        .insert(insertData)
+        .select("*")
+        .single();
+
+      message = retryMessage;
+      error = retryError;
+    }
 
     if (error) throw error;
 
