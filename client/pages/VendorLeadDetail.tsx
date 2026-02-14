@@ -70,12 +70,13 @@ export default function VendorLeadDetail() {
           }
         });
 
+        const result = await response.json();
+
         if (!response.ok) {
-          const result = await response.json();
           throw result.error || 'Project not found';
         }
 
-        const projectData = await response.json();
+        const projectData = result;
         setProject(projectData);
 
         // Fetch service category

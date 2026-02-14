@@ -12,11 +12,11 @@ export function cn(...inputs: ClassValue[]) {
 export function getErrorMessage(err: unknown): string {
   if (!err) return 'Unknown error';
 
-  if (err instanceof Error) {
-    return err.message;
-  }
+  let message: string | undefined;
 
-  if (typeof err === 'string') {
+  if (err instanceof Error) {
+    message = err.message;
+  } else if (typeof err === 'string') {
     return err;
   }
 
@@ -24,35 +24,24 @@ export function getErrorMessage(err: unknown): string {
     const obj = err as Record<string, unknown>;
 
     // Try common error message fields
-    const message = obj.message || obj.error || obj.detail || obj.msg;
+    const extractedMessage = obj.message || obj.error || obj.detail || obj.msg;
 
-    if (typeof message === 'string') {
-      return message;
-    }
-
-    // If 'error' field is another object (Supabase style), recurse once
-    if (obj.error && typeof obj.error === 'object') {
+    if (typeof extractedMessage === 'string') {
+      message = extractedMessage;
+    } else if (obj.error && typeof obj.error === 'object') {
+      // If 'error' field is another object (Supabase style), recurse once
       const innerMessage = (obj.error as Record<string, unknown>).message || (obj.error as Record<string, unknown>).msg;
       if (typeof innerMessage === 'string') {
-        return innerMessage;
+        message = innerMessage;
       }
-    }
-
-    // Try to safely stringify
-    try {
-      const stringified = JSON.stringify(err);
-      if (stringified === '{}' || stringified === '[]' || stringified.includes('[object Object]')) {
-        return 'An unexpected error occurred';
-      }
-      return stringified;
-    } catch {
-      return 'An unexpected error occurred';
     }
   }
 
-  const finalMessage = String(err);
-  if (finalMessage.includes('[object Object]')) {
+  // Final check for [object Object]
+  const finalMessage = message || String(err);
+  if (finalMessage.includes('[object Object]') || finalMessage === 'Error: [object Object]') {
     return 'An unexpected error occurred';
   }
+
   return finalMessage;
 }

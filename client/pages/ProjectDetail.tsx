@@ -72,12 +72,13 @@ export default function ProjectDetail() {
           }
         });
 
+        const result = await response.json();
+
         if (!response.ok) {
-          const result = await response.json();
           throw result.error || 'Project not found';
         }
 
-        const projectData = await response.json();
+        const projectData = result;
         setProject(projectData);
 
         // Bids are already included in the response from handleGetProject
