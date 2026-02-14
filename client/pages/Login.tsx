@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { getErrorMessage } from "@/lib/utils";
+import { getErrorMessage, cn } from "@/lib/utils";
 import { AlertCircle, Mail, Lock, ArrowRight, Layers, Zap, CheckCircle2, Sparkles, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { motion } from "framer-motion";
