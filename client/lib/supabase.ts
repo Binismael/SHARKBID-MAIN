@@ -1,15 +1,29 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SB_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SB_SUPABASE_ANON_KEY;
+// Helper to check if a value is a placeholder
+const isPlaceholder = (val: string | undefined) => 
+  !val || val.includes("your-") || val.includes("__") || val.length < 20;
+
+// Try multiple environment variable names
+const supabaseUrl = !isPlaceholder(import.meta.env.VITE_SB_SUPABASE_URL)
+  ? import.meta.env.VITE_SB_SUPABASE_URL
+  : (import.meta.env.VITE_SUPABASE_URL || "");
+
+const supabaseAnonKey = !isPlaceholder(import.meta.env.VITE_SB_SUPABASE_ANON_KEY)
+  ? import.meta.env.VITE_SB_SUPABASE_ANON_KEY
+  : (import.meta.env.VITE_SUPABASE_ANON_KEY || "");
 
 // Always require real credentials
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "❌ FATAL: Supabase credentials not configured. Set VITE_SB_SUPABASE_URL and VITE_SB_SUPABASE_ANON_KEY"
-  );
+if (!supabaseUrl || !supabaseAnonKey || isPlaceholder(supabaseUrl) || isPlaceholder(supabaseAnonKey)) {
+  console.error("❌ Supabase credentials missing or invalid:", {
+    url: supabaseUrl ? "present" : "missing",
+    key: supabaseAnonKey ? "present" : "missing",
+    isUrlPlaceholder: isPlaceholder(supabaseUrl),
+    isKeyPlaceholder: isPlaceholder(supabaseAnonKey)
+  });
 }
 
-console.log("✅ Supabase configured with URL:", supabaseUrl);
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(
+  supabaseUrl || "https://placeholder.supabase.co", 
+  supabaseAnonKey || "placeholder"
+);
