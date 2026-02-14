@@ -196,11 +196,13 @@ export const handleAIIntake: RequestHandler = async (req, res) => {
     }
 
     // Check if API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      console.error("OPENAI_API_KEY is not configured in environment variables");
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey || apiKey === 'your-openai-api-key-here') {
+      console.error("OpenAI API key is missing or using placeholder value");
       return res.status(500).json({
-        error: "OpenAI API key not configured",
-        message: "OPENAI_API_KEY environment variable is missing",
+        error: "Configuration Error",
+        message: "The OpenAI API key is not configured. Please set a valid OPENAI_API_KEY in your .env file.",
+        isConfigError: true
       });
     }
 

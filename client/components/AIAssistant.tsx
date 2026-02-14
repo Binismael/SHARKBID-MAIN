@@ -157,6 +157,20 @@ Be friendly, professional, and concise. Use markdown for formatting if helpful.`
 
       if (!response.ok) {
         const errorData = await response.json();
+        const configError = errorData.isConfigError || errorData.message?.includes('API key');
+
+        if (configError) {
+          const configMessage: Message = {
+            id: Date.now().toString(),
+            role: 'assistant',
+            content: "I'm currently in 'Demo Mode' because my AI brain (OpenAI API key) hasn't been connected yet. \n\nTo enable my full capabilities, please add a valid `OPENAI_API_KEY` to the `.env` file.",
+            timestamp: new Date(),
+          };
+          setMessages(prev => [...prev, configMessage]);
+          setIsLoading(false);
+          return;
+        }
+
         throw new Error(errorData.error || errorData.message || 'Failed to get response');
       }
 
