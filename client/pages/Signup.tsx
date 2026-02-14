@@ -83,13 +83,6 @@ export default function Signup() {
       description: "Bid on projects",
       icon: Briefcase,
       color: "from-green-500 to-green-600",
-    },
-    {
-      value: "admin" as const,
-      label: "Admin",
-      description: "Manage platform",
-      icon: Shield,
-      color: "from-purple-500 to-purple-600",
     }
   ];
 
@@ -156,7 +149,7 @@ export default function Signup() {
               {/* Role Selection */}
               <div className="space-y-6">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Identity Profile *</label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {roleOptions.map((option, i) => {
                     const Icon = option.icon;
                     const isSelected = role === option.value;
