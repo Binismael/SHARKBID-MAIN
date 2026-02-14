@@ -15,42 +15,60 @@ import adminRouter from "./routes/admin";
 export function createServer() {
   const app = express();
 
-  // Supabase Proxy
-  const supabaseUrl = (process.env.VITE_SUPABASE_URL || "https://kpytttekmeoeqskfopqj.supabase.co").replace(/\/$/, "");
-  console.log(`[PROXY] Supabase target: ${supabaseUrl}`);
-
-  app.use("/supabase", proxy(supabaseUrl, {
-    proxyReqPathResolver: (req) => {
-      const path = req.url;
-      console.log(`[PROXY] ${req.method} ${req.originalUrl} -> ${supabaseUrl}${path}`);
-      return path;
-    },
-    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
-      // Log headers for debugging (safely)
-      const hasApiKey = !!(srcReq.headers['apikey'] || srcReq.headers['x-client-info']);
-      const hasAuth = !!srcReq.headers['authorization'];
-      console.log(`[PROXY] Headers: apikey=${hasApiKey}, auth=${hasAuth}`);
-
-      // Ensure we don't send the Host header of our own app to Supabase
-      // express-http-proxy usually handles this, but let's be explicit if needed
-      return proxyReqOpts;
-    },
-    userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
-      if (proxyRes.statusCode && proxyRes.statusCode >= 400) {
-        console.warn(`[PROXY] Error Response: ${proxyRes.statusCode} for ${userReq.originalUrl}`);
-        try {
-          const data = JSON.parse(proxyResData.toString('utf8'));
-          console.warn(`[PROXY] Error Data:`, data);
-        } catch (e) {}
-      }
-      return proxyResData;
-    }
-  }));
-
   // Middleware
   app.use(cors());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // Supabase Proxy
+  const supabaseUrl = (process.env.VITE_SUPABASE_URL || "https://kpytttekmeoeqskfopqj.supabase.co").replace(/\/$/, "");
+  console.log(`[PROXY] Supabase target: ${supabaseUrl}`);
+
+  app.use("/api/v1/supabase", async (req, res) => {
+    try {
+      const targetUrl = (process.env.VITE_SUPABASE_URL || "https://kpytttekmeoeqskfopqj.supabase.co").replace(/\/$/, "");
+      const url = `${targetUrl}${req.url}`;
+
+      console.log(`[PROXY] Manual Fetch: ${req.method} ${req.originalUrl} -> ${url}`);
+
+      const headers: Record<string, string> = {};
+      Object.entries(req.headers).forEach(([key, value]) => {
+        if (value && typeof value === 'string' && key !== 'host' && key !== 'connection') {
+          headers[key] = value;
+        }
+      });
+      headers['host'] = new URL(targetUrl).host;
+
+      console.log(`[PROXY] Sending Headers:`, Object.keys(headers));
+
+      const response = await fetch(url, {
+        method: req.method,
+        headers,
+        body: ['GET', 'HEAD'].includes(req.method) ? undefined : (typeof req.body === 'string' ? req.body : JSON.stringify(req.body)),
+      });
+
+      const buffer = await response.arrayBuffer();
+
+      console.log(`[PROXY] Manual Response: ${response.status} for ${url} (length: ${buffer.byteLength})`);
+
+      res.status(response.status);
+      response.headers.forEach((value, key) => {
+        // Skip headers that should be handled by Express or might cause issues
+        const skipHeaders = ['content-encoding', 'transfer-encoding', 'content-length', 'connection', 'keep-alive'];
+        if (!skipHeaders.includes(key.toLowerCase())) {
+          res.setHeader(key, value);
+        }
+      });
+      res.send(Buffer.from(buffer));
+    } catch (error) {
+      console.error(`[PROXY] Manual Error:`, error);
+      res.status(500).json({ error: "Proxy Error", message: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.use("/api/test-me", (req, res) => {
+    res.json({ success: true, message: "Hit Express successfully!" });
+  });
 
   // Example API routes
   app.get("/api/ping", (_req, res) => {

@@ -14,7 +14,7 @@ const rawKey =
 
 // Force use of the local proxy to bypass environment-level fetch interception
 const supabaseUrl = typeof window !== 'undefined'
-  ? `${window.location.origin}/supabase`
+  ? `${window.location.origin}/api/v1/supabase`
   : "https://kpytttekmeoeqskfopqj.supabase.co";
 
 const supabaseAnonKey = rawKey;
@@ -25,6 +25,10 @@ if (isPlaceholder(rawKey)) {
   });
 } else {
   console.log("✅ Supabase initialized via proxy:", supabaseUrl);
+  if (typeof window !== 'undefined') {
+    console.log("✅ Window location origin:", window.location.origin);
+    console.log("✅ Full constructed URL:", supabaseUrl);
+  }
 }
 
 export const supabase = createClient(
