@@ -23,9 +23,14 @@ export function createServer() {
     proxyReqPathResolver: (req) => {
       return req.url; // Forward the rest of the path
     },
-    proxyReqOptDecorator: (proxyReqOpts) => {
-      // Ensure origin and referer are handled if needed by Supabase
+    proxyReqOptDecorator: (proxyReqOpts, _srcReq) => {
+      // Ensure apikey header is preserved if already set by client
+      // or set it here if needed. supabase-js sets it on the client.
       return proxyReqOpts;
+    },
+    userResHeaderDecorator: (headers, _userReq, _userRes, _proxyReq, _proxyRes) => {
+      // Handle CORS headers from Supabase if needed
+      return headers;
     }
   }));
 

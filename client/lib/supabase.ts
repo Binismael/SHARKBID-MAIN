@@ -32,6 +32,7 @@ if (isPlaceholder(rawKey)) {
   });
 } else {
   console.log("✅ Supabase client initialized via proxy:", supabaseUrl);
+  console.log("✅ Anon Key Length:", rawKey?.length);
 }
 
 export const supabase = createClient(
