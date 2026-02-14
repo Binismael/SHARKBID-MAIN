@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap, Lock, Layers, BarChart3, Sparkles, CheckCircle2, TrendingUp, Users, UserPlus, Gauge, Target, Globe, Play, Rocket, Award, Clock } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { TestimonialMarquee } from "@/components/TestimonialMarquee";
 
 export default function Index() {
   return (
@@ -338,6 +339,9 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* Testimonials Marquee */}
+      <TestimonialMarquee />
 
       {/* CTA Section */}
       <section className="py-32 relative overflow-hidden bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
