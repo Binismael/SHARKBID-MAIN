@@ -110,11 +110,20 @@ export const handleGetProject: RequestHandler = async (req, res) => {
 
     // 2. Authorization check: business owner, routed vendor, or admin
     let isAuthorized = false;
+
+    // Fetch user profile to check role
+    const { data: userProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const isAdmin = userProfile?.role === "admin";
     let isOwner = userId && project.business_id === userId;
     let isSelectedVendor = userId && project.selected_vendor_id === userId;
     let isRouted = false;
 
-    if (isOwner || isSelectedVendor) {
+    if (isAdmin || isOwner || isSelectedVendor) {
       isAuthorized = true;
     } else if (userId) {
       // Check if this user is a routed vendor for this project
@@ -152,8 +161,8 @@ export const handleGetProject: RequestHandler = async (req, res) => {
     }
 
     // 4. Fetch responses based on who's asking
-    if (isOwner) {
-      // Owner sees all bids
+    if (isOwner || isAdmin) {
+      // Owner or Admin sees all bids
       const { data: responses, error: respError } = await supabaseAdmin
         .from("vendor_responses")
         .select("*")
@@ -782,6 +791,39 @@ export const handleVendorUpdateStatus: RequestHandler = async (req, res) => {
       });
 
       return res.json({ success: true, message: "Project marked as completed" });
+    }
+
+    if (action === 'approve') {
+      // Business owner approving project
+      // Must be the owner or admin
+      const { data: userProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("role")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      const isAdmin = userProfile?.role === "admin";
+      const isOwner = project.business_id === userId;
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({ error: "Only the project owner can approve the project" });
+      }
+
+      const { error: updateError } = await supabaseAdmin
+        .from("projects")
+        .update({ status: 'completed', updated_at: new Date() })
+        .eq("id", projectId);
+
+      if (updateError) throw updateError;
+
+      // Log activity
+      await supabaseAdmin.from("project_activity").insert({
+        project_id: projectId,
+        user_id: userId,
+        action: "approved_by_business",
+      });
+
+      return res.json({ success: true, message: "Project approved and completed" });
     }
 
     return res.status(400).json({ error: "Invalid action" });

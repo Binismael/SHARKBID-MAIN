@@ -237,9 +237,26 @@ router.get("/admin/projects", async (req: Request, res: Response) => {
       });
     }
 
+    // Fetch all business profiles to map names
+    const businessIds = [...new Set((data || []).map(p => p.business_id))];
+    const { data: profiles } = await supabaseAdmin
+      .from("profiles")
+      .select("user_id, company_name")
+      .in("user_id", businessIds);
+
+    const profileMap = (profiles || []).reduce((acc: any, p) => {
+      acc[p.user_id] = p.company_name;
+      return acc;
+    }, {});
+
+    const enrichedProjects = (data || []).map(p => ({
+      ...p,
+      business_name: profileMap[p.business_id] || "Unknown"
+    }));
+
     return res.json({
       success: true,
-      data: data || [],
+      data: enrichedProjects,
     });
   } catch (error) {
     console.error("[ADMIN] Error in get projects endpoint:", error);

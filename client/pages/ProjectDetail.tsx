@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Edit2, Trash2, Loader2, AlertCircle, CheckCircle2, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, Loader2, AlertCircle, CheckCircle2, MessageSquare, Briefcase, TrendingUp, Clock, User, CheckCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
@@ -53,6 +53,7 @@ export default function ProjectDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [approving, setApproving] = useState(false);
   const [assigning, setAssigning] = useState<string | null>(null);
 
   useEffect(() => {
@@ -132,6 +133,41 @@ export default function ProjectDetail() {
       toast.error(message);
     } finally {
       setAssigning(null);
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!project || !window.confirm('Are you sure you want to approve and complete this project?')) {
+      return;
+    }
+
+    setApproving(true);
+    try {
+      const response = await fetch('/api/projects/vendor-update-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user?.id || ''
+        },
+        body: JSON.stringify({
+          projectId: project.id,
+          action: 'approve'
+        })
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw result.error || 'Failed to approve project';
+      }
+
+      toast.success('Project approved and completed!');
+      setProject({ ...project, status: 'completed' });
+    } catch (err) {
+      const message = getErrorMessage(err || 'Failed to approve project');
+      toast.error(message);
+    } finally {
+      setApproving(false);
     }
   };
 
@@ -246,6 +282,24 @@ export default function ProjectDetail() {
               </div>
             </div>
             <div className="flex gap-2">
+              {project.status === 'selected' && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20"
+                  onClick={handleApprove}
+                  disabled={approving}
+                >
+                  {approving ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <>
+                      <CheckCircle className="h-3.5 w-3.5 mr-2" />
+                      Approve & Complete
+                    </>
+                  )}
+                </Button>
+              )}
               <Button variant="outline" size="sm" className="font-bold text-xs uppercase tracking-widest border-slate-200 dark:border-slate-800" disabled>
                 <Edit2 className="h-3.5 w-3.5 mr-2" />
                 Edit

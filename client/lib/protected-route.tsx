@@ -29,7 +29,8 @@ export function ProtectedRoute({
   }
 
   // If a specific role is required, check if user has it
-  if (requiredRole && userRole !== requiredRole) {
+  // Admin bypass: admins can access any protected route
+  if (requiredRole && userRole !== requiredRole && userRole !== "admin") {
     // If user is logged in but doesn't have the right role, redirect to their dashboard
     if (userRole === "admin") {
       return <Navigate to="/admin/dashboard" replace />;

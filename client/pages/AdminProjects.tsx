@@ -13,6 +13,7 @@ interface Project {
   description: string;
   service_category_id: string;
   business_id: string;
+  business_name?: string;
   status: "draft" | "open" | "in_review" | "selected" | "completed" | "cancelled";
   budget_min: number | null;
   budget_max: number | null;
@@ -87,25 +88,6 @@ export default function AdminProjects() {
 
         setServiceCategories(serviceMap);
 
-        // Fetch business profiles
-        if (projectsData && projectsData.length > 0) {
-          const businessIds = [...new Set(projectsData.map((p: any) => p.business_id))];
-          const { data: businessesData, error: businessesError } = await supabase
-            .from("profiles")
-            .select("id, company_name")
-            .in("id", businessIds);
-
-          if (businessesError) {
-            console.warn("Error fetching businesses:", businessesError);
-          } else if (businessesData) {
-            const businessMap = businessesData.reduce((acc: Record<string, string>, business) => {
-              acc[business.id] = business.company_name;
-              return acc;
-            }, {});
-            setBusinessNames(businessMap);
-          }
-        }
-
         setProjects(projectsData || []);
         setError(null);
       } catch (err) {
@@ -123,7 +105,7 @@ export default function AdminProjects() {
   const filteredProjects = projects.filter((p) => {
     const matchesSearch =
       p.title.toLowerCase().includes(search.toLowerCase()) ||
-      (businessNames[p.business_id] || "").toLowerCase().includes(search.toLowerCase());
+      (p.business_name || "").toLowerCase().includes(search.toLowerCase());
 
     const matchesStatus = filterStatus === "all" || p.status === filterStatus;
 
@@ -284,6 +266,7 @@ export default function AdminProjects() {
                           <tr
                             key={project.id}
                             className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                            onClick={() => navigate(`/business/project/${project.id}`)}
                           >
                             <td className="py-4 px-4">
                               <div className="font-medium text-slate-900 dark:text-white max-w-xs truncate">
@@ -292,7 +275,7 @@ export default function AdminProjects() {
                             </td>
                             <td className="py-4 px-4">
                               <div className="text-slate-700 dark:text-slate-300">
-                                {businessNames[project.business_id] || "Unknown"}
+                                {project.business_name || "Unknown"}
                               </div>
                             </td>
                             <td className="py-4 px-4">
