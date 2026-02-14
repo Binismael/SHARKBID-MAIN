@@ -289,6 +289,12 @@ router.get("/admin/stats", async (req: Request, res: Response) => {
           open_projects: projectsData?.filter(p => p.status === 'open').length || 0,
           total_bids: totalBids,
           match_rate: parseFloat(matchRate as string) || 0,
+          // Compatibility with older admin-service stats
+          totalProjects: totalProjects,
+          totalCreators: vendorProfiles?.length || 0,
+          totalCompanies: businessProfiles?.length || 0,
+          pendingPayments: 0,
+          totalPendingAmount: 0,
         },
         recentProjects: projectsData?.slice(0, 5).map(p => ({
           ...p,

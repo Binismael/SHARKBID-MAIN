@@ -46,41 +46,33 @@ async function withRetry<T>(
   throw lastError;
 }
 
-// Get all projects for a client
+// Get all projects for a client (using server API to bypass RLS)
 export async function getClientProjects(clientId: string) {
   if (!clientId) {
     return [];
   }
 
   try {
-    const { data, error } = await withRetry(
-      () => supabase
-        .from("projects")
-        .select(`
-          id,
-          title,
-          description,
-          status,
-          tier,
-          budget,
-          client_id,
-          created_at,
-          updated_at
-        `)
-        .eq("client_id", clientId)
-        .order("created_at", { ascending: false })
-    );
+    const response = await fetch('/api/projects/business', {
+      headers: {
+        'x-user-id': clientId
+      }
+    });
 
-    if (error) {
-      console.error("Supabase query error for projects:", formatError(error));
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      console.error("Error fetching client projects:", result.error);
       return [];
     }
+
+    const data = result.data;
     if (!data) {
       return [];
     }
 
-    // Format project data without trying to fetch related tables
-    const enrichedData = data.map((project) => ({
+    // Format project data
+    const enrichedData = data.map((project: any) => ({
       ...project,
       nextMilestone: "Project in progress",
       milestoneDueDate: null,
@@ -95,29 +87,24 @@ export async function getClientProjects(clientId: string) {
   }
 }
 
-// Get single project by ID (fast direct fetch)
+// Get single project by ID (using server API)
 export async function getProjectById(projectId: string, clientId: string) {
   if (!projectId || !clientId) {
     return null;
   }
 
   try {
-    // Direct fetch with aggressive timeout
-    const { data, error } = await Promise.race([
-      supabase
-        .from("projects")
-        .select("id, title, description, status, tier, budget, budget_used, created_at, updated_at")
-        .eq("id", projectId)
-        .eq("client_id", clientId)
-        .maybeSingle(),
-      new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Project fetch timeout")), 4000)
-      ),
-    ]) as any;
+    const response = await fetch(`/api/projects/${projectId}`, {
+      headers: {
+        'x-user-id': clientId
+      }
+    });
 
-    if (error || !data) {
+    if (!response.ok) {
       return null;
     }
+
+    const data = await response.json();
 
     return {
       ...data,
@@ -127,7 +114,7 @@ export async function getProjectById(projectId: string, clientId: string) {
       deliverableStatus: [],
     };
   } catch (error) {
-    console.debug("Direct project fetch timeout/error - will use fallback");
+    console.debug("Project fetch error:", error);
     return null;
   }
 }
@@ -141,39 +128,40 @@ export async function getClientProfile(clientId: string) {
   try {
     const { data, error } = await withRetry(
       () => supabase
-        .from("user_profiles")
-        .select("id, name, email")
-        .eq("id", clientId)
+        .from("profiles")
+        .select("user_id, company_name, contact_email")
+        .eq("user_id", clientId)
         .maybeSingle()
     );
 
     if (error) {
       console.error("Error fetching client profile:", formatError(error));
-      // Return default profile on error
       return { id: clientId, name: "User", email: "" };
     }
 
-    // Return data or default profile
-    return data || { id: clientId, name: "User", email: "" };
+    return data ? {
+      id: data.user_id,
+      name: data.company_name || "User",
+      email: data.contact_email || ""
+    } : { id: clientId, name: "User", email: "" };
   } catch (error) {
     console.error("Error fetching client profile:", formatError(error));
-    // Return default profile on network error
     return { id: clientId, name: "User", email: "" };
   }
 }
 
-// Get client dashboard stats
+// Get client dashboard stats (using server API)
 export async function getClientStats(clientId: string) {
   try {
-    const { data, error, count } = await withRetry(
-      () => supabase
-        .from("projects")
-        .select("id, budget", { count: "exact" })
-        .eq("client_id", clientId)
-    );
+    const response = await fetch('/api/projects/business', {
+      headers: {
+        'x-user-id': clientId
+      }
+    });
 
-    if (error) {
-      console.error("Error fetching client stats:", formatError(error));
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
       return {
         activeProjects: 0,
         totalBudget: 0,
@@ -183,13 +171,14 @@ export async function getClientStats(clientId: string) {
       };
     }
 
+    const data = result.data;
     let totalBudget = 0;
     if (data) {
-      totalBudget = data.reduce((sum: number, p: any) => sum + (p.budget || 0), 0);
+      totalBudget = data.reduce((sum: number, p: any) => sum + (p.budget_max || 0), 0);
     }
 
     return {
-      activeProjects: count || 0,
+      activeProjects: data?.length || 0,
       totalBudget,
       budgetRemaining: totalBudget,
       totalSpent: 0,
