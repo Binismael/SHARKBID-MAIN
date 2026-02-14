@@ -39,9 +39,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (currentSession?.user) {
           setSession(currentSession);
           setUser(currentSession.user);
-          // Get user role from metadata
-          const role = (currentSession.user.user_metadata?.role ||
-            "business") as "admin" | "business" | "vendor";
+
+          // Fetch role from profile table as source of truth
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("user_id", currentSession.user.id)
+            .maybeSingle();
+
+          const role = (profile?.role || currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
           setUserRole(role);
         }
       } catch (err) {
@@ -56,12 +62,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+    } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
       if (currentSession?.user) {
         setSession(currentSession);
         setUser(currentSession.user);
-        const role = (currentSession.user.user_metadata?.role ||
-          "business") as "admin" | "business" | "vendor";
+
+        // Fetch role from profile table as source of truth
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("user_id", currentSession.user.id)
+          .maybeSingle();
+
+        const role = (profile?.role || currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
         setUserRole(role);
       } else {
         setSession(null);

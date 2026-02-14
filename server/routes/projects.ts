@@ -724,7 +724,15 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
       .maybeSingle();
 
     const isAdmin = userProfile?.role === "admin";
-    let vendorId = isOwner ? targetVendorId : userId;
+
+    // effectiveVendorId is the vendor whose conversation we are looking at.
+    // 1. If owner: must provide targetVendorId.
+    // 2. If vendor: is their own userId.
+    // 3. If admin: can provide targetVendorId or leave empty to see all.
+    let effectiveVendorId = targetVendorId;
+    if (!isOwner && !isAdmin) {
+      effectiveVendorId = userId;
+    }
 
     if (!isOwner && !isAdmin) {
       // If not owner or admin, verify this user is a vendor for this project
@@ -760,61 +768,61 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
 
     // Filter messages:
     // 1. Project ID must match
-    // 2. Either (sender is owner/admin and recipient/context is vendorId) OR (sender is vendorId)
+    // 2. Either (sender is owner/admin and recipient/context is effectiveVendorId) OR (sender is effectiveVendorId)
 
     let query = supabaseAdmin
       .from("project_messages")
       .select("*")
       .eq("project_id", projectId);
 
-    if (vendorId || isAdmin) {
+    if (isAdmin && !effectiveVendorId) {
       // For Admin, if no vendorId is provided, they see everything for this project
-      if (isAdmin && !vendorId) {
-        query = query.eq("project_id", projectId);
-      } else {
-        const { data: response } = await supabaseAdmin
-          .from("vendor_responses")
-          .select("id")
-          .eq("project_id", projectId)
-          .eq("vendor_id", vendorId || '')
-          .maybeSingle();
+      const { data: messages, error: msgError } = await query.order("created_at", { ascending: true });
+      if (msgError) throw msgError;
+      return respondWithEnrichedMessages(res, messages, supabaseAdmin);
+    }
 
-        const responseId = response?.id || '00000000-0000-0000-0000-000000000000';
+    if (effectiveVendorId) {
+      // We'll try to use the most comprehensive filter, but fallback if vendor_id column is missing
+      const { data: response } = await supabaseAdmin
+        .from("vendor_responses")
+        .select("id")
+        .eq("project_id", projectId)
+        .eq("vendor_id", effectiveVendorId)
+        .maybeSingle();
 
-        // Try to fetch messages. We'll handle the missing column error by falling back.
-        // We use two separate logic paths to ensure we don't hit the missing column error if it's not there.
-        try {
-          // First attempt: Try with vendor_id column
-          const { data: messages, error: msgError } = await supabaseAdmin
-            .from("project_messages")
-            .select("*")
-            .eq("project_id", projectId)
-            .or(`vendor_id.eq.${vendorId},sender_id.eq.${vendorId},and(sender_id.eq.${project.business_id},vendor_response_id.eq.${responseId})`)
-            .order("created_at", { ascending: true });
+      const responseId = response?.id || '00000000-0000-0000-0000-000000000000';
 
-          if (!msgError) {
-            return respondWithEnrichedMessages(res, messages, supabaseAdmin);
-          }
-
-          if (msgError.code !== '42703') {
-            throw msgError;
-          }
-          // If 42703, fall through to fallback
-        } catch (e: any) {
-          if (e?.code !== '42703') throw e;
-        }
-
-        // Fallback: Use only existing columns
-        const { data: fallbackMessages, error: fallbackError } = await supabaseAdmin
+      try {
+        // First attempt: Try with vendor_id column
+        const { data: messages, error: msgError } = await supabaseAdmin
           .from("project_messages")
           .select("*")
           .eq("project_id", projectId)
-          .or(`vendor_response_id.eq.${responseId},sender_id.eq.${vendorId},and(sender_id.eq.${project.business_id},vendor_response_id.eq.${responseId})`)
+          .or(`vendor_id.eq.${effectiveVendorId},sender_id.eq.${effectiveVendorId},and(sender_id.eq.${project.business_id},vendor_response_id.eq.${responseId})`)
           .order("created_at", { ascending: true });
 
-        if (fallbackError) throw fallbackError;
-        return respondWithEnrichedMessages(res, fallbackMessages, supabaseAdmin);
+        if (!msgError) {
+          return respondWithEnrichedMessages(res, messages, supabaseAdmin);
+        }
+
+        if (msgError.code !== '42703') {
+          throw msgError;
+        }
+      } catch (e: any) {
+        if (e?.code !== '42703') throw e;
       }
+
+      // Fallback: Use only existing columns
+      const { data: fallbackMessages, error: fallbackError } = await supabaseAdmin
+        .from("project_messages")
+        .select("*")
+        .eq("project_id", projectId)
+        .or(`vendor_response_id.eq.${responseId},sender_id.eq.${effectiveVendorId},and(sender_id.eq.${project.business_id},vendor_response_id.eq.${responseId})`)
+        .order("created_at", { ascending: true });
+
+      if (fallbackError) throw fallbackError;
+      return respondWithEnrichedMessages(res, fallbackMessages, supabaseAdmin);
     }
 
     const { data: messages, error: msgError } = await query.order("created_at", { ascending: true });

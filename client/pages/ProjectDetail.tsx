@@ -455,7 +455,10 @@ export default function ProjectDetail() {
                     {userRole === 'admin' ? 'Project Monitoring Room' : 'Workspace Messages'}
                   </h2>
                 </div>
-                <ProjectMessages projectId={project.id} vendorId={project.selected_vendor_id || undefined} />
+                <ProjectMessages
+                  projectId={project.id}
+                  vendorId={userRole === 'admin' ? undefined : (project.selected_vendor_id || undefined)}
+                />
               </section>
             )}
           </div>
