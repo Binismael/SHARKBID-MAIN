@@ -10,13 +10,13 @@
       "dist/server/**/*.js"
     ]
   },
-  "scripts": {
+"scripts": {
     "dev": "node scripts/dev.js",
     "dev:client": "vite",
     "dev:server": "tsx watch server/dev-server.ts",
-    "build": "npm run build:client && npm run build:server",
-    "build:client": "npx vite build",
-    "build:server": "npx vite build --config vite.config.server.ts",
+    "build": "pnpm run build:client && pnpm run build:server",
+    "build:client": "pnpm vite build",
+    "build:server": "pnpm vite build --config vite.config.server.ts",
     "start": "node dist/server/node-build.mjs",
     "test": "vitest --run",
     "format.fix": "prettier --write .",
