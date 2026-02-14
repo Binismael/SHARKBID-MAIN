@@ -1,8 +1,8 @@
 import { RequestHandler } from "express";
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const supabaseUrl = process.env.VITE_SUPABASE_URL_APP || "";
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY_APP || "";
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.warn("⚠️ [PROFILES] Supabase credentials missing. Profile endpoints will fail.");
