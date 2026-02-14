@@ -328,11 +328,15 @@ export default function BusinessVendorDetail() {
               <h3 className="text-lg font-bold mb-4">Service Areas</h3>
               {vendor.vendor_coverage_areas && vendor.vendor_coverage_areas.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {vendor.vendor_coverage_areas.map((areaId, idx) => (
-                    <span key={idx} className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded text-sm font-medium">
-                      {coverageNames[areaId] || 'US'}
-                    </span>
-                  ))}
+                  {vendor.vendor_coverage_areas.map((areaId, idx) => {
+                    const stateAbbr = coverageNames[areaId];
+                    const stateName = stateAbbr ? STATE_NAMES[stateAbbr] || stateAbbr : stateAbbr || 'US';
+                    return (
+                      <span key={idx} className="bg-slate-100 dark:bg-slate-800 px-3 py-1 rounded text-sm font-medium" title={stateAbbr}>
+                        {stateName}
+                      </span>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-sm text-slate-500">Nationwide coverage available.</p>
