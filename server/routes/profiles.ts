@@ -8,7 +8,9 @@ if (!supabaseUrl || !supabaseServiceKey) {
   console.warn("⚠️ [PROFILES] Supabase credentials missing. Profile endpoints will fail.");
 }
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseAdmin = (supabaseUrl && supabaseServiceKey)
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
 
 export const handleGetMyProfile: RequestHandler = async (req, res) => {
   try {

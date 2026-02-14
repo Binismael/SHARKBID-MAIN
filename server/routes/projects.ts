@@ -9,7 +9,9 @@ if (!supabaseUrl || !supabaseServiceKey) {
   console.warn("⚠️ [PROJECTS] Supabase credentials missing. Project endpoints will fail.");
 }
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseAdmin = (supabaseUrl && supabaseServiceKey)
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
 
 // Publish a project (change status from draft to open and route to vendors)
 export const handlePublishProject: RequestHandler = async (req, res) => {

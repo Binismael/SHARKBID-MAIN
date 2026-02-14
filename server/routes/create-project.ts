@@ -8,7 +8,9 @@ if (!supabaseUrl || !supabaseServiceKey) {
   console.warn("⚠️ [CREATE-PROJECT] Supabase credentials missing. Project creation will fail.");
 }
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseAdmin = (supabaseUrl && supabaseServiceKey)
+  ? createClient(supabaseUrl, supabaseServiceKey)
+  : null;
 
 interface CreateProjectRequest {
   title: string;

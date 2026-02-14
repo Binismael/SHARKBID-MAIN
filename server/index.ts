@@ -15,6 +15,9 @@ export function createServer() {
 
   // Middleware
   app.use(cors());
+  console.log("TEST_VAR:", process.env.TEST_VAR);
+  console.log("VITE_SUPABASE_URL:", process.env.VITE_SUPABASE_URL);
+  console.log("VITE_SUPABASE_URL_X:", process.env.VITE_SUPABASE_URL_X);
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
