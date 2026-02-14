@@ -3,13 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
-import { Sparkles, ArrowRight, Building2, Briefcase, Shield, CheckCircle2 } from "lucide-react";
+import { getErrorMessage } from "@/lib/utils";
+import { Sparkles, ArrowRight, Building2, Briefcase, Shield, CheckCircle2, Zap, AlertCircle, ShieldCheck, Loader2 } from "lucide-react";
+import { Logo } from "@/components/Logo";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [role, setRole] = useState<"admin" | "client" | "creator">("client");
+  const [role, setRole] = useState<"admin" | "business" | "vendor">("business");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { signUp, user, userRole } = useAuth();
@@ -19,10 +23,10 @@ export default function Signup() {
     if (user && userRole) {
       if (userRole === "admin") {
         navigate("/admin/dashboard", { replace: true });
-      } else if (userRole === "client") {
-        navigate("/client/dashboard", { replace: true });
-      } else if (userRole === "creator") {
-        navigate("/creator/dashboard", { replace: true });
+      } else if (userRole === "business") {
+        navigate("/business/dashboard", { replace: true });
+      } else if (userRole === "vendor") {
+        navigate("/vendor/dashboard", { replace: true });
       }
     }
   }, [user, userRole, navigate]);
@@ -31,7 +35,7 @@ export default function Signup() {
     e.preventDefault();
     setError("");
 
-    const requiredFields = role === "client" ? [email, password, companyName] : [email, password];
+    const requiredFields = role === "business" ? [email, password, companyName] : [email, password];
     if (!requiredFields.every(field => field.trim())) {
       setError("Please fill in all required fields");
       return;
@@ -44,13 +48,22 @@ export default function Signup() {
 
     try {
       setLoading(true);
-      const displayName = role === "client" ? companyName : `${role.charAt(0).toUpperCase() + role.slice(1)} User`;
+      const displayName = role === "business" ? companyName : `${role.charAt(0).toUpperCase() + role.slice(1)} User`;
       await signUp(email, password, displayName, role);
       alert("Sign up successful! Redirecting to login...");
       navigate("/login", { replace: true });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Signup error:", error);
-      setError("Sign up failed. Please try again.");
+      const message = getErrorMessage(error);
+
+      // Handle specific Supabase auth errors
+      if (message.includes("already registered") || message.includes("User already exists")) {
+        setError("This email is already registered. Please try logging in or use a different email.");
+      } else if (message.includes("Invalid")) {
+        setError("Invalid email or password. Please check and try again.");
+      } else {
+        setError(message || "Sign up failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -58,214 +71,284 @@ export default function Signup() {
 
   const roleOptions = [
     {
-      value: "client" as const,
-      label: "Client",
-      description: "Hire creators",
+      value: "business" as const,
+      label: "Business",
+      description: "Find vendors",
       icon: Building2,
+      color: "from-blue-500 to-blue-600",
     },
     {
-      value: "creator" as const,
-      label: "Creator",
-      description: "Earn money",
+      value: "vendor" as const,
+      label: "Vendor",
+      description: "Bid on projects",
       icon: Briefcase,
-    },
-    {
-      value: "admin" as const,
-      label: "Admin",
-      description: "Manage platform",
-      icon: Shield,
+      color: "from-green-500 to-green-600",
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 dark:from-slate-950 via-blue-50 dark:via-blue-950/20 to-purple-50 dark:to-purple-950/20 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative Elements */}
-      <div className="absolute top-0 -left-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-15 dark:opacity-10 animate-blob"></div>
-      <div className="absolute top-40 -right-40 w-80 h-80 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl opacity-15 dark:opacity-10 animate-blob animation-delay-2000"></div>
-      <div className="absolute -bottom-8 left-20 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-15 dark:opacity-10 animate-blob animation-delay-4000"></div>
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden py-20">
+      {/* Editorial Background */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/10 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/10 blur-[120px] animate-pulse delay-700" />
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] mix-blend-overlay" />
+      </div>
 
-      <div className="w-full max-w-lg z-10">
+      <div className="w-full max-w-4xl z-10">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 mb-4 shadow-lg">
-            <Sparkles className="h-6 w-6 text-white" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <div className="flex justify-center mb-8">
+            <Logo variant="light" className="h-20" />
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">
-            Visual Matters
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Join the creative community
+          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500">Registration Portal</span>
+          <h1 className="text-5xl font-black text-white mb-4 uppercase tracking-tighter">Join the <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">Marketplace</span></h1>
+          <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest max-w-xs mx-auto">
+            Select your account type to begin the onboarding process.
           </p>
-        </div>
+        </motion.div>
 
         {/* Signup Card */}
-        <div className="bg-card rounded-2xl border border-border shadow-xl p-8 space-y-6">
-          {/* Error Message */}
-          {error && (
-            <div className="p-4 rounded-lg border border-destructive/30 bg-destructive/10 flex gap-3">
-              <span className="text-destructive text-lg">⚠️</span>
-              <p className="text-sm text-destructive">{error}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Role Selection */}
-            <div className="space-y-3">
-              <label className="text-sm font-medium text-foreground">
-                Join as:
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {roleOptions.map((option) => {
-                  const Icon = option.icon;
-                  const isSelected = role === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setRole(option.value)}
-                      disabled={loading}
-                      className={`p-4 rounded-lg border-2 transition-all text-center ${
-                        isSelected
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-primary/50 bg-card"
-                      }`}
-                    >
-                      <Icon className={`h-5 w-5 mb-2 mx-auto ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
-                      <p className={`text-sm font-medium ${isSelected ? 'text-primary' : 'text-foreground'}`}>
-                        {option.label}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {option.description}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Company Name (for clients) */}
-            {role === "client" && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Company Name
-                </label>
-                <Input
-                  placeholder="Your company name"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  disabled={loading}
-                  className="h-11 px-4"
-                />
-              </div>
-            )}
-
-            {/* Email Field */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                Email Address
-              </label>
-              <Input
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                className="h-11 px-4"
-              />
-            </div>
-
-            {/* Password Field */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">
-                Password
-              </label>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                className="h-11 px-4"
-              />
-              <p className="text-xs text-muted-foreground">
-                Minimum 6 characters
-              </p>
-            </div>
-
-            {/* Agreement */}
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="mt-1 rounded border border-border cursor-pointer"
-                disabled={loading}
-              />
-              <span className="text-xs text-muted-foreground">
-                I agree to the <span className="font-medium">Terms of Service</span> and <span className="font-medium">Privacy Policy</span>
-              </span>
-            </label>
-
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full h-11 rounded-lg bg-gradient-to-r from-primary to-primary/90 hover:from-primary/95 hover:to-primary/85 text-white font-semibold gap-2 shadow-lg transition-all"
-            >
-              {loading ? (
-                <>
-                  <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                  Creating Account...
-                </>
-              ) : (
-                <>
-                  Create Account
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </form>
-
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-card text-muted-foreground">
-                Already have an account?
-              </span>
-            </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="bg-slate-900/50 backdrop-blur-3xl rounded-[2.5rem] border border-white/5 shadow-2xl overflow-hidden"
+        >
+          {/* Progress Bar (Visual) */}
+          <div className="h-1.5 w-full bg-white/5">
+            <motion.div
+              initial={{ width: "0%" }}
+              animate={{ width: "100%" }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+              className="h-full bg-gradient-to-r from-blue-600 to-indigo-600"
+            />
           </div>
 
-          {/* Login Link */}
-          <Link to="/login">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-11 rounded-lg"
-            >
-              Sign In Instead
-            </Button>
-          </Link>
-        </div>
+          <div className="p-8 md:p-12 space-y-10">
+            {/* Error Message */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 flex gap-3 mb-6"
+                >
+                  <AlertCircle className="h-5 w-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-[11px] font-bold text-rose-400 uppercase leading-relaxed tracking-tight">{error}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <form onSubmit={handleSubmit} className="space-y-10">
+              {/* Role Selection */}
+              <div className="space-y-6">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Identity Profile *</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {roleOptions.map((option, i) => {
+                    const Icon = option.icon;
+                    const isSelected = role === option.value;
+                    return (
+                      <motion.button
+                        key={option.value}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 + (i * 0.1) }}
+                        type="button"
+                        onClick={() => setRole(option.value)}
+                        disabled={loading}
+                        className={cn(
+                          "relative p-6 rounded-3xl border-2 transition-all group overflow-hidden",
+                          isSelected
+                            ? "border-blue-600 bg-blue-600/5 ring-4 ring-blue-600/5 shadow-xl shadow-blue-600/10"
+                            : "border-white/5 hover:border-white/10 bg-white/[0.02]"
+                        )}
+                      >
+                        <div className={cn(
+                          "h-12 w-12 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110",
+                          isSelected ? "bg-blue-600 text-white" : "bg-white/5 text-slate-500"
+                        )}>
+                          <Icon className="h-6 w-6" />
+                        </div>
+                        <p className={cn(
+                          "text-xs font-black uppercase tracking-widest leading-none",
+                          isSelected ? "text-white" : "text-slate-400"
+                        )}>
+                          {option.label}
+                        </p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight mt-2 opacity-60">
+                          {option.description}
+                        </p>
+
+                        {isSelected && (
+                          <motion.div
+                            layoutId="activeRole"
+                            className="absolute top-3 right-3"
+                          >
+                            <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Form Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+                {/* Company Name (for businesses) */}
+                {role === "business" && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="space-y-3"
+                  >
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Organization Name *</label>
+                    <Input
+                      placeholder="e.g., Apex Global Solutions"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      disabled={loading}
+                      className="h-14 px-5 bg-white/5 border-transparent focus:bg-white/10 focus:ring-4 focus:ring-blue-500/5 rounded-2xl text-white font-bold text-sm transition-all"
+                    />
+                  </motion.div>
+                )}
+
+                {/* Email Field */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="space-y-3"
+                >
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Professional Email *</label>
+                  <Input
+                    type="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                    className="h-14 px-5 bg-white/5 border-transparent focus:bg-white/10 focus:ring-4 focus:ring-blue-500/5 rounded-2xl text-white font-bold text-sm transition-all"
+                  />
+                </motion.div>
+
+                {/* Password Field */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="space-y-3"
+                >
+                  <div className="flex items-center justify-between ml-1">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Access Password *</label>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-600">Min. 6 Characters</span>
+                  </div>
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                    className="h-14 px-5 bg-white/5 border-transparent focus:bg-white/10 focus:ring-4 focus:ring-blue-500/5 rounded-2xl text-white font-bold text-sm transition-all"
+                  />
+                </motion.div>
+              </div>
+
+              {/* Agreement */}
+              <div className="pt-4">
+                <label className="flex items-start gap-4 cursor-pointer group">
+                  <div className="mt-1 relative">
+                    <input
+                      type="checkbox"
+                      className="peer h-5 w-5 rounded-lg border-2 border-white/10 bg-white/5 appearance-none checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer"
+                      disabled={loading}
+                      required
+                    />
+                    <CheckCircle2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-3 w-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase leading-relaxed tracking-wider group-hover:text-slate-400 transition-colors">
+                    I acknowledge and agree to the <span className="text-white hover:underline">Marketplace Terms</span> and <span className="text-white hover:underline">Privacy Guidelines</span>.
+                  </span>
+                </label>
+              </div>
+
+              {/* Submit Section */}
+              <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <Link to="/login" className="order-2 sm:order-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-white transition-colors">
+                  Existing User Login
+                </Link>
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="order-1 sm:order-2 w-full sm:w-auto h-14 px-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 transition-all active:scale-95"
+                >
+                  {loading ? (
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Provisioning...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      Initialize Account
+                      <ArrowRight className="h-4 w-4" />
+                    </div>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </motion.div>
 
         {/* Benefits Box */}
-        <div className="mt-8 p-4 rounded-lg border border-green-200 dark:border-green-900 bg-green-50 dark:bg-green-950/20 backdrop-blur-sm space-y-3">
-          <h3 className="text-xs font-semibold text-green-900 dark:text-green-200">
-            ✓ What you get:
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="mt-12 p-8 rounded-[2.5rem] border border-blue-500/10 bg-blue-500/5 backdrop-blur-sm relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+          <h3 className="text-[10px] font-black uppercase text-blue-500 tracking-[0.3em] mb-6 flex items-center gap-3">
+            <Sparkles className="h-4 w-4" />
+            Ecosystem Benefits
           </h3>
-          <ul className="space-y-2 text-xs text-green-800 dark:text-green-300">
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              {role === "client" && "Access to verified creators"}
-              {role === "creator" && "Find paid projects"}
-              {role === "admin" && "Platform management"}
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <span>Secure payments & milestones</span>
-            </li>
-          </ul>
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { title: "Smart Sourcing", desc: role === "business" ? "Top-tier vendor network." : "High-quality project leads." },
+              { title: "Secure Workflow", desc: "Encrypted communications." },
+              { title: "Market Growth", desc: "Data-driven opportunities." }
+            ].map((benefit, i) => (
+              <div key={benefit.title} className="space-y-2">
+                <p className="text-xs font-black uppercase text-white tracking-widest">{benefit.title}</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{benefit.desc}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Legal Footer */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="mt-12 text-center space-y-4"
+        >
+          <div className="flex items-center justify-center gap-6">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-3 w-3 text-slate-700" />
+              <span className="text-[8px] font-black uppercase text-slate-700 tracking-[0.2em]">ISO 27001 Compliant</span>
+            </div>
+            <div className="h-1 w-1 rounded-full bg-slate-800" />
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-3 w-3 text-slate-700" />
+              <span className="text-[8px] font-black uppercase text-slate-700 tracking-[0.2em]">GDPR Protected</span>
+            </div>
+          </div>
+          <p className="text-[8px] font-black uppercase text-slate-800 tracking-[0.2em]">© 2026 Sharkbid Platforms Inc. All Rights Reserved.</p>
+        </motion.div>
       </div>
     </div>
   );

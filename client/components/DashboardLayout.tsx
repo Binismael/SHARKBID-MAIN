@@ -1,10 +1,11 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { Menu, LogOut, Sparkles, X, Home, FileText, Settings, Zap, DollarSign, LayoutGrid, Users, BarChart3, Sliders, User, Lock } from "lucide-react";
+import { Menu, LogOut, X, Home, FileText, Settings, Zap, DollarSign, LayoutGrid, Users, BarChart3, Sliders, User, Lock, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { NotificationBell } from "@/components/NotificationBell";
+import { Logo } from "@/components/Logo";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -76,6 +77,8 @@ export function DashboardLayout({
     role === "admin" ? adminNav : role === "client" ? clientNav : creatorNav;
 
   const roleConfig = getRoleConfig(role);
+  const dashboardPath = role === "admin" ? "/admin/dashboard" : role === "client" ? "/client/dashboard" : "/creator/dashboard";
+  const isAtDashboard = location.pathname === dashboardPath;
 
   return (
     <div className="flex h-screen bg-background">
@@ -89,15 +92,10 @@ export function DashboardLayout({
         {/* Logo */}
         <div className="p-6 border-b border-border">
           <Link to="/" className="flex items-center gap-3 font-bold">
-            <div className={`p-2.5 ${roleConfig.bg} rounded-lg shadow-md`}>
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
+            <Logo variant="dark" className={cn(sidebarOpen ? "h-12" : "h-10")} />
             {sidebarOpen && (
               <div>
-                <span className="text-lg font-bold text-foreground block">
-                  Visual Matters
-                </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground block">
                   {roleConfig.title}
                 </span>
               </div>
@@ -166,6 +164,28 @@ export function DashboardLayout({
           </div>
 
           <div className="flex items-center gap-3">
+            {!isAtDashboard && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate(dashboardPath)}
+                className="hidden sm:flex items-center gap-2 text-primary border-primary/20 hover:bg-primary/5"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to Dashboard
+              </Button>
+            )}
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/")}
+              className="hidden sm:flex items-center gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Website
+            </Button>
+
             <NotificationBell />
 
             <div className="h-8 w-px bg-border"></div>

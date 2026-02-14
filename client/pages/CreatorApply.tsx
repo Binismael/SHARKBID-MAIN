@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { submitCreatorApplication } from "@/lib/creator-application-service";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 export default function CreatorApply() {
   const [formData, setFormData] = useState({
@@ -34,7 +35,7 @@ export default function CreatorApply() {
         .filter((s) => s.length > 0);
 
       if (specialties.length === 0) {
-        setError("Please enter at least one specialty");
+        setError("Please enter at least one service category");
         setLoading(false);
         return;
       }
@@ -52,7 +53,7 @@ export default function CreatorApply() {
         // Hide success message after 5 seconds
         setTimeout(() => setSuccess(false), 5000);
       } else {
-        setError(result.error || "Failed to submit application");
+        setError(getErrorMessage(result.error || "Failed to submit application"));
       }
     } catch (err) {
       setError("An unexpected error occurred");
@@ -65,16 +66,18 @@ export default function CreatorApply() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Visual Matters</h1>
-          <p className="text-muted-foreground">Apply to become a creator</p>
+          <div className="flex justify-center mb-2">
+            <Logo variant="dark" />
+          </div>
+          <p className="text-muted-foreground">Apply to become a vendor</p>
         </div>
 
         {/* Success Message */}
         {success && (
           <div className="mb-6 p-4 rounded-lg border-2 border-secondary bg-secondary/10 flex gap-3">
-            <CheckCircle2 className="h-5 w-5 text-secondary flex-shrink-0 mt-0.5" />
+            <CheckCircle2 className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-secondary mb-1">Application Submitted!</p>
+              <p className="font-semibold text-blue-600 mb-1">Application Submitted!</p>
               <p className="text-sm text-muted-foreground">
                 Thank you for applying. We'll review your application and get back to you soon.
               </p>
@@ -129,10 +132,10 @@ export default function CreatorApply() {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">Specialties *</label>
+              <label className="text-sm font-medium mb-1 block">Services Offered *</label>
               <textarea
                 name="specialties"
-                placeholder="e.g., Motion Design, Photography, Branding (comma-separated)"
+                placeholder="e.g., Plumbing, Electrical, Cleaning (comma-separated)"
                 value={formData.specialties}
                 onChange={handleChange}
                 required

@@ -11,7 +11,9 @@
     ]
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "node scripts/dev.js",
+    "dev:client": "vite",
+    "dev:server": "tsx watch server/dev-server.ts",
     "build": "npm run build:client && npm run build:server",
     "build:client": "vite build",
     "build:server": "vite build --config vite.config.server.ts",
@@ -24,6 +26,7 @@
     "@supabase/supabase-js": "^2.93.1",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "pg": "^8.18.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

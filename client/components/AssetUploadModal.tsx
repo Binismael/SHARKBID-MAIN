@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Upload, X, AlertCircle, CheckCircle } from "lucide-react";
 import { uploadAsset } from "@/lib/asset-service";
+import { getErrorMessage } from "@/lib/utils";
 
 interface AssetUploadModalProps {
   isOpen: boolean;
@@ -73,7 +74,7 @@ export function AssetUploadModal({
         onClose();
       }, 1500);
     } else {
-      setError(result.error || "Upload failed");
+      setError(getErrorMessage(result.error || "Upload failed"));
     }
 
     setUploading(false);
@@ -158,7 +159,7 @@ export function AssetUploadModal({
                 <Input
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
-                  placeholder="e.g. web, banner, 2025"
+                  placeholder="e.g. web, banner, 2026"
                   disabled={uploading}
                 />
               </div>
@@ -187,7 +188,7 @@ export function AssetUploadModal({
                   <Input
                     value={campaign}
                     onChange={(e) => setCampaign(e.target.value)}
-                    placeholder="e.g. Summer 2025"
+                    placeholder="e.g. Summer 2026"
                     disabled={uploading}
                   />
                 </div>

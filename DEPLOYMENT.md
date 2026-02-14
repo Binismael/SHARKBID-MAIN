@@ -1,356 +1,179 @@
-# Deployment Guide
+# Sharkbid MVP - Deployment Guide
 
-This guide covers deploying Visual Matters to production using Netlify or Vercel.
-
----
-
-## Table of Contents
-1. [Prerequisites](#prerequisites)
-2. [Netlify Deployment](#netlify-deployment)
-3. [Vercel Deployment](#vercel-deployment)
-4. [Environment Variables](#environment-variables)
-5. [Database Setup](#database-setup)
-6. [Post-Deployment Checklist](#post-deployment-checklist)
-
----
+This guide covers deploying Sharkbid to production using Netlify or Vercel with www.shrkbid.com as the primary domain.
 
 ## Prerequisites
 
-Before deploying, ensure you have:
-- [ ] GitHub repository created and pushed
-- [ ] Supabase project created with database
-- [ ] SendGrid account (optional, for emails)
-- [ ] Netlify or Vercel account
-- [ ] Domain name (optional but recommended)
+- GitHub repository with the Sharkbid code
+- Supabase project configured with migrations applied
+- Netlify or Vercel account
+- Domain: www.shrkbid.com registered and DNS configured
 
----
+## Environment Variables Setup
 
-## Netlify Deployment
+Before deploying, gather all required environment variables:
 
-### Step 1: Connect GitHub Repository
+1. **Supabase Credentials:**
+   - `VITE_SUPABASE_URL` - Your Supabase project URL
+   - `VITE_SUPABASE_ANON_KEY` - Your Supabase anonymous key
+   - `SUPABASE_SERVICE_ROLE_KEY` - Your Supabase service role key
 
-1. Go to [netlify.com](https://netlify.com)
-2. Click "New site from Git"
+2. **OpenAI Credentials:**
+   - `OPENAI_API_KEY` - Your OpenAI API key (for AI intake chat)
+
+3. **SendGrid Credentials** (optional for email):
+   - `SENDGRID_API_KEY` - Your SendGrid API key
+   - `FROM_EMAIL` - Sender email address
+
+4. **Builder.io Configuration** (optional):
+   - `VITE_PUBLIC_BUILDER_KEY` - Your Builder.io public key
+
+## Deployment Options
+
+### Option 1: Netlify Deployment
+
+#### Step 1: Connect GitHub Repository
+1. Go to [Netlify Dashboard](https://app.netlify.com/)
+2. Click "Add new site" → "Import an existing project"
 3. Select GitHub and authorize
-4. Choose your repository
-5. Verify build settings:
-   - Build command: `npm run build:client`
-   - Publish directory: `dist/spa`
-   - Functions directory: `netlify/functions`
+4. Choose the `Binismael/SHARKBID-MAIN` repository
+5. Select the `warlock-ledger-4jajub8c` branch (or your current branch)
 
-### Step 2: Configure Environment Variables
+#### Step 2: Configure Build Settings
+In Netlify UI, set:
+- **Build command:** `pnpm build`
+- **Publish directory:** `dist/spa`
+- **Node version:** 20.x
 
-1. Go to Site Settings → Environment
-2. Add the following variables:
-
+#### Step 3: Add Environment Variables
+In Netlify Dashboard → Site settings → Build & deploy → Environment:
 ```
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key-here
-SENDGRID_API_KEY=sg_xxx (if using emails)
-FROM_EMAIL=noreply@yourdomain.com
-NODE_ENV=production
-PING_MESSAGE=pong
+VITE_SUPABASE_URL=https://kpytttekmeoeqskfopqj.supabase.co
+VITE_SUPABASE_ANON_KEY=sb_publishable_lreQ-onfcl54cNK1onBAMQ_T9GB1lJe
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+OPENAI_API_KEY=sk-proj-your-key
+SENDGRID_API_KEY=SG.your-key
+FROM_EMAIL=noreply@sharkbid.co
+VITE_PUBLIC_BUILDER_KEY=__BUILDER_PUBLIC_KEY__
 ```
 
-### Step 3: Configure Security Headers
+#### Step 4: Configure Custom Domain
+1. In Netlify → Domain settings
+2. Add custom domain: `www.shrkbid.com`
+3. Follow DNS configuration instructions
+4. Netlify will provision SSL certificate automatically
 
-Edit `netlify.toml`:
-
+#### Step 5: Set Redirect Rules
+Create `netlify.toml` in root:
 ```toml
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Content-Type-Options = "nosniff"
     X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
     X-XSS-Protection = "1; mode=block"
-    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
-    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
-
-# Redirect non-www to www (optional)
-[[redirects]]
-  from = "https://example.com/*"
-  to = "https://www.example.com/:splat"
-  status = 301
-  force = true
-
-# API proxy
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/api/:splat"
-  status = 200
 ```
 
-### Step 4: Configure Custom Domain
+### Option 2: Vercel Deployment
 
-1. Go to Site Settings → Domain management
-2. Click "Add custom domain"
-3. Enter your domain
-4. Follow DNS setup instructions
-5. Enable HTTPS (automatic)
+#### Step 1: Connect GitHub Repository
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+2. Click "Add New..." → "Project"
+3. Import GitHub repository: `Binismael/SHARKBID-MAIN`
+4. Select the current branch
 
-### Step 5: Deploy
+#### Step 2: Configure Project Settings
+- **Framework:** Vite
+- **Build Command:** `pnpm build`
+- **Output Directory:** `dist/spa`
+- **Install Command:** `pnpm install`
 
-```bash
-# Manual deployment
-git push origin main
-
-# Automatic deployment happens on every push to main
+#### Step 3: Add Environment Variables
+In Vercel → Project settings → Environment Variables:
+```
+VITE_SUPABASE_URL=https://kpytttekmeoeqskfopqj.supabase.co
+VITE_SUPABASE_ANON_KEY=sb_publishable_lreQ-onfcl54cNK1onBAMQ_T9GB1lJe
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+OPENAI_API_KEY=sk-proj-your-key
+SENDGRID_API_KEY=SG.your-key
+FROM_EMAIL=noreply@sharkbid.co
+VITE_PUBLIC_BUILDER_KEY=__BUILDER_PUBLIC_KEY__
 ```
 
----
+#### Step 4: Configure Custom Domain
+1. In Vercel → Domains
+2. Add: `www.shrkbid.com`
+3. Update DNS records as instructed
+4. Vercel automatically manages SSL
 
-## Vercel Deployment
-
-### Step 1: Connect Repository
-
-1. Go to [vercel.com](https://vercel.com)
-2. Click "New Project"
-3. Select "Import Git Repository"
-4. Choose your GitHub repo
-5. Select "Other" as the framework (or let Vercel auto-detect)
-
-### Step 2: Configure Build Settings
-
-```
-Build Command: npm run build:client
-Output Directory: dist/spa
-```
-
-### Step 3: Add Environment Variables
-
-1. Go to Project Settings → Environment Variables
-2. Add variables:
-
-```
-VITE_SUPABASE_URL
-VITE_SUPABASE_ANON_KEY
-SENDGRID_API_KEY (if using emails)
-FROM_EMAIL
-NODE_ENV
-```
-
-### Step 4: Deploy
-
-```bash
-git push origin main
-# Vercel auto-deploys on push
-```
-
----
-
-## Environment Variables
-
-### Development
-Create `.env.local`:
-```bash
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-SENDGRID_API_KEY=sg_xxx (optional)
-FROM_EMAIL=test@example.com
-NODE_ENV=development
-```
-
-### Production
-Set in Netlify/Vercel dashboard (never commit `.env`):
-
-```bash
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-SENDGRID_API_KEY=sg_xxx
-FROM_EMAIL=noreply@yourdomain.com
-NODE_ENV=production
-PING_MESSAGE=pong
-```
-
-### Important Security Notes
-- ✅ VITE_* variables are safe to expose (used in frontend)
-- ❌ SENDGRID_API_KEY must only be on server (keep it hidden)
-- ❌ Never commit `.env` files
-- ✅ Use environment-specific API keys
-- ✅ Rotate keys regularly
-
----
-
-## Database Setup
-
-### 1. Create Supabase Project
-
-1. Go to [supabase.com](https://supabase.com)
-2. Create new project
-3. Configure database password
-4. Wait for project initialization
-5. Copy Project URL and Anon Key
-
-### 2. Apply Database Migrations
-
-The application requires the following tables. If not automatically created, use Supabase SQL editor:
-
-```sql
--- Run migrations from migrations/ folder
--- Or create tables manually:
-
-CREATE TABLE user_profiles (
-  id UUID PRIMARY KEY,
-  name VARCHAR(255),
-  email VARCHAR(255) UNIQUE,
-  avatar_url TEXT,
-  role VARCHAR(50),
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
-);
-
--- ... (additional tables documented in SCHEMA.md)
-```
-
-### 3. Enable Row Level Security
-
-```sql
-ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE deliverables ENABLE ROW LEVEL SECURITY;
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
-```
-
-See [SECURITY.md](./SECURITY.md) for RLS policy examples.
-
-### 4. Configure Storage
-
-1. Go to Storage in Supabase dashboard
-2. Create bucket: `assets`
-3. Make it private (access via authenticated requests)
-4. Configure CORS if needed
-
----
-
-## Monitoring & Logs
-
-### Netlify Functions Logs
-
-```bash
-# View logs
-netlify functions:invoke api --http POST --payload '{"key": "value"}'
-
-# Or in Netlify dashboard:
-# Functions → Logs
-```
-
-### Supabase Logs
-
-1. Go to Supabase dashboard
-2. Database → Logs
-3. View query logs, errors, etc.
-
-### Error Tracking (Optional)
-
-Add Sentry for error monitoring:
-
-```typescript
-import * as Sentry from "@sentry/react";
-
-Sentry.init({
-  dsn: "your-sentry-dsn",
-  environment: process.env.NODE_ENV,
-});
-```
-
----
+#### Step 5: Server Function Configuration
+For API routes, Vercel automatically converts `/server/routes` to Vercel Functions. No additional configuration needed.
 
 ## Post-Deployment Checklist
 
-- [ ] Verify site loads without errors
-- [ ] Test authentication (signup, login, logout)
-- [ ] Test core features (create project, upload asset, etc.)
-- [ ] Verify API endpoints respond
-- [ ] Check environment variables are set
-- [ ] Enable HTTPS/SSL
-- [ ] Setup custom domain
-- [ ] Configure backups
-- [ ] Setup monitoring/alerts
-- [ ] Test email notifications (if configured)
-- [ ] Verify RLS policies work
-- [ ] Setup error tracking
-- [ ] Review security checklist in SECURITY.md
-- [ ] Create backup of database
-- [ ] Document admin account details
-
----
+- [ ] Test all three portals (Business, Vendor, Admin) in production
+- [ ] Verify Supabase connection and RLS policies are working
+- [ ] Test AI intake chat with OpenAI
+- [ ] Confirm lead routing is triggering
+- [ ] Test vendor bid submission
+- [ ] Check email notifications (if SendGrid configured)
+- [ ] Verify SSL certificate is active
+- [ ] Set up CDN caching for static assets
+- [ ] Configure monitoring/alerting
 
 ## Troubleshooting
 
-### Site not deploying
-- Check build logs in Netlify/Vercel
-- Verify environment variables are set
-- Check `netlify.toml` syntax
-- Ensure build command matches your setup
+### Build Failures
+- Ensure all required environment variables are set
+- Check Node version matches (20.x or higher)
+- Verify pnpm dependencies with `pnpm install --frozen-lockfile`
 
-### APIs not working
-- Check Netlify functions logs
-- Verify API endpoint paths are correct
-- Check environment variables (SENDGRID_API_KEY, etc.)
-- Test locally: `netlify dev`
+### API Issues
+- Verify Supabase keys are correct
+- Check CORS settings in Supabase
+- Review API logs in Supabase dashboard
 
-### Database connection errors
-- Verify VITE_SUPABASE_URL is correct
-- Check VITE_SUPABASE_ANON_KEY is valid
-- Ensure Supabase project is active
-- Check network connectivity
+### Email Not Sending
+- Confirm SENDGRID_API_KEY is set
+- Verify FROM_EMAIL domain is verified in SendGrid
+- Check email routing logs in SendGrid dashboard
 
-### Emails not sending
-- Verify SENDGRID_API_KEY is set
-- Check email address format
-- Review SendGrid logs
-- Test endpoint manually
+## Continuous Deployment
 
----
+Both Netlify and Vercel support automatic deployments:
+1. Push to your deployment branch (e.g., `main`, `production`)
+2. The site automatically rebuilds and deploys
+3. Deployments are previewed before going live
 
-## Rollback
+## Monitoring
 
-If deployment breaks production:
+### Supabase Monitoring
+- Monitor database performance in Supabase dashboard
+- Check API usage and quotas
+- Review RLS policy violations in logs
 
-### Netlify Rollback
-1. Go to Deploys
-2. Click previous deployment
-3. Click "Publish deploy"
+### Application Monitoring
+- Set up error tracking (Sentry recommended)
+- Monitor API response times
+- Track user engagement
 
-### Vercel Rollback
-1. Go to Deployments
-2. Find previous deployment
-3. Click "Promote to Production"
+## Scaling Considerations
 
----
-
-## Performance Optimization
-
-### Frontend
-- Enable caching in `netlify.toml`
-- Minimize bundle size (tree-shake unused code)
-- Use lazy loading for routes
-- Optimize images
-
-### Backend
-- Add database indexes
-- Cache responses where appropriate
-- Use connection pooling
-- Monitor function execution time
-
----
-
-## Scaling
-
-As your app grows:
-1. **Database**: Add read replicas, archive old data
-2. **Files**: Use CDN for asset delivery
-3. **Functions**: Upgrade Netlify/Vercel plan
-4. **Monitoring**: Increase log retention
-5. **Email**: Upgrade SendGrid plan
-
----
+For production scale:
+1. **Supabase:** Upgrade to paid plan for higher limits
+2. **CDN:** Ensure static assets are cached at edge
+3. **Database:** Monitor for slow queries, optimize indexes
+4. **Rate Limiting:** Implement on API endpoints if needed
 
 ## Support
 
 For deployment issues:
-- Netlify Support: https://support.netlify.com
+- Netlify Support: https://support.netlify.com/
 - Vercel Support: https://vercel.com/support
-- Supabase Community: https://supabase.com/community
+- Supabase Documentation: https://supabase.com/docs
+- OpenAI Documentation: https://platform.openai.com/docs

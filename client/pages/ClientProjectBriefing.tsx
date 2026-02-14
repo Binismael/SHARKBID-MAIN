@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth-context";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle2, ArrowLeft, Zap, Sparkles, Clock, DollarSign } from "lucide-react";
+import { getErrorMessage } from "@/lib/utils";
 import {
   createProjectFromBriefing,
   getProjectBriefingTemplate,
@@ -94,7 +95,7 @@ export default function ClientProjectBriefing() {
       const result = await createProjectFromBriefing(user.id, briefing);
 
       if (!result.success) {
-        setError(result.error || "Failed to create project");
+        setError(getErrorMessage(result.error || "Failed to create project"));
         setLoading(false);
         return;
       }

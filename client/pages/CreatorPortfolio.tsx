@@ -183,7 +183,7 @@ export default function CreatorPortfolio() {
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                           <CheckCircle2 className="h-4 w-4 text-green-500" />
-                          <span>Verified Creator • Member since 2024</span>
+                          <span>Verified Creator • Member since 2026</span>
                         </div>
                       </div>
                       <div className="flex gap-2">

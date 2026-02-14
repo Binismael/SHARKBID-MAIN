@@ -55,30 +55,22 @@ async function withRetry<T>(
 // Projects
 export async function getProjects() {
   try {
-    // Try simple query first (no relationships, faster)
-    const { data, error } = await withRetry(
-      () => supabase
-        .from("projects")
-        .select("id, title, description, status, tier, budget, budget_used, client_id, company_id, created_at, updated_at")
-        .order("created_at", { ascending: false }),
-      6,  // Maximum attempts
-      100,  // Very fast initial backoff
-      3000  // 3 second timeout
-    );
+    const response = await fetch('/api/admin/projects', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('supabase.auth.token')}` // Placeholder for token
+      }
+    });
+    const result = await response.json();
 
-    if (error) {
-      console.warn("Project fetch error:", error);
+    if (!result.success) {
+      console.warn("Project fetch error:", result.error);
       return [];
     }
 
-    if (!data) {
-      return [];
-    }
-
-    return data;
+    return result.data || [];
   } catch (error) {
     console.error("Error in getProjects:", error);
-    return [];  // Return empty array gracefully instead of throwing
+    return [];
   }
 }
 
@@ -92,13 +84,23 @@ export async function createProject(projectData: {
   platforms?: string[];
   timeline?: string;
 }) {
-  const { data, error } = await supabase
-    .from("projects")
-    .insert([projectData])
-    .select();
-  
-  if (error) throw error;
-  return data?.[0];
+  // Map company_id to business_id for server API compatibility
+  const response = await fetch('/api/projects/create', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-user-id': projectData.company_id // Using company_id as userId
+    },
+    body: JSON.stringify({
+      ...projectData,
+      service_category: 'Other', // Placeholder
+      project_state: 'NY' // Placeholder
+    })
+  });
+
+  const result = await response.json();
+  if (!result.success) throw result.error || 'Failed to create project';
+  return result.project;
 }
 
 export async function updateProject(
@@ -115,98 +117,62 @@ export async function updateProject(
     timeline: string;
   }>
 ) {
+  // For update, we might need a dedicated endpoint or use direct Supabase if RLS allows
+  // For now, continuing to use direct Supabase but with business_id correction if needed
+  // Actually, let's keep it as is but be aware of RLS
   const { data, error } = await supabase
     .from("projects")
     .update(projectData)
     .eq("id", projectId)
     .select();
-  
+
   if (error) throw error;
   return data?.[0];
 }
 
 export async function deleteProject(projectId: string) {
-  const { error } = await supabase
-    .from("projects")
-    .delete()
-    .eq("id", projectId);
-  
-  if (error) throw error;
+  const response = await fetch(`/api/projects/${projectId}`, {
+    method: 'DELETE',
+    headers: {
+      'x-user-id': 'admin' // In real app, this should be the actual user ID or handled by admin middleware
+    }
+  });
+
+  const result = await response.json();
+  if (!result.success) throw result.error || 'Failed to delete project';
 }
 
 // User Profiles & Creators
 export async function getUserProfiles(role?: string) {
-  let query = supabase.from("user_profiles").select("*");
-  
+  // We can use the admin endpoint or direct Supabase for profiles
+  // Profiles usually have simpler RLS
+  let query = supabase.from("profiles").select("*");
+
   if (role) {
     query = query.eq("role", role);
   }
-  
+
   const { data, error } = await query.order("created_at", { ascending: false });
-  
+
   if (error) throw error;
   return data;
 }
 
 export async function getCreatorProfiles() {
   try {
-    // Fetch ALL creators (pending, approved, rejected) for admin review
-    const { data: creators, error } = await withRetry(
-      () => supabase
-        .from("creator_profiles")
-        .select("id, bio, skills, specialties, portfolio_links, day_rate, status, created_at")
-        .order("created_at", { ascending: false })
-        .limit(100),
-      6,
-      100,
-      3000
-    );
+    // Fetch via direct Supabase but using profiles table
+    const { data: creators, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("role", "vendor")
+        .order("created_at", { ascending: false });
 
     if (error) {
       console.warn("Creator profiles fetch error:", error);
       return [];
     }
 
-    if (!creators || creators.length === 0) {
-      return [];
-    }
-
-    console.log("Found creators:", creators.length);
-
-    // Enrich with user profile data - fetch in batches
-    const enrichedCreators = await Promise.all(
-      creators.map(async (creator) => {
-        try {
-          const { data: userProfile, error: userError } = await supabase
-            .from("user_profiles")
-            .select("id, name, email, role")
-            .eq("id", creator.id)
-            .single();
-
-          if (userError || !userProfile) {
-            console.warn(`No user profile found for creator ${creator.id}`);
-            return {
-              ...creator,
-              user_profiles: { name: "Unknown Creator", email: "" },
-            };
-          }
-
-          return {
-            ...creator,
-            user_profiles: userProfile,
-          };
-        } catch (err) {
-          console.error(`Error fetching user profile for ${creator.id}:`, err);
-          return {
-            ...creator,
-            user_profiles: { name: "Unknown Creator", email: "" },
-          };
-        }
-      })
-    );
-
-    console.log("Enriched creators with user profiles:", enrichedCreators);
-    return enrichedCreators;
+    return creators || [];
   } catch (error) {
     console.error("Error in getCreatorProfiles:", error);
     return [];
@@ -217,61 +183,56 @@ export async function updateCreatorStatus(
   creatorId: string,
   status: "pending" | "approved" | "rejected"
 ) {
+  const is_approved = status === "approved";
   const { data, error } = await supabase
-    .from("creator_profiles")
-    .update({ status })
-    .eq("id", creatorId)
+    .from("profiles")
+    .update({ is_approved })
+    .eq("user_id", creatorId)
     .select();
-  
+
   if (error) throw error;
   return data?.[0];
 }
 
-// Companies
+// Companies (Business Profiles)
 export async function getCompanies() {
-  const { data, error } = await supabase
-    .from("companies")
-    .select("*")
-    .order("created_at", { ascending: false });
-  
-  if (error) throw error;
-  return data;
+  try {
+    const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("role", "business")
+        .order("created_at", { ascending: false });
+
+    if (error) {
+      console.warn("Companies fetch error:", error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error("Error in getCompanies:", error);
+    return [];
+  }
 }
 
 // Payments
 export async function getPayments() {
   try {
-    // Simple query without relationships (faster, less prone to timeout)
-    const { data, error } = await withRetry(
-      () => supabase
+    const { data, error } = await supabase
         .from("payments")
-        .select("id, project_id, creator_id, milestone_id, amount, status, paid_at, created_at")
+        .select("*")
         .order("created_at", { ascending: false })
-        .limit(50),  // Limit to 50 to keep response small
-      6,  // Maximum attempts
-      100,  // Very fast initial backoff
-      3000  // 3 second timeout
-    );
+        .limit(50);
 
     if (error) {
       console.warn("Payment fetch error:", error);
       return [];
     }
 
-    if (!data || data.length === 0) {
-      return [];
-    }
-
-    // Return base data without enrichment to avoid slow loads
-    return data.map(payment => ({
-      ...payment,
-      creator: null,
-      project: null,
-      milestone: null,
-    }));
+    return data || [];
   } catch (error) {
     console.error("Error in getPayments:", error);
-    return [];  // Return empty array gracefully instead of throwing
+    return [];
   }
 }
 
@@ -285,13 +246,13 @@ export async function updatePaymentStatus(
     updateData.paid_at = paidDate;
     updateData.paid_date = paidDate;
   }
-  
+
   const { data, error } = await supabase
     .from("payments")
     .update(updateData)
     .eq("id", paymentId)
     .select();
-  
+
   if (error) throw error;
   return data?.[0];
 }
@@ -299,53 +260,16 @@ export async function updatePaymentStatus(
 // Dashboard Stats
 export async function getDashboardStats() {
   try {
-    // Fast count queries with aggressive retries and short timeouts
-    const [projects, creators, payments, companies] = await Promise.allSettled([
-      withRetry(() => supabase.from("projects").select("id", { count: "exact", head: true }), 5, 100, 2500),
-      withRetry(() => supabase.from("user_profiles").select("id", { count: "exact", head: true }).eq("role", "creator"), 5, 100, 2500),
-      withRetry(() => supabase.from("payments").select("id", { count: "exact", head: true }), 5, 100, 2500),
-      withRetry(() => supabase.from("companies").select("id", { count: "exact", head: true }), 5, 100, 2500),
-    ]);
+    const response = await fetch('/api/admin/stats');
+    const result = await response.json();
 
-    // Extract counts safely
-    const totalProjects = projects.status === "fulfilled" ? projects.value.count || 0 : 0;
-    const totalCreators = creators.status === "fulfilled" ? creators.value.count || 0 : 0;
-    const totalCompanies = companies.status === "fulfilled" ? companies.value.count || 0 : 0;
-
-    let pendingPayments = 0;
-    let totalPendingAmount = 0;
-
-    // Try to get pending payment info (but don't fail if it times out)
-    try {
-      const { data: paymentData } = await withRetry(
-        () => supabase
-          .from("payments")
-          .select("amount, status")
-          .eq("status", "pending")
-          .limit(100),
-        3,
-        100,
-        2000
-      ).catch(() => ({ data: null }));
-
-      if (paymentData) {
-        pendingPayments = paymentData.length;
-        totalPendingAmount = paymentData.reduce((sum: number, p: any) => sum + (p.amount || 0), 0);
-      }
-    } catch (err) {
-      console.debug("Could not fetch pending payments:", err);
+    if (!result.success) {
+      throw result.error || 'Failed to load stats';
     }
 
-    return {
-      totalProjects,
-      totalCreators,
-      totalCompanies,
-      pendingPayments,
-      totalPendingAmount,
-    };
+    return result.data.metrics;
   } catch (error) {
     console.error("Error getting dashboard stats:", error);
-    // Return safe defaults instead of throwing
     return {
       totalProjects: 0,
       totalCreators: 0,
@@ -356,79 +280,34 @@ export async function getDashboardStats() {
   }
 }
 
-// Project Assignments - Direct insertion using admin user context
+// Project Assignments - Using admin server-side API
 export async function assignCreatorToProject(
   projectId: string,
   creatorId: string,
   role: string = "contributor"
 ) {
   try {
-    // Validate inputs
-    if (!projectId || !creatorId) {
-      return {
-        success: false,
-        error: "Missing projectId or creatorId",
-      };
+    const response = await fetch('/api/admin/assign-creator', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        projectId,
+        creatorId,
+        role
+      })
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw result.error || 'Failed to assign creator';
     }
 
-    console.log(`[Assignment] Checking if creator ${creatorId} is already assigned to project ${projectId}...`);
-
-    // Check if already assigned
-    const { data: existingAssignments, error: checkError } = await withRetry(
-      () => supabase
-        .from("project_assignments")
-        .select("id")
-        .eq("project_id", projectId)
-        .eq("creator_id", creatorId),
-      3,
-      100,
-      2500
-    );
-
-    if (checkError) {
-      console.error("Error checking existing assignments:", checkError);
-      return {
-        success: false,
-        error: "Failed to check existing assignments",
-      };
-    }
-
-    // If already assigned, return success but indicate it was a duplicate
-    if (existingAssignments && existingAssignments.length > 0) {
-      console.log(`[Assignment] ⚠️ Creator ${creatorId} is already assigned to project ${projectId}`);
-      return {
-        success: true,
-        data: existingAssignments[0],
-        alreadyAssigned: true,
-      };
-    }
-
-    console.log(`[Assignment] Creator ${creatorId} not yet assigned, attempting insertion...`);
-    const { data, error } = await withRetry(
-      () => supabase
-        .from("project_assignments")
-        .insert([
-          {
-            project_id: projectId,
-            creator_id: creatorId,
-            role,
-          },
-        ])
-        .select(),
-      3,  // 3 retry attempts
-      100,  // 100ms initial delay
-      2500  // 2.5 second timeout
-    );
-
-    if (error) {
-      console.error("Direct insertion error:", error);
-      throw new Error(error.message || "Failed to assign creator");
-    }
-
-    console.log(`[Assignment] ✅ Successfully inserted assignment for creator ${creatorId}`);
     return {
       success: true,
-      data: data?.[0],
+      data: result.data,
       alreadyAssigned: false,
     };
   } catch (error) {
@@ -442,27 +321,15 @@ export async function assignCreatorToProject(
 
 export async function getProjectAssignments(projectId: string) {
   try {
-    if (!projectId) {
+    const response = await fetch(`/api/admin/project-assignments/${projectId}`);
+    const result = await response.json();
+
+    if (!result.success) {
+      console.warn("Assignment fetch error:", result.error);
       return [];
     }
 
-    // Direct Supabase query
-    const { data, error } = await withRetry(
-      () => supabase
-        .from("project_assignments")
-        .select("id, project_id, creator_id, role, assigned_at")
-        .eq("project_id", projectId),
-      3,  // 3 retry attempts
-      100,  // 100ms initial delay
-      2500  // 2.5 second timeout
-    );
-
-    if (error) {
-      console.warn("Assignment fetch error:", error);
-      return [];
-    }
-
-    return data || [];
+    return result.data || [];
   } catch (error) {
     console.error("Error fetching project assignments:", error);
     return [];

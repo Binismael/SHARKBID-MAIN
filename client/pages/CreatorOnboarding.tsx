@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, CheckCircle, ChevronRight } from "lucide-react";
+import { getErrorMessage } from "@/lib/utils";
 import {
   updateCreatorProfile,
   updateCreatorPreferences,
@@ -61,7 +62,7 @@ export default function CreatorOnboarding() {
       if (Object.keys(profileData).length > 0) {
         const profileResult = await updateCreatorProfile(user.id, profileData);
         if (!profileResult.success) {
-          setError(profileResult.error || "Failed to save profile");
+          setError(getErrorMessage(profileResult.error || "Failed to save profile"));
           setLoading(false);
           return;
         }
@@ -74,7 +75,7 @@ export default function CreatorOnboarding() {
           preferencesData
         );
         if (!prefsResult.success) {
-          setError(prefsResult.error || "Failed to save preferences");
+          setError(getErrorMessage(prefsResult.error || "Failed to save preferences"));
           setLoading(false);
           return;
         }
@@ -84,7 +85,7 @@ export default function CreatorOnboarding() {
       const completeResult = await completeCreatorOnboarding(user.id);
       if (!completeResult.success) {
         setError(
-          completeResult.error || "Failed to complete onboarding"
+          getErrorMessage(completeResult.error || "Failed to complete onboarding")
         );
         setLoading(false);
         return;

@@ -1,19 +1,49 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, Lock, Layers, BarChart3 } from "lucide-react";
+import { 
+  ArrowRight, Zap, Lock, Layers, BarChart3, Sparkles, 
+  CheckCircle2, TrendingUp, Users, UserPlus, Gauge, 
+  Target, Globe, Play, Rocket, Award, Clock, MapPin,
+  ShieldCheck, Inbox, MessageSquare, Briefcase, Building2
+} from "lucide-react";
+import { Logo } from "@/components/Logo";
+import { TestimonialMarquee } from "@/components/TestimonialMarquee";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { cn } from "@/lib/utils";
+import { useRef } from "react";
 
 export default function Index() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end end"]
+  });
+
+  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
+
   return (
-    <div className="min-h-screen bg-background">
+    <div ref={containerRef} className="min-h-screen bg-slate-950 text-white selection:bg-blue-500/30 selection:text-blue-200 overflow-x-hidden">
+      {/* Editorial Background Elements */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/10 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-600/10 blur-[120px] animate-pulse delay-700" />
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] mix-blend-overlay" />
+      </div>
+
       {/* Navigation */}
-      <nav className="border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="text-2xl font-bold text-foreground">Visual Matters</div>
+      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-slate-950/50 backdrop-blur-xl">
+        <div className="container mx-auto px-6 h-20 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-3">
+            <Logo variant="light" className="h-12" />
+          </Link>
+          
+
           <div className="flex items-center gap-6">
-            <Link to="/login" className="text-foreground hover:text-accent transition">
+            <Link to="/login" className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-white transition-colors">
               Sign In
             </Link>
-            <Button asChild>
+            <Button asChild className="h-10 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-[10px] font-black uppercase tracking-[0.2em] transition-all active:scale-95">
               <Link to="/signup">Get Started</Link>
             </Button>
           </div>
@@ -21,201 +51,323 @@ export default function Index() {
       </nav>
 
       {/* Hero Section */}
-      <section className="py-24 border-b border-border">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <h1 className="text-5xl md:text-6xl font-bold leading-tight">
-              The creative infrastructure platform for agencies
-            </h1>
-            <p className="text-xl text-muted-foreground">
-              Scale creative operations 3x without growing your team. Automate projects, creator workflows, and payments on a single platform built for premium creative work.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-              <Button asChild size="lg">
-                <Link to="/signup">
-                  Start Free Trial
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" asChild>
-                <a href="#features">Learn More</a>
-              </Button>
-            </div>
+      <section className="relative pt-40 pb-32 min-h-screen flex items-center justify-center">
+        <motion.div 
+          style={{ opacity, scale }}
+          className="container mx-auto px-6 relative z-10 text-center space-y-12"
+        >
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20"
+          >
+            <Sparkles className="h-4 w-4 text-blue-500" />
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500">2026 Industry Standard</span>
+          </motion.div>
+
+          {/* Main Headline */}
+          <div className="space-y-6">
+            <motion.h1 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1, delay: 0.2 }}
+              className="text-7xl md:text-9xl font-black uppercase leading-[0.85] tracking-tighter"
+            >
+              The Next <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500">Generation</span> <br />
+              Marketplace
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1, delay: 0.5 }}
+              className="text-slate-400 text-lg md:text-xl font-medium max-w-2xl mx-auto leading-relaxed uppercase tracking-tight"
+            >
+              Stop wasting time on vendor search. Let AI match your business with qualified experts by service, location, and expertise.
+            </motion.p>
           </div>
-        </div>
-      </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-24 border-b border-border">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Built for creative teams</h2>
-            <p className="text-lg text-muted-foreground">Everything you need to run a world-class creative operations platform</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Feature 1 */}
-            <div className="border border-border rounded-lg p-8 hover:shadow-md transition">
-              <Layers className="h-8 w-8 text-accent mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Multi-Tier Project Management</h3>
-              <p className="text-muted-foreground">
-                Essential, Standard, and Visionary tiers with tier-based scope, pricing, and automatic milestone generation. Control every project from intake to delivery.
-              </p>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="border border-border rounded-lg p-8 hover:shadow-md transition">
-              <Zap className="h-8 w-8 text-accent mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Creator Marketplace</h3>
-              <p className="text-muted-foreground">
-                Vet and approve creators instantly. Assign work with clarity. Track deliverables and process payments in one dashboard. No email needed.
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="border border-border rounded-lg p-8 hover:shadow-md transition">
-              <Lock className="h-8 w-8 text-accent mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Asset Vault</h3>
-              <p className="text-muted-foreground">
-                Every asset automatically linked and searchable by project, creator, tag, or year. Your clients see only what they own. Perfect audit trail.
-              </p>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="border border-border rounded-lg p-8 hover:shadow-md transition">
-              <BarChart3 className="h-8 w-8 text-accent mb-4" />
-              <h3 className="text-xl font-semibold mb-3">Real-Time Visibility</h3>
-              <p className="text-muted-foreground">
-                Clients see budgets, timelines, and progress. Creators see deliverables and payment status. Admin controls everything in one control tower.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Portal Overview */}
-      <section className="py-24 border-b border-border">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold mb-12 text-center">Three powerful portals</h2>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Client Portal */}
-            <div className="border border-border rounded-lg p-8 bg-card">
-              <h3 className="text-2xl font-semibold mb-4">Client Portal</h3>
-              <p className="text-muted-foreground mb-6">
-                Clients buy outcomes, not creatives. They see:
-              </p>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>✓ Active projects and status</li>
-                <li>✓ Budget tracking</li>
-                <li>✓ Milestone timelines</li>
-                <li>✓ Asset vault</li>
-                <li>✓ Feedback & approvals</li>
-              </ul>
-            </div>
-
-            {/* Creator Portal */}
-            <div className="border border-border rounded-lg p-8 bg-card">
-              <h3 className="text-2xl font-semibold mb-4">Creator Portal</h3>
-              <p className="text-muted-foreground mb-6">
-                Creators focus on execution. They see:
-              </p>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>✓ Assigned projects</li>
-                <li>✓ Clear briefs & due dates</li>
-                <li>✓ Upload & submission</li>
-                <li>✓ Payment status</li>
-                <li>✓ Earnings history</li>
-              </ul>
-            </div>
-
-            {/* Admin Portal */}
-            <div className="border border-border rounded-lg p-8 bg-card">
-              <h3 className="text-2xl font-semibold mb-4">Admin Control Tower</h3>
-              <p className="text-muted-foreground mb-6">
-                You orchestrate the ecosystem. You control:
-              </p>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>✓ Creator supply & approval</li>
-                <li>✓ Client demand & pricing</li>
-                <li>✓ Project workflows</li>
-                <li>✓ Milestone & payment tracking</li>
-                <li>✓ All analytics</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Automation Section */}
-      <section className="py-24 border-b border-border">
-        <div className="container mx-auto px-4">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-4xl font-bold mb-6">Built-in automation</h2>
-            <p className="text-lg text-muted-foreground mb-8">
-              Triggers fire automatically on user approval, project creation, milestone delivery, and asset uploads. Webhooks and email notifications keep everyone in sync.
-            </p>
-            <div className="bg-muted/50 border border-border rounded-lg p-8">
-              <p className="text-sm text-muted-foreground text-left">
-                <strong>Example workflow:</strong> Client selects tier → Draft project created → Milestones auto-generated → Admin assigns creators → Creator sees brief → Deliverable marked ready → Payment processing starts → Creator notified.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Design Principles */}
-      <section className="py-24 border-b border-border bg-muted/30">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-bold mb-12 text-center">Designed for concierge excellence</h2>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-accent mb-3">3</div>
-              <p className="font-semibold mb-2">Clicks to any asset</p>
-              <p className="text-sm text-muted-foreground">Navigation designed for speed and simplicity</p>
-            </div>
-
-            <div className="text-center">
-              <div className="text-4xl font-bold text-accent mb-3">0</div>
-              <p className="font-semibold mb-2">Email required</p>
-              <p className="text-sm text-muted-foreground">Everything in the portal. Real-time updates.</p>
-            </div>
-
-            <div className="text-center">
-              <div className="text-4xl font-bold text-accent mb-3">100%</div>
-              <p className="font-semibold mb-2">Transparency</p>
-              <p className="text-sm text-muted-foreground">Everyone sees their role in the system</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24">
-        <div className="container mx-auto px-4 text-center space-y-6">
-          <h2 className="text-4xl font-bold">Ready to scale without growing?</h2>
-          <p className="text-xl text-muted-foreground">
-            Visual Matters turns creative agencies into operating systems.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-            <Button asChild size="lg">
-              <Link to="/signup">
-                Start Free Trial
-                <ArrowRight className="ml-2 h-4 w-4" />
+          {/* CTA Buttons */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
+            className="flex flex-col sm:flex-row gap-6 justify-center pt-8"
+          >
+            <Button asChild size="lg" className="h-16 px-10 rounded-2xl bg-white text-slate-950 hover:bg-slate-200 text-xs font-black uppercase tracking-[0.2em] shadow-2xl shadow-white/10 transition-all active:scale-95 group">
+              <Link to="/signup" className="gap-3 flex items-center">
+                Launch Experience
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
-            <Button variant="outline" size="lg" asChild>
-              <Link to="/apply">Apply as Creator</Link>
+            <Button variant="outline" size="lg" asChild className="h-16 px-10 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 text-xs font-black uppercase tracking-[0.2em] transition-all active:scale-95">
+              <a href="#how-it-works" className="flex items-center gap-3">
+                <Play className="h-4 w-4 fill-current" />
+                View Intelligence
+              </a>
+            </Button>
+          </motion.div>
+
+          {/* Featured Image / Dashboard Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2, delay: 1, ease: "easeOut" }}
+            className="pt-24 relative max-w-6xl mx-auto"
+          >
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-[3rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+              <div className="relative bg-slate-900 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl shadow-blue-500/20">
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2Fd51db21242644bff87f6c68e2397daf7%2F59fdcc0ddd4f428f9b5720b5a469b88f?format=webp&width=1600"
+                  alt="Sharkbid Professional Network"
+                  className="w-full h-auto object-cover opacity-80"
+                />
+                
+                {/* Floating Elements */}
+                <div className="absolute top-10 right-10 p-6 rounded-2xl bg-slate-900/80 backdrop-blur-xl border border-white/10 hidden lg:block animate-bounce shadow-xl">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                      <Zap className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[10px] font-black uppercase tracking-widest">Lead Matched</p>
+                      <p className="text-[8px] font-bold text-slate-500 uppercase tracking-tight">Verified Specialist Found</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      </section>
+
+      {/* Editorial Grid Section */}
+      <section id="services" className="py-32 border-y border-white/5 bg-slate-900/30">
+        <div className="container mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-24 items-center">
+            <div className="space-y-12">
+              <div className="space-y-4">
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500">Autonomous Ecosystem</span>
+                <h2 className="text-6xl md:text-7xl font-black uppercase leading-[0.9] tracking-tighter">
+                  Instant <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">Routing</span>
+                </h2>
+                <p className="text-slate-400 text-lg font-medium leading-relaxed max-w-lg">
+                  Natural language project discovery meets precision engineering. Our system maps your requirements to the exact experts in your region in real-time.
+                </p>
+              </div>
+
+              <div className="space-y-8">
+                {[
+                  { icon: Layers, title: "AI Intake", desc: "No complex forms. Just conversation." },
+                  { icon: Target, title: "Hyper-Local", desc: "Precision matching by geography." },
+                  { icon: ShieldCheck, title: "Verified Network", desc: "100% vetted professionals only." }
+                ].map((item, i) => (
+                  <motion.div 
+                    key={item.title}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="flex items-center gap-6 group"
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center group-hover:bg-blue-600 transition-colors duration-500">
+                      <item.icon className="h-6 w-6 text-blue-500 group-hover:text-white transition-colors" />
+                    </div>
+                    <div>
+                      <h3 className="text-xs font-black uppercase tracking-widest">{item.title}</h3>
+                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-tight mt-1">{item.desc}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              className="relative"
+            >
+              <div className="absolute -inset-1 bg-gradient-to-br from-blue-600/20 to-purple-600/20 rounded-[3rem] blur-2xl"></div>
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2Fd51db21242644bff87f6c68e2397daf7%2F384cb1b074f44e15ba094ac37c07621c?format=webp&width=800"
+                alt="Local Routing Map"
+                className="relative rounded-[2.5rem] border border-white/10 shadow-2xl grayscale hover:grayscale-0 transition-all duration-1000"
+              />
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Portals Section */}
+      <section id="network" className="py-32 relative">
+        <div className="container mx-auto px-6 text-center space-y-20">
+          <div className="space-y-4">
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-purple-500">Dedicated Gateways</span>
+            <h2 className="text-6xl md:text-7xl font-black uppercase leading-[0.9] tracking-tighter">
+              Three Distinct <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-500">Experiences</span>
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              { 
+                icon: Building2, 
+                title: "Business", 
+                desc: "Post projects and source the perfect specialized vendors.",
+                features: ["AI Intake", "Bid Comparison", "Auto-Selection"],
+                color: "blue"
+              },
+              { 
+                icon: Briefcase, 
+                title: "Vendor", 
+                desc: "Discover premium leads and win business with confidence.",
+                features: ["Smart Pipeline", "Profile Control", "Real-time Alerts"],
+                color: "purple"
+              },
+              { 
+                icon: BarChart3, 
+                title: "Admin", 
+                desc: "Orchestrate the entire marketplace from a single tower.",
+                features: ["Vetting Engine", "Routing Logic", "Analytics"],
+                color: "indigo"
+              }
+            ].map((portal, i) => (
+              <motion.div
+                key={portal.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="group relative p-12 rounded-[2.5rem] bg-slate-900/50 border border-white/5 hover:border-white/10 transition-all overflow-hidden"
+              >
+                <div className={cn(
+                  "absolute top-0 right-0 w-32 h-32 opacity-0 group-hover:opacity-10 blur-3xl rounded-full -mr-16 -mt-16 transition-opacity",
+                  portal.color === "blue" ? "bg-blue-600" : portal.color === "purple" ? "bg-purple-600" : "bg-indigo-600"
+                )} />
+                
+                <div className="space-y-8 relative z-10">
+                  <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto transition-transform group-hover:scale-110 duration-500">
+                    <portal.icon className={cn(
+                      "h-8 w-8",
+                      portal.color === "blue" ? "text-blue-500" : portal.color === "purple" ? "text-purple-500" : "text-indigo-500"
+                    )} />
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-black uppercase tracking-tight">{portal.title} Portal</h3>
+                    <p className="text-[11px] font-bold text-slate-500 uppercase tracking-tight leading-relaxed">
+                      {portal.desc}
+                    </p>
+                  </div>
+
+                  <div className="pt-8 border-t border-white/5 space-y-4">
+                    {portal.features.map(f => (
+                      <div key={f} className="flex items-center gap-3 justify-center">
+                        <CheckCircle2 className="h-3 w-3 text-slate-700" />
+                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonial Section */}
+      <section className="py-32 bg-slate-900/30">
+        <TestimonialMarquee />
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-40 relative overflow-hidden">
+        <div className="absolute inset-0 bg-blue-600/5 backdrop-blur-3xl" />
+        <div className="container mx-auto px-6 relative z-10 text-center space-y-12">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            className="space-y-6"
+          >
+            <h2 className="text-7xl md:text-9xl font-black uppercase leading-[0.85] tracking-tighter">
+              Start Your <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">Evolution</span>
+            </h2>
+            <p className="text-slate-400 text-lg md:text-xl font-medium max-w-2xl mx-auto leading-relaxed uppercase tracking-tight">
+              Join hundreds of businesses and vendors using Sharkbid to make smarter decisions, faster.
+            </p>
+          </motion.div>
+
+          <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8">
+            <Button asChild size="lg" className="h-16 px-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-[0.2em] shadow-2xl shadow-blue-600/20 transition-all active:scale-95 group">
+              <Link to="/signup" className="gap-3 flex items-center">
+                Initialize Account
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild className="h-16 px-12 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 text-xs font-black uppercase tracking-[0.2em] transition-all active:scale-95">
+              <Link to="/signup" className="flex items-center gap-3">
+                Join Network
+              </Link>
             </Button>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-border py-8 bg-muted/30">
-        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>&copy; 2025 Visual Matters. A creative infrastructure platform.</p>
+      <footer className="py-20 border-t border-white/5 relative z-10">
+        <div className="container mx-auto px-6">
+          <div className="grid md:grid-cols-4 gap-16 mb-20">
+            <div className="space-y-6">
+              <Logo variant="light" className="h-12" />
+              <p className="text-[11px] font-bold text-slate-500 uppercase tracking-tight leading-relaxed">
+                The most efficient B2B marketplace <br />
+                connecting verified businesses <br />
+                with qualified vendors.
+              </p>
+            </div>
+
+            {[
+              { title: "Product", links: ["Features", "Pricing", "Security", "Evolution"] },
+              { title: "Network", links: ["Directory", "Validation", "Matching", "Insights"] },
+              { title: "Legal", links: ["Privacy", "Terms", "Compliance", "Cookies"] }
+            ].map(col => (
+              <div key={col.title} className="space-y-6">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-white">{col.title}</h4>
+                <ul className="space-y-3">
+                  {col.links.map(link => (
+                    <li key={link}>
+                      <Link to="#" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 hover:text-white transition-colors">
+                        {link}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-10 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-8">
+              <span className="text-[10px] font-black uppercase text-slate-700 tracking-[0.2em]">© 2026 Sharkbid</span>
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-3 w-3 text-slate-800" />
+                <span className="text-[8px] font-black uppercase text-slate-800 tracking-[0.2em]">SSL Encrypted</span>
+              </div>
+            </div>
+            
+            <div className="flex gap-8">
+              {['Twitter', 'LinkedIn', 'GitHub'].map(social => (
+                <Link key={social} to="#" className="text-[10px] font-black uppercase tracking-widest text-slate-700 hover:text-white transition-colors">
+                  {social}
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </footer>
     </div>
