@@ -4,8 +4,10 @@ import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { getErrorMessage } from "@/lib/utils";
-import { Sparkles, ArrowRight, Building2, Briefcase, Shield, CheckCircle2, Zap, AlertCircle } from "lucide-react";
+import { Sparkles, ArrowRight, Building2, Briefcase, Shield, CheckCircle2, Zap, AlertCircle, ShieldCheck } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -92,197 +94,268 @@ export default function Signup() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute top-0 -left-40 w-80 h-80 bg-blue-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob"></div>
-      <div className="absolute top-40 -right-40 w-80 h-80 bg-purple-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-      <div className="absolute -bottom-8 left-20 w-80 h-80 bg-pink-500 rounded-full mix-blend-screen filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden py-20">
+      {/* Editorial Background */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-600/10 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-600/10 blur-[120px] animate-pulse delay-700" />
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] mix-blend-overlay" />
+      </div>
 
-      <div className="w-full max-w-lg z-10">
+      <div className="w-full max-w-4xl z-10">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-6">
-            <Logo variant="light" className="h-24" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-12"
+        >
+          <div className="flex justify-center mb-8">
+            <Logo variant="light" className="h-20" />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">Join Sharkbid</h1>
-          <p className="text-blue-100">
-            The B2B marketplace for smart vendor matching
+          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500">Registration Portal</span>
+          <h1 className="text-5xl font-black text-white mb-4 uppercase tracking-tighter">Join the <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">Marketplace</span></h1>
+          <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest max-w-xs mx-auto">
+            Select your account type to begin the onboarding process.
           </p>
-        </div>
+        </motion.div>
 
         {/* Signup Card */}
-        <div className="bg-white/10 dark:bg-black/20 backdrop-blur-xl rounded-2xl border border-white/20 shadow-2xl p-8 space-y-6">
-          {/* Error Message */}
-          {error && (
-            <div className="p-4 rounded-lg border border-red-500/30 bg-red-500/10 flex gap-3">
-              <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-300">{error}</p>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Role Selection */}
-            <div className="space-y-3">
-              <label className="text-sm font-medium text-white">
-                Join as:
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {roleOptions.map((option) => {
-                  const Icon = option.icon;
-                  const isSelected = role === option.value;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setRole(option.value)}
-                      disabled={loading}
-                      className={`p-4 rounded-lg border-2 transition-all text-center ${
-                        isSelected
-                          ? `border-blue-500 bg-gradient-to-br ${option.color} bg-opacity-20`
-                          : "border-white/20 hover:border-white/40 bg-white/5"
-                      }`}
-                    >
-                      <Icon className={`h-6 w-6 mb-2 mx-auto ${isSelected ? 'text-blue-400' : 'text-white/70'}`} />
-                      <p className={`text-sm font-medium ${isSelected ? 'text-blue-200' : 'text-white'}`}>
-                        {option.label}
-                      </p>
-                      <p className="text-xs text-white/50 mt-1">
-                        {option.description}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Company Name (for businesses) */}
-            {role === "business" && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-white">
-                  Company Name
-                </label>
-                <Input
-                  placeholder="Your company name"
-                  value={companyName}
-                  onChange={(e) => setCompanyName(e.target.value)}
-                  disabled={loading}
-                  className="h-11 px-4 bg-white/5 border border-white/10 text-white placeholder:text-white/50 focus:border-blue-500/50 focus:bg-white/10 transition-all"
-                />
-              </div>
-            )}
-
-            {/* Email Field */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-white">
-                Email Address
-              </label>
-              <Input
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                className="h-11 px-4 bg-white/5 border border-white/10 text-white placeholder:text-white/50 focus:border-blue-500/50 focus:bg-white/10 transition-all"
-              />
-            </div>
-
-            {/* Password Field */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-white">
-                Password
-              </label>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                className="h-11 px-4 bg-white/5 border border-white/10 text-white placeholder:text-white/50 focus:border-blue-500/50 focus:bg-white/10 transition-all"
-              />
-              <p className="text-xs text-white/60">
-                Minimum 6 characters
-              </p>
-            </div>
-
-            {/* Agreement */}
-            <label className="flex items-start gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                className="mt-1 rounded border border-white/20 bg-white/5 cursor-pointer"
-                disabled={loading}
-              />
-              <span className="text-xs text-white/70">
-                I agree to the <span className="font-medium text-white">Terms of Service</span> and <span className="font-medium text-white">Privacy Policy</span>
-              </span>
-            </label>
-
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full h-11 rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold gap-2 shadow-2xl transition-all"
-            >
-              {loading ? (
-                <>
-                  <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                  Creating Account...
-                </>
-              ) : (
-                <>
-                  Create Account
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </form>
-
-          {/* Divider */}
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white/10 text-white/70">
-                Already have an account?
-              </span>
-            </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="bg-slate-900/50 backdrop-blur-3xl rounded-[2.5rem] border border-white/5 shadow-2xl overflow-hidden"
+        >
+          {/* Progress Bar (Visual) */}
+          <div className="h-1.5 w-full bg-white/5">
+            <motion.div
+              initial={{ width: "0%" }}
+              animate={{ width: "100%" }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+              className="h-full bg-gradient-to-r from-blue-600 to-indigo-600"
+            />
           </div>
 
-          {/* Login Link */}
-          <Link to="/login">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full h-11 rounded-lg text-white font-medium border-white/20 hover:bg-white/10 transition-all"
-            >
-              Sign In Instead
-            </Button>
-          </Link>
-        </div>
+          <div className="p-8 md:p-12 space-y-10">
+            {/* Error Message */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 flex gap-3 mb-6"
+                >
+                  <AlertCircle className="h-5 w-5 text-rose-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-[11px] font-bold text-rose-400 uppercase leading-relaxed tracking-tight">{error}</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <form onSubmit={handleSubmit} className="space-y-10">
+              {/* Role Selection */}
+              <div className="space-y-6">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Identity Profile *</label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {roleOptions.map((option, i) => {
+                    const Icon = option.icon;
+                    const isSelected = role === option.value;
+                    return (
+                      <motion.button
+                        key={option.value}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 + (i * 0.1) }}
+                        type="button"
+                        onClick={() => setRole(option.value)}
+                        disabled={loading}
+                        className={cn(
+                          "relative p-6 rounded-3xl border-2 transition-all group overflow-hidden",
+                          isSelected
+                            ? "border-blue-600 bg-blue-600/5 ring-4 ring-blue-600/5 shadow-xl shadow-blue-600/10"
+                            : "border-white/5 hover:border-white/10 bg-white/[0.02]"
+                        )}
+                      >
+                        <div className={cn(
+                          "h-12 w-12 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110",
+                          isSelected ? "bg-blue-600 text-white" : "bg-white/5 text-slate-500"
+                        )}>
+                          <Icon className="h-6 w-6" />
+                        </div>
+                        <p className={cn(
+                          "text-xs font-black uppercase tracking-widest leading-none",
+                          isSelected ? "text-white" : "text-slate-400"
+                        )}>
+                          {option.label}
+                        </p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight mt-2 opacity-60">
+                          {option.description}
+                        </p>
+
+                        {isSelected && (
+                          <motion.div
+                            layoutId="activeRole"
+                            className="absolute top-3 right-3"
+                          >
+                            <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Form Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+                {/* Company Name (for businesses) */}
+                {role === "business" && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="space-y-3"
+                  >
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Organization Name *</label>
+                    <Input
+                      placeholder="e.g., Apex Global Solutions"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      disabled={loading}
+                      className="h-14 px-5 bg-white/5 border-transparent focus:bg-white/10 focus:ring-4 focus:ring-blue-500/5 rounded-2xl text-white font-bold text-sm transition-all"
+                    />
+                  </motion.div>
+                )}
+
+                {/* Email Field */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="space-y-3"
+                >
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">Professional Email *</label>
+                  <Input
+                    type="email"
+                    placeholder="you@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
+                    className="h-14 px-5 bg-white/5 border-transparent focus:bg-white/10 focus:ring-4 focus:ring-blue-500/5 rounded-2xl text-white font-bold text-sm transition-all"
+                  />
+                </motion.div>
+
+                {/* Password Field */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="space-y-3"
+                >
+                  <div className="flex items-center justify-between ml-1">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Access Password *</label>
+                    <span className="text-[8px] font-black uppercase tracking-widest text-slate-600">Min. 6 Characters</span>
+                  </div>
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                    className="h-14 px-5 bg-white/5 border-transparent focus:bg-white/10 focus:ring-4 focus:ring-blue-500/5 rounded-2xl text-white font-bold text-sm transition-all"
+                  />
+                </motion.div>
+              </div>
+
+              {/* Agreement */}
+              <div className="pt-4">
+                <label className="flex items-start gap-4 cursor-pointer group">
+                  <div className="mt-1 relative">
+                    <input
+                      type="checkbox"
+                      className="peer h-5 w-5 rounded-lg border-2 border-white/10 bg-white/5 appearance-none checked:bg-blue-600 checked:border-blue-600 transition-all cursor-pointer"
+                      disabled={loading}
+                      required
+                    />
+                    <CheckCircle2 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-3 w-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase leading-relaxed tracking-wider group-hover:text-slate-400 transition-colors">
+                    I acknowledge and agree to the <span className="text-white hover:underline">Marketplace Terms</span> and <span className="text-white hover:underline">Privacy Guidelines</span>.
+                  </span>
+                </label>
+              </div>
+
+              {/* Submit Section */}
+              <div className="pt-6 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <Link to="/login" className="order-2 sm:order-1 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 hover:text-white transition-colors">
+                  Existing User Login
+                </Link>
+
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="order-1 sm:order-2 w-full sm:w-auto h-14 px-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-blue-500/20 transition-all active:scale-95"
+                >
+                  {loading ? (
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Provisioning...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      Initialize Account
+                      <ArrowRight className="h-4 w-4" />
+                    </div>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </motion.div>
 
         {/* Benefits Box */}
-        <div className="mt-8 p-6 rounded-lg border border-green-500/30 bg-green-500/10 backdrop-blur-sm space-y-3">
-          <h3 className="text-sm font-semibold text-green-300 flex items-center gap-2">
-            <Zap className="h-4 w-4" />
-            What you get:
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="mt-12 p-8 rounded-[2.5rem] border border-blue-500/10 bg-blue-500/5 backdrop-blur-sm relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full -mr-16 -mt-16 blur-3xl" />
+          <h3 className="text-[10px] font-black uppercase text-blue-500 tracking-[0.3em] mb-6 flex items-center gap-3">
+            <Sparkles className="h-4 w-4" />
+            Ecosystem Benefits
           </h3>
-          <ul className="space-y-2 text-xs text-green-200">
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              {role === "business" && "Find qualified vendors for your projects"}
-              {role === "vendor" && "Discover high-quality business opportunities"}
-              {role === "admin" && "Full marketplace management & analytics"}
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <span>24/7 support & community</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <span>Secure platform & transparent processes</span>
-            </li>
-          </ul>
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { title: "Smart Sourcing", desc: role === "business" ? "Top-tier vendor network." : "High-quality project leads." },
+              { title: "Secure Workflow", desc: "Encrypted communications." },
+              { title: "Market Growth", desc: "Data-driven opportunities." }
+            ].map((benefit, i) => (
+              <div key={benefit.title} className="space-y-2">
+                <p className="text-xs font-black uppercase text-white tracking-widest">{benefit.title}</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">{benefit.desc}</p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Legal Footer */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="mt-12 text-center space-y-4"
+        >
+          <div className="flex items-center justify-center gap-6">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-3 w-3 text-slate-700" />
+              <span className="text-[8px] font-black uppercase text-slate-700 tracking-[0.2em]">ISO 27001 Compliant</span>
+            </div>
+            <div className="h-1 w-1 rounded-full bg-slate-800" />
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-3 w-3 text-slate-700" />
+              <span className="text-[8px] font-black uppercase text-slate-700 tracking-[0.2em]">GDPR Protected</span>
+            </div>
+          </div>
+          <p className="text-[8px] font-black uppercase text-slate-800 tracking-[0.2em]">© {new Date().getFullYear()} Sharkbid Platforms Inc. All Rights Reserved.</p>
+        </motion.div>
       </div>
     </div>
   );
