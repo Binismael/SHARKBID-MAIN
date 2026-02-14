@@ -113,14 +113,22 @@ export default function VendorLeadDetail() {
         }
 
         // Check for existing messages
-        const msgsResponse = await fetch(`/api/projects/${projectId}/messages`, {
-          headers: {
-            'x-user-id': user.id
+        try {
+          const msgsResponse = await fetch(`/api/projects/${projectId}/messages`, {
+            headers: {
+              'x-user-id': user.id
+            }
+          });
+
+          if (msgsResponse.ok) {
+            const msgsResult = await msgsResponse.json();
+            if (msgsResult.success && msgsResult.data && msgsResult.data.length > 0) {
+              setHasMessages(true);
+            }
           }
-        });
-        const msgsResult = await msgsResponse.json();
-        if (msgsResult.success && msgsResult.data && msgsResult.data.length > 0) {
-          setHasMessages(true);
+        } catch (msgErr) {
+          console.error('Error checking messages:', msgErr);
+          // Don't fail the whole page load if message check fails
         }
       } catch (err) {
         const message = getErrorMessage(err || 'Failed to load project');

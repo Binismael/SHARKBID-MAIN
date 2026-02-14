@@ -772,7 +772,6 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
       if (isAdmin && !vendorId) {
         query = query.eq("project_id", projectId);
       } else {
-        // We'll try to use the most comprehensive filter, but fallback if vendor_id column is missing
         const { data: response } = await supabaseAdmin
           .from("vendor_responses")
           .select("id")
@@ -782,26 +781,39 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
 
         const responseId = response?.id || '00000000-0000-0000-0000-000000000000';
 
-        // Try with vendor_id column first
-        const { data: messages, error: msgError } = await query
-          .or(`vendor_id.eq.${vendorId},sender_id.eq.${vendorId},and(sender_id.eq.${project.business_id},vendor_response_id.eq.${responseId})`)
-          .order("created_at", { ascending: true });
-
-        if (msgError && msgError.code === '42703') {
-          // Fallback if column missing: use vendor_response_id and sender_id only
-          const { data: fallbackMessages, error: fallbackError } = await supabaseAdmin
+        // Try to fetch messages. We'll handle the missing column error by falling back.
+        // We use two separate logic paths to ensure we don't hit the missing column error if it's not there.
+        try {
+          // First attempt: Try with vendor_id column
+          const { data: messages, error: msgError } = await supabaseAdmin
             .from("project_messages")
             .select("*")
             .eq("project_id", projectId)
-            .or(`vendor_response_id.eq.${responseId},sender_id.eq.${vendorId},and(sender_id.eq.${project.business_id},vendor_response_id.eq.${responseId})`)
+            .or(`vendor_id.eq.${vendorId},sender_id.eq.${vendorId},and(sender_id.eq.${project.business_id},vendor_response_id.eq.${responseId})`)
             .order("created_at", { ascending: true });
 
-          if (fallbackError) throw fallbackError;
-          return respondWithEnrichedMessages(res, fallbackMessages, supabaseAdmin);
+          if (!msgError) {
+            return respondWithEnrichedMessages(res, messages, supabaseAdmin);
+          }
+
+          if (msgError.code !== '42703') {
+            throw msgError;
+          }
+          // If 42703, fall through to fallback
+        } catch (e: any) {
+          if (e?.code !== '42703') throw e;
         }
 
-        if (msgError) throw msgError;
-        return respondWithEnrichedMessages(res, messages, supabaseAdmin);
+        // Fallback: Use only existing columns
+        const { data: fallbackMessages, error: fallbackError } = await supabaseAdmin
+          .from("project_messages")
+          .select("*")
+          .eq("project_id", projectId)
+          .or(`vendor_response_id.eq.${responseId},sender_id.eq.${vendorId},and(sender_id.eq.${project.business_id},vendor_response_id.eq.${responseId})`)
+          .order("created_at", { ascending: true });
+
+        if (fallbackError) throw fallbackError;
+        return respondWithEnrichedMessages(res, fallbackMessages, supabaseAdmin);
       }
     }
 
