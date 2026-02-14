@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 const isPlaceholder = (val: string | undefined) => 
   !val || val.includes("your-") || val.includes("__") || val.length < 10;
 
-// Retrieve environment variables (checking multiple possible names)
+// Retrieve environment variables
 const rawUrl = 
   import.meta.env.VITE_SUPABASE_URL || 
   import.meta.env.VITE_SB_SUPABASE_URL || 
@@ -27,8 +27,12 @@ if (!supabaseUrl || !supabaseAnonKey || isPlaceholder(supabaseUrl) || isPlacehol
     url: supabaseUrl ? (isPlaceholder(supabaseUrl) ? "PLACEHOLDER" : "PRESENT") : "MISSING",
     key: supabaseAnonKey ? (isPlaceholder(supabaseAnonKey) ? "PLACEHOLDER" : "PRESENT") : "MISSING"
   });
+} else {
+  console.log("✅ Supabase initialized for client:", supabaseUrl);
 }
 
+// In case fetch is overridden, we log it but use it.
+// If it fails, the user will see it in the console.
 export const supabase = createClient(
   supabaseUrl || "https://placeholder.supabase.co",
   supabaseAnonKey || "placeholder",
@@ -36,7 +40,8 @@ export const supabase = createClient(
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: true
+      detectSessionInUrl: true,
+      storage: window.localStorage // Explicitly use localStorage
     }
   }
 );

@@ -17,6 +17,26 @@
   <body>
     <div id="root"></div>
 
+    <script>
+      // Unregister any existing service worker
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (let registration of registrations) {
+            console.log("DEBUG: Unregistering Service Worker:", registration);
+            registration.unregister();
+          }
+        });
+      }
+
+      console.log("DEBUG: window.fetch type:", typeof window.fetch);
+      console.log("DEBUG: window.fetch string:", window.fetch.toString());
+      if (window.fetch.toString().includes('native')) {
+        console.log("DEBUG: window.fetch appears to be native.");
+      } else {
+        console.warn("DEBUG: window.fetch appears to be OVERRIDDEN.");
+      }
+    </script>
+
     <script type="module" src="/client/main.tsx"></script>
 
     <!-- <script>
