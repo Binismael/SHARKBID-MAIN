@@ -1,39 +1,26 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Helper to check if a value is a placeholder
-const isPlaceholder = (val: string | undefined) => 
-  !val || val.includes("your-") || val.includes("__") || val.length < 10;
+// Note: In Vite, only variables starting with VITE_ are exposed to the client
+const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
-// Retrieve environment variables
-const rawKey = 
-  import.meta.env.VITE_SUPABASE_ANON_KEY || 
-  import.meta.env.VITE_SB_SUPABASE_ANON_KEY || 
-  import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ||
-  "";
-
-// Force use of the local proxy to bypass environment-level fetch interception
+// Use absolute proxy URL
 const supabaseUrl = typeof window !== 'undefined'
   ? `${window.location.origin}/api/v1/supabase`
   : "https://kpytttekmeoeqskfopqj.supabase.co";
 
-const supabaseAnonKey = rawKey;
-
-if (isPlaceholder(rawKey)) {
+if (!rawKey || rawKey.length < 10 || rawKey.includes("your-")) {
   console.error("❌ Supabase Anon Key missing or invalid!", {
-    key: rawKey ? "PLACEHOLDER" : "MISSING"
+    hasKey: !!rawKey,
+    keyLength: rawKey?.length || 0,
+    allEnvKeys: Object.keys(import.meta.env).filter(k => k.includes("SUPABASE"))
   });
 } else {
   console.log("✅ Supabase initialized via proxy:", supabaseUrl);
-  if (typeof window !== 'undefined') {
-    console.log("✅ Window location origin:", window.location.origin);
-    console.log("✅ Full constructed URL:", supabaseUrl);
-  }
 }
 
 export const supabase = createClient(
   supabaseUrl,
-  supabaseAnonKey || "placeholder",
+  rawKey || "placeholder",
   {
     auth: {
       persistSession: true,
