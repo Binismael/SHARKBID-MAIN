@@ -55,20 +55,39 @@ export default function Index() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
-              <Button asChild size="lg" className="h-14 px-8 bg-gradient-to-r from-primary via-primary to-purple-600 hover:from-primary/90 hover:to-purple-700 text-white font-semibold shadow-2xl text-lg">
+              <Button asChild size="lg" className="h-14 px-8 bg-gradient-to-r from-primary via-primary to-purple-600 hover:from-primary/90 hover:to-purple-700 text-white font-semibold shadow-2xl text-lg group">
                 <Link to="/signup" className="gap-3 flex items-center">
-                  <Zap className="h-5 w-5" />
+                  <Zap className="h-5 w-5 fill-current" />
                   Get Started Free
-                  <ArrowRight className="h-5 w-5" />
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" asChild className="h-14 px-8 border-2 text-lg font-semibold">
+              <Button variant="outline" size="lg" asChild className="h-14 px-8 border-2 text-lg font-semibold dark:border-slate-800">
                 <a href="#how-it-works" className="flex items-center gap-2">
                   <Play className="h-5 w-5" />
                   Watch Demo
                 </a>
               </Button>
             </div>
+
+            {/* Featured Image */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="pt-20"
+            >
+              <div className="relative group max-w-4xl mx-auto">
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-[2.5rem] blur opacity-20 group-hover:opacity-40 transition duration-1000 group-hover:duration-200"></div>
+                <div className="relative bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800">
+                  <img
+                    src="https://cdn.builder.io/api/v1/image/assets%2Fd51db21242644bff87f6c68e2397daf7%2F59fdcc0ddd4f428f9b5720b5a469b88f?format=webp&width=1200"
+                    alt="Sharkbid Professional Network"
+                    className="w-full h-auto object-cover scale-100 group-hover:scale-[1.02] transition-transform duration-700"
+                  />
+                </div>
+              </div>
+            </motion.div>
 
             {/* Trust Indicators */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-12">
@@ -99,82 +118,80 @@ export default function Index() {
       </section>
 
       {/* Features Section */}
-      <section id="how-it-works" className="py-24 relative bg-gradient-to-b from-muted/30 to-muted/10 border-y border-border">
-        <div className="container mx-auto px-4">
+      <section id="how-it-works" className="py-24 relative bg-[#f8fafc] dark:bg-slate-950 border-y border-border overflow-hidden">
+        <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-20">
-            <h2 className="text-5xl md:text-6xl font-bold mb-6">How Sharkbid Works</h2>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">Four powerful capabilities that automate B2B vendor matching and make it fair, fast, and transparent</p>
+            <h2 className="text-5xl md:text-6xl font-black mb-6 uppercase tracking-tight text-slate-900 dark:text-white">How Sharkbid <span className="text-blue-600">Works</span></h2>
+            <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 max-w-3xl mx-auto font-medium">Four powerful capabilities that automate B2B vendor matching and make it fair, fast, and transparent</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Feature 1 */}
-            <div className="group relative p-8 rounded-2xl border-2 border-border bg-card hover:border-blue-500/50 hover:shadow-2xl transition-all duration-300 overflow-hidden">
-              <div className="absolute -top-8 -right-8 w-24 h-24 bg-blue-500/10 rounded-full group-hover:scale-150 transition-transform duration-300"></div>
-              <div className="relative">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg mb-4">
-                  <Layers className="h-6 w-6 text-white" />
+          <div className="grid lg:grid-cols-2 gap-16 items-center mb-32">
+            <div className="space-y-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] font-black uppercase tracking-widest">
+                <MapPin className="h-3 w-3" />
+                Hyper-Local Matching
+              </div>
+              <h3 className="text-4xl font-black text-slate-900 dark:text-white uppercase leading-none">Instant Smart <span className="text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-500">Routing</span></h3>
+              <p className="text-slate-500 dark:text-slate-400 text-lg leading-relaxed font-medium">
+                No spam. No irrelevant leads. Projects automatically route to vendors by service category and geographic coverage in seconds. Our system maps your needs to the exact experts in your region.
+              </p>
+              <div className="flex items-center gap-4 pt-4">
+                <div className="flex -space-x-3">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="h-10 w-10 rounded-full border-2 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-[10px] font-bold">
+                      {String.fromCharCode(64 + i)}
+                    </div>
+                  ))}
                 </div>
-                <h3 className="text-2xl font-bold mb-3">AI-Powered Intake</h3>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                  Natural conversation, not boring forms. Our AI understands your project and captures service type, location, budget, timeline, and special requirements.
-                </p>
-                <div className="flex items-center gap-2 text-blue-600 font-semibold">
-                  <Clock className="h-4 w-4" />
-                  <span>Takes less than 2 minutes</span>
-                </div>
+                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">500+ Verified Vendors</p>
               </div>
             </div>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="relative group"
+            >
+              <div className="absolute -inset-4 bg-rose-500/5 rounded-[3rem] blur-2xl group-hover:bg-rose-500/10 transition-colors"></div>
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2Fd51db21242644bff87f6c68e2397daf7%2F384cb1b074f44e15ba094ac37c07621c?format=webp&width=800"
+                alt="Local Routing Map"
+                className="relative rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-slate-800 transition-transform duration-500 group-hover:scale-[1.02]"
+              />
+            </motion.div>
+          </div>
 
-            {/* Feature 2 */}
-            <div className="group relative p-8 rounded-2xl border-2 border-border bg-card hover:border-green-500/50 hover:shadow-2xl transition-all duration-300 overflow-hidden">
-              <div className="absolute -top-8 -right-8 w-24 h-24 bg-green-500/10 rounded-full group-hover:scale-150 transition-transform duration-300"></div>
-              <div className="relative">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg mb-4">
-                  <Zap className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3">Instant Smart Routing</h3>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                  No spam. No irrelevant leads. Projects automatically route to vendors by service category and geographic coverage in seconds.
-                </p>
-                <div className="flex items-center gap-2 text-green-600 font-semibold">
-                  <Rocket className="h-4 w-4" />
-                  <span>Matched in seconds, not days</span>
-                </div>
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="order-2 lg:order-1 relative group"
+            >
+              <div className="absolute -inset-4 bg-blue-500/5 rounded-[3rem] blur-2xl group-hover:bg-blue-500/10 transition-colors"></div>
+              <img
+                src="https://cdn.builder.io/api/v1/image/assets%2Fd51db21242644bff87f6c68e2397daf7%2Ff774255062b649adaef8064583d28330?format=webp&width=800"
+                alt="Transparent Bidding"
+                className="relative rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-slate-800 transition-transform duration-500 group-hover:scale-[1.02]"
+              />
+            </motion.div>
+            <div className="order-1 lg:order-2 space-y-8">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-[10px] font-black uppercase tracking-widest">
+                <CheckCircle2 className="h-3 w-3" />
+                Trust & Verification
               </div>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="group relative p-8 rounded-2xl border-2 border-border bg-card hover:border-purple-500/50 hover:shadow-2xl transition-all duration-300 overflow-hidden">
-              <div className="absolute -top-8 -right-8 w-24 h-24 bg-purple-500/10 rounded-full group-hover:scale-150 transition-transform duration-300"></div>
-              <div className="relative">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-lg mb-4">
-                  <Award className="h-6 w-6 text-white" />
+              <h3 className="text-4xl font-black text-slate-900 dark:text-white uppercase leading-none">Fair & Transparent <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">Bidding</span></h3>
+              <p className="text-slate-500 dark:text-slate-400 text-lg leading-relaxed font-medium">
+                All vendors see the same opportunities. Detailed proposals compared side-by-side. Full audit trail for every decision and communication. Select partners based on real ratings and verified history.
+              </p>
+              <div className="grid grid-cols-2 gap-6 pt-4">
+                <div>
+                  <p className="text-2xl font-black text-slate-900 dark:text-white">100%</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Audit Trail</p>
                 </div>
-                <h3 className="text-2xl font-bold mb-3">Fair & Transparent Bidding</h3>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                  All vendors see the same opportunities. Detailed proposals compared side-by-side. Full audit trail for every decision and communication.
-                </p>
-                <div className="flex items-center gap-2 text-purple-600 font-semibold">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span>Complete accountability</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="group relative p-8 rounded-2xl border-2 border-border bg-card hover:border-orange-500/50 hover:shadow-2xl transition-all duration-300 overflow-hidden">
-              <div className="absolute -top-8 -right-8 w-24 h-24 bg-orange-500/10 rounded-full group-hover:scale-150 transition-transform duration-300"></div>
-              <div className="relative">
-                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg mb-4">
-                  <BarChart3 className="h-6 w-6 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-3">Complete Visibility</h3>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                  Real-time dashboards for businesses, vendors, and admins. Track projects from creation through completion. Monitor pipelines and performance.
-                </p>
-                <div className="flex items-center gap-2 text-orange-600 font-semibold">
-                  <TrendingUp className="h-4 w-4" />
-                  <span>Data-driven insights</span>
+                <div>
+                  <p className="text-2xl font-black text-slate-900 dark:text-white">Zero</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hidden Fees</p>
                 </div>
               </div>
             </div>
