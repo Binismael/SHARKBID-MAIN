@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, Lock, Layers, BarChart3, Sparkles, CheckCircle2, TrendingUp, Users, UserPlus, Gauge, Target, Globe, Play, Rocket, Award, Clock } from "lucide-react";
+import { ArrowRight, Zap, Lock, Layers, BarChart3, Sparkles, CheckCircle2, TrendingUp, Users, UserPlus, Gauge, Target, Globe, Play, Rocket, Award, Clock, MapPin } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { TestimonialMarquee } from "@/components/TestimonialMarquee";
+import { motion } from "framer-motion";
 
 export default function Index() {
   return (
