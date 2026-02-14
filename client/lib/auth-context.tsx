@@ -40,15 +40,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(currentSession);
           setUser(currentSession.user);
 
-          // Fetch role from profile table as source of truth
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("user_id", currentSession.user.id)
-            .maybeSingle();
+          try {
+            // Fetch role from profile table as source of truth
+            const { data: profile, error: profileError } = await supabase
+              .from("profiles")
+              .select("role")
+              .eq("user_id", currentSession.user.id)
+              .maybeSingle();
 
-          const role = (profile?.role || currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
-          setUserRole(role);
+            if (profileError) {
+              console.error("Profile fetch error during checkAuth:", profileError);
+            }
+
+            const role = (profile?.role || currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
+            setUserRole(role);
+          } catch (profileErr) {
+            console.error("Catch error during profile fetch in checkAuth:", profileErr);
+            // Fallback to metadata
+            const role = (currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
+            setUserRole(role);
+          }
         }
       } catch (err) {
         console.error("Auth check error:", err);
@@ -63,19 +74,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
+      setLoading(true); // Re-trigger loading on state change
+
       if (currentSession?.user) {
         setSession(currentSession);
         setUser(currentSession.user);
 
-        // Fetch role from profile table as source of truth
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("user_id", currentSession.user.id)
-          .maybeSingle();
+        try {
+          // Fetch role from profile table as source of truth
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("user_id", currentSession.user.id)
+            .maybeSingle();
 
-        const role = (profile?.role || currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
-        setUserRole(role);
+          if (profileError) {
+            console.error("Profile fetch error during onAuthStateChange:", profileError);
+          }
+
+          const role = (profile?.role || currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
+          setUserRole(role);
+        } catch (profileErr) {
+          console.error("Catch error during profile fetch in onAuthStateChange:", profileErr);
+          const role = (currentSession.user.user_metadata?.role || "business") as "admin" | "business" | "vendor";
+          setUserRole(role);
+        }
       } else {
         setSession(null);
         setUser(null);

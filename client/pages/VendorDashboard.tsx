@@ -61,104 +61,96 @@ export default function VendorDashboard() {
     const fetchVendorData = async () => {
       try {
         setLoading(true);
+        setError(null);
 
         // Check vendor profile
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('*')
+          .select('vendor_services')
           .eq('user_id', user.id)
-          .single();
+          .maybeSingle();
+
+        if (profileError) {
+          console.error("Dashboard profile fetch error:", profileError);
+        }
 
         if (profileData?.vendor_services && profileData.vendor_services.length > 0) {
           setProfileComplete(true);
         }
 
-        // 1. Fetch vendor's bids via server-side API
-        const bidsResponse = await fetch('/api/projects/vendor-bids', {
-          headers: {
-            'x-vendor-id': user.id
+        // Fetch all data in parallel with a timeout wrapper for better UX
+        const fetchWithTimeout = async (url: string, options: any = {}) => {
+          const controller = new AbortController();
+          const id = setTimeout(() => controller.abort(), 10000); // 10s timeout
+          try {
+            const response = await fetch(url, { ...options, signal: controller.signal });
+            clearTimeout(id);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+          } catch (e) {
+            clearTimeout(id);
+            throw e;
           }
-        });
-        const bidsResult = await bidsResponse.json();
+        };
 
-        if (!bidsResult.success) {
-          throw bidsResult.error || 'Failed to load bids';
-        }
-
-        const bidsData = bidsResult.data;
-        const bidMap = new Map(bidsData?.map((b: any) => [b.project_id, b.status]) || []);
-
-        // 2. Fetch projects where this vendor is the selected vendor via server-side API
-        const assignedResponse = await fetch('/api/projects/vendor', {
-          headers: {
-            'x-user-id': user.id
-          }
-        });
-        const assignedResult = await assignedResponse.json();
-
-        if (!assignedResult.success) {
-          throw assignedResult.error || 'Failed to load assigned projects';
-        }
-
-        const assignedProjects = assignedResult.data;
-
-        // 3. Fetch routed leads for this vendor via server-side API
-        const response = await fetch('/api/projects/routed', {
-          headers: {
-            'x-user-id': user.id
-          }
-        });
-        const result = await response.json();
-
-        if (!result.success) {
-          throw result.error || 'Failed to load leads';
-        }
-
-        const routedLeads = result.data;
-
-        // 4. Combine and deduplicate projects
-        const allProjectsMap = new Map();
-
-        // Add routed projects
-        (routedLeads || []).forEach((item: any) => {
-          if (item.projects && item.status !== 'declined') {
-            allProjectsMap.set(item.projects.id, {
-              ...item.projects,
-              routed_at: item.routed_at,
-              bid_status: bidMap.get(item.projects.id) || 'not_bid',
-            });
-          }
+        const [bidsResult, assignedResult, leadsResult] = await Promise.all([
+          fetchWithTimeout('/api/projects/vendor-bids', { headers: { 'x-vendor-id': user.id } }),
+          fetchWithTimeout('/api/projects/vendor', { headers: { 'x-user-id': user.id } }),
+          fetchWithTimeout('/api/projects/routed', { headers: { 'x-user-id': user.id } })
+        ]).catch(err => {
+          console.error("Parallel fetch error:", err);
+          throw new Error("One or more requests failed. Please refresh.");
         });
 
-        // Add assigned projects (ensure they have correct status if not in routing)
-        (assignedProjects || []).forEach((p: any) => {
-          if (!allProjectsMap.has(p.id)) {
-            allProjectsMap.set(p.id, {
-              ...p,
-              bid_status: bidMap.get(p.id) || 'accepted',
-            });
-          } else {
-            // Update status if it's accepted in bids but maybe not in routing
-            const existing = allProjectsMap.get(p.id);
-            if (bidMap.get(p.id) === 'accepted' || p.selected_vendor_id === user.id) {
-              existing.bid_status = 'accepted';
+        if (bidsResult && assignedResult && leadsResult) {
+          const bidsData = bidsResult.data;
+          const bidMap = new Map(bidsData?.map((b: any) => [b.project_id, b.status]) || []);
+          const assignedProjects = assignedResult.data;
+          const routedLeads = leadsResult.data;
+
+          // Combine and deduplicate projects
+          const allProjectsMap = new Map();
+
+          // Add routed projects
+          (routedLeads || []).forEach((item: any) => {
+            if (item.projects && item.status !== 'declined') {
+              allProjectsMap.set(item.projects.id, {
+                ...item.projects,
+                routed_at: item.routed_at,
+                bid_status: bidMap.get(item.projects.id) || 'not_bid',
+              });
             }
-          }
-        });
+          });
 
-        const combinedLeads = Array.from(allProjectsMap.values());
-        setLeads(combinedLeads);
+          // Add assigned projects
+          (assignedProjects || []).forEach((p: any) => {
+            if (!allProjectsMap.has(p.id)) {
+              allProjectsMap.set(p.id, {
+                ...p,
+                bid_status: bidMap.get(p.id) || 'accepted',
+              });
+            } else {
+              const existing = allProjectsMap.get(p.id);
+              if (bidMap.get(p.id) === 'accepted' || p.selected_vendor_id === user.id) {
+                existing.bid_status = 'accepted';
+              }
+            }
+          });
 
-        // Calculate stats
-        setStats({
-          total_leads: combinedLeads.filter(l => l.status !== 'completed' && l.bid_status !== 'accepted').length,
-          bids_submitted: bidsData?.filter((b: any) => (b.status === 'submitted' || b.status === 'bid_submitted') && b.status !== 'withdrawn').length || 0,
-          bids_accepted: (assignedProjects?.filter((p: any) => p.status !== 'completed').length || 0),
-        });
+          const combinedLeads = Array.from(allProjectsMap.values());
+          setLeads(combinedLeads);
+
+          // Calculate stats
+          setStats({
+            total_leads: combinedLeads.filter(l => l.status !== 'completed' && l.bid_status !== 'accepted').length,
+            bids_submitted: bidsData?.filter((b: any) => (b.status === 'submitted' || b.status === 'bid_submitted') && b.status !== 'withdrawn').length || 0,
+            bids_accepted: (assignedProjects?.filter((p: any) => p.status !== 'completed').length || 0),
+          });
+        }
       } catch (err) {
-        const message = getErrorMessage(err || 'Failed to load leads');
+        const message = getErrorMessage(err || 'Failed to load dashboard data');
         setError(message);
-        console.error('Error:', err);
+        console.error('Dashboard Fetch Error:', err);
       } finally {
         setLoading(false);
       }
