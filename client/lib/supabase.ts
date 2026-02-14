@@ -5,12 +5,6 @@ const isPlaceholder = (val: string | undefined) =>
   !val || val.includes("your-") || val.includes("__") || val.length < 10;
 
 // Retrieve environment variables
-const rawUrl = 
-  import.meta.env.VITE_SUPABASE_URL || 
-  import.meta.env.VITE_SB_SUPABASE_URL || 
-  import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
-  "";
-
 const rawKey = 
   import.meta.env.VITE_SUPABASE_ANON_KEY || 
   import.meta.env.VITE_SB_SUPABASE_ANON_KEY || 
@@ -18,23 +12,23 @@ const rawKey =
   import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ||
   "";
 
-// Clean the URL (remove trailing slash)
-const supabaseUrl = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl;
+// Force use of the local proxy to bypass environment-level fetch interception
+const supabaseUrl = typeof window !== 'undefined'
+  ? `${window.location.origin}/supabase`
+  : "https://kpytttekmeoeqskfopqj.supabase.co";
+
 const supabaseAnonKey = rawKey;
 
-if (!supabaseUrl || !supabaseAnonKey || isPlaceholder(supabaseUrl) || isPlaceholder(supabaseAnonKey)) {
-  console.error("❌ Supabase configuration missing or invalid!", {
-    url: supabaseUrl ? (isPlaceholder(supabaseUrl) ? "PLACEHOLDER" : "PRESENT") : "MISSING",
-    key: supabaseAnonKey ? (isPlaceholder(supabaseAnonKey) ? "PLACEHOLDER" : "PRESENT") : "MISSING"
+if (isPlaceholder(rawKey)) {
+  console.error("❌ Supabase Anon Key missing or invalid!", {
+    key: rawKey ? "PLACEHOLDER" : "MISSING"
   });
 } else {
-  console.log("✅ Supabase initialized directly:", supabaseUrl);
-  // Log a tiny bit of the key for debugging without exposing it
-  console.log("✅ Anon Key fragment:", supabaseAnonKey.substring(0, 10) + "..." + supabaseAnonKey.substring(supabaseAnonKey.length - 5));
+  console.log("✅ Supabase initialized via proxy:", supabaseUrl);
 }
 
 export const supabase = createClient(
-  supabaseUrl || "https://placeholder.supabase.co",
+  supabaseUrl,
   supabaseAnonKey || "placeholder",
   {
     auth: {

@@ -15,6 +15,38 @@ import adminRouter from "./routes/admin";
 export function createServer() {
   const app = express();
 
+  // Supabase Proxy
+  const supabaseUrl = (process.env.VITE_SUPABASE_URL || "https://kpytttekmeoeqskfopqj.supabase.co").replace(/\/$/, "");
+  console.log(`[PROXY] Supabase target: ${supabaseUrl}`);
+
+  app.use("/supabase", proxy(supabaseUrl, {
+    proxyReqPathResolver: (req) => {
+      const path = req.url;
+      console.log(`[PROXY] ${req.method} ${req.originalUrl} -> ${supabaseUrl}${path}`);
+      return path;
+    },
+    proxyReqOptDecorator: (proxyReqOpts, srcReq) => {
+      // Log headers for debugging (safely)
+      const hasApiKey = !!(srcReq.headers['apikey'] || srcReq.headers['x-client-info']);
+      const hasAuth = !!srcReq.headers['authorization'];
+      console.log(`[PROXY] Headers: apikey=${hasApiKey}, auth=${hasAuth}`);
+
+      // Ensure we don't send the Host header of our own app to Supabase
+      // express-http-proxy usually handles this, but let's be explicit if needed
+      return proxyReqOpts;
+    },
+    userResDecorator: (proxyRes, proxyResData, userReq, userRes) => {
+      if (proxyRes.statusCode && proxyRes.statusCode >= 400) {
+        console.warn(`[PROXY] Error Response: ${proxyRes.statusCode} for ${userReq.originalUrl}`);
+        try {
+          const data = JSON.parse(proxyResData.toString('utf8'));
+          console.warn(`[PROXY] Error Data:`, data);
+        } catch (e) {}
+      }
+      return proxyResData;
+    }
+  }));
+
   // Middleware
   app.use(cors());
   app.use(express.json());
