@@ -1,26 +1,31 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Basic environment variable retrieval
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_SB_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SB_SUPABASE_ANON_KEY;
-
-// Validation with helpful error messages
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("❌ Supabase configuration missing!", {
-    url: supabaseUrl ? "present" : "MISSING",
-    key: supabaseAnonKey ? "present" : "MISSING",
-    availableKeys: Object.keys(import.meta.env).filter(k => k.includes("SUPABASE"))
-  });
-}
-
-// Check for placeholder values (common issue)
+// Helper to check if a value is a placeholder
 const isPlaceholder = (val: string | undefined) => 
-  val && (val.includes("your-") || val.includes("__") || val.length < 10);
+  !val || val.includes("your-") || val.includes("__") || val.length < 10;
 
-if (isPlaceholder(supabaseUrl) || isPlaceholder(supabaseAnonKey)) {
-  console.warn("⚠️ Supabase client initialized with potential placeholder values.", {
-    urlIsPlaceholder: isPlaceholder(supabaseUrl),
-    keyIsPlaceholder: isPlaceholder(supabaseAnonKey)
+// Retrieve environment variables (checking multiple possible names)
+const rawUrl = 
+  import.meta.env.VITE_SUPABASE_URL || 
+  import.meta.env.VITE_SB_SUPABASE_URL || 
+  import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
+  "";
+
+const rawKey = 
+  import.meta.env.VITE_SUPABASE_ANON_KEY || 
+  import.meta.env.VITE_SB_SUPABASE_ANON_KEY || 
+  import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY ||
+  "";
+
+// Clean the URL (remove trailing slash)
+const supabaseUrl = rawUrl.endsWith('/') ? rawUrl.slice(0, -1) : rawUrl;
+const supabaseAnonKey = rawKey;
+
+if (!supabaseUrl || !supabaseAnonKey || isPlaceholder(supabaseUrl) || isPlaceholder(supabaseAnonKey)) {
+  console.error("❌ Supabase configuration missing or invalid!", {
+    url: supabaseUrl ? (isPlaceholder(supabaseUrl) ? "PLACEHOLDER" : "PRESENT") : "MISSING",
+    key: supabaseAnonKey ? (isPlaceholder(supabaseAnonKey) ? "PLACEHOLDER" : "PRESENT") : "MISSING"
   });
 }
 
