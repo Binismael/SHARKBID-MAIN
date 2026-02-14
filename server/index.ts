@@ -4,7 +4,7 @@ import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { handleAIIntake } from "./routes/ai-intake";
 import { handleTriggerRouting } from "./routes/lead-routing";
-import { handlePublishProject, handleGetProject, handleGetAvailableProjects, handleGetRoutedLeads, handleGetBusinessProjects, handleGetVendorProjects, handleGetUnroutedProjects, handleUpsertRouting, handleGetVendorBids, handleVendorSubmitBid, handleAssignVendor, handleDeleteProject, handleGetMessages, handleSendMessage } from "./routes/projects";
+import { handlePublishProject, handleGetProject, handleGetAvailableProjects, handleGetRoutedLeads, handleGetBusinessProjects, handleGetVendorProjects, handleGetUnroutedProjects, handleUpsertRouting, handleGetVendorBids, handleVendorSubmitBid, handleAssignVendor, handleDeleteProject, handleGetMessages, handleSendMessage, handleVendorUpdateStatus } from "./routes/projects";
 import { handleCreateProject } from "./routes/create-project";
 import emailRouter from "./routes/email";
 import adminRouter from "./routes/admin";
@@ -40,6 +40,7 @@ export function createServer() {
   app.get("/api/projects/vendor-bids", handleGetVendorBids);
   app.post("/api/projects/submit-bid", handleVendorSubmitBid);
   app.post("/api/projects/assign-vendor", handleAssignVendor);
+  app.post("/api/projects/vendor-update-status", handleVendorUpdateStatus);
   app.delete("/api/projects/:projectId", handleDeleteProject);
   app.get("/api/projects/:projectId/messages", handleGetMessages);
   app.post("/api/projects/:projectId/messages", handleSendMessage);

@@ -23,6 +23,8 @@ interface Project {
   timeline_start?: string;
   timeline_end?: string;
   project_details?: any;
+  status: string;
+  selected_vendor_id?: string;
   created_at: string;
 }
 
@@ -55,6 +57,7 @@ export default function VendorLeadDetail() {
   const [bidAmount, setBidAmount] = useState('');
   const [proposedTimeline, setProposedTimeline] = useState('');
   const [responseNotes, setResponseNotes] = useState('');
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!projectId || !user) return;
@@ -167,6 +170,50 @@ export default function VendorLeadDetail() {
     }
   };
 
+  const handleStatusUpdate = async (action: 'decline' | 'complete') => {
+    if (!project || !user || !projectId) return;
+
+    const confirmMessage = action === 'decline'
+      ? 'Are you sure you want to decline this lead? This will withdraw your bid if you have one.'
+      : 'Are you sure you want to mark this project as completed?';
+
+    if (!window.confirm(confirmMessage)) return;
+
+    setUpdatingStatus(action);
+    try {
+      const response = await fetch('/api/projects/vendor-update-status', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id
+        },
+        body: JSON.stringify({
+          projectId,
+          action
+        })
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw result.error || `Failed to ${action} project`;
+      }
+
+      toast.success(result.message);
+
+      if (action === 'decline') {
+        navigate('/vendor/dashboard');
+      } else {
+        setProject({ ...project, status: 'completed' });
+      }
+    } catch (err) {
+      const message = getErrorMessage(err || `Failed to ${action} project`);
+      toast.error(message);
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -272,7 +319,7 @@ export default function VendorLeadDetail() {
           )}
 
           {/* Messaging System */}
-          {existingBid && (
+          {(existingBid || project.selected_vendor_id === user.id) && (
             <div className="pt-8">
               <div className="flex items-center gap-2 mb-6">
                 <MessageSquare className="h-6 w-6 text-primary" />
@@ -284,9 +331,38 @@ export default function VendorLeadDetail() {
         </div>
 
         {/* Bid Section */}
-        <div>
+        <div className="space-y-6">
+          {project.selected_vendor_id === user.id && project.status !== 'completed' && (
+            <Card className="p-6 border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
+              <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-2">Active Project</h3>
+              <p className="text-sm text-blue-800 dark:text-blue-200 mb-4">
+                You have been selected for this project! You can now coordinate with the business and mark it as finished when done.
+              </p>
+              <Button
+                onClick={() => handleStatusUpdate('complete')}
+                disabled={!!updatingStatus}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold"
+              >
+                {updatingStatus === 'complete' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                Submit Finished Project
+              </Button>
+            </Card>
+          )}
+
+          {project.status === 'completed' && (
+            <Card className="p-6 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
+              <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-bold mb-2">
+                <CheckCircle2 className="h-5 w-5" />
+                Project Completed
+              </div>
+              <p className="text-sm text-green-600 dark:text-green-300">
+                This project has been marked as finished.
+              </p>
+            </Card>
+          )}
+
           {existingBid ? (
-            <Card className="p-6 sticky top-6">
+            <Card className="p-6">
               <div className="flex items-center gap-2 mb-4 text-green-600">
                 <CheckCircle2 className="h-5 w-5" />
                 <h3 className="font-semibold">Bid Submitted</h3>
@@ -306,15 +382,32 @@ export default function VendorLeadDetail() {
                     <p className="text-sm">{existingBid.response_notes}</p>
                   </div>
                 )}
-                <div className="pt-2 border-t">
+                <div className="pt-2 border-t space-y-3">
                   <p className="text-xs text-muted-foreground mb-2">Status: <span className="font-medium capitalize">{existingBid.status}</span></p>
-                  <Button
-                    onClick={() => setShowBidForm(!showBidForm)}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {showBidForm ? 'Cancel Edit' : 'Edit Bid'}
-                  </Button>
+
+                  {project.status !== 'completed' && (
+                    <div className="grid grid-cols-1 gap-2">
+                      <Button
+                        onClick={() => setShowBidForm(!showBidForm)}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        {showBidForm ? 'Cancel Edit' : 'Edit Bid'}
+                      </Button>
+
+                      {project.selected_vendor_id !== user.id && (
+                        <Button
+                          onClick={() => handleStatusUpdate('decline')}
+                          variant="ghost"
+                          disabled={!!updatingStatus}
+                          className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          {updatingStatus === 'decline' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                          Cancel / Decline Project
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -423,6 +516,16 @@ export default function VendorLeadDetail() {
                       Submit Bid
                     </>
                   )}
+                </Button>
+
+                <Button
+                  onClick={() => handleStatusUpdate('decline')}
+                  variant="ghost"
+                  disabled={!!updatingStatus}
+                  className="w-full text-slate-500 hover:text-red-600 hover:bg-red-50"
+                >
+                  {updatingStatus === 'decline' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                  Decline Lead
                 </Button>
               </form>
             </Card>

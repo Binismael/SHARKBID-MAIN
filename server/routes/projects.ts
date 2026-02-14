@@ -720,6 +720,79 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
   }
 };
 
+// Vendor update project or routing status (Decline or Complete)
+export const handleVendorUpdateStatus: RequestHandler = async (req, res) => {
+  try {
+    const { projectId, action } = req.body;
+    const userId = req.headers["x-user-id"] as string;
+
+    if (!projectId || !action || !userId) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const { data: project, error: fetchError } = await supabaseAdmin
+      .from("projects")
+      .select("*")
+      .eq("id", projectId)
+      .single();
+
+    if (fetchError || !project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    if (action === 'decline') {
+      // Vendor declining a lead/routing
+      const { error: updateError } = await supabaseAdmin
+        .from("project_routing")
+        .update({ status: 'declined', updated_at: new Date() })
+        .eq("project_id", projectId)
+        .eq("vendor_id", userId);
+
+      if (updateError) throw updateError;
+
+      // Also update bid status if it exists
+      await supabaseAdmin
+        .from("vendor_responses")
+        .update({ status: 'withdrawn' })
+        .eq("project_id", projectId)
+        .eq("vendor_id", userId);
+
+      return res.json({ success: true, message: "Lead declined successfully" });
+    }
+
+    if (action === 'complete') {
+      // Vendor marking project as completed
+      // Must be the selected vendor
+      if (project.selected_vendor_id !== userId) {
+        return res.status(403).json({ error: "Only the assigned vendor can mark a project as completed" });
+      }
+
+      const { error: updateError } = await supabaseAdmin
+        .from("projects")
+        .update({ status: 'completed', updated_at: new Date() })
+        .eq("id", projectId);
+
+      if (updateError) throw updateError;
+
+      // Log activity
+      await supabaseAdmin.from("project_activity").insert({
+        project_id: projectId,
+        user_id: userId,
+        action: "completed_by_vendor",
+      });
+
+      return res.json({ success: true, message: "Project marked as completed" });
+    }
+
+    return res.status(400).json({ error: "Invalid action" });
+  } catch (error) {
+    console.error("Vendor update status error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
 // Send a message
 export const handleSendMessage: RequestHandler = async (req, res) => {
   try {

@@ -19,7 +19,9 @@ interface Lead {
   project_state: string;
   created_at: string;
   routed_at?: string;
-  bid_status?: 'not_bid' | 'submitted' | 'accepted' | 'bid_submitted' | 'bid_accepted';
+  status: string;
+  selected_vendor_id?: string;
+  bid_status?: 'not_bid' | 'submitted' | 'accepted' | 'bid_submitted' | 'bid_accepted' | 'declined' | 'withdrawn';
 }
 
 interface BidStats {
@@ -119,7 +121,7 @@ export default function VendorDashboard() {
 
         // Add routed projects
         (routedLeads || []).forEach((item: any) => {
-          if (item.projects) {
+          if (item.projects && item.status !== 'declined') {
             allProjectsMap.set(item.projects.id, {
               ...item.projects,
               routed_at: item.routed_at,
@@ -149,9 +151,9 @@ export default function VendorDashboard() {
 
         // Calculate stats
         setStats({
-          total_leads: combinedLeads.length,
-          bids_submitted: bidsData?.filter((b: any) => b.status === 'submitted' || b.status === 'bid_submitted').length || 0,
-          bids_accepted: (assignedProjects?.length || 0) || bidsData?.filter((b: any) => b.status === 'accepted').length || 0,
+          total_leads: combinedLeads.filter(l => l.status !== 'completed' && l.bid_status !== 'accepted').length,
+          bids_submitted: bidsData?.filter((b: any) => (b.status === 'submitted' || b.status === 'bid_submitted') && b.status !== 'withdrawn').length || 0,
+          bids_accepted: (assignedProjects?.filter((p: any) => p.status !== 'completed').length || 0),
         });
       } catch (err) {
         const message = getErrorMessage(err || 'Failed to load leads');
@@ -310,7 +312,7 @@ export default function VendorDashboard() {
         )}
 
         {/* Active Projects */}
-        {leads.some(l => l.bid_status === 'accepted' || l.bid_status === 'bid_accepted') && (
+        {leads.some(l => (l.bid_status === 'accepted' || l.bid_status === 'bid_accepted' || l.selected_vendor_id === user?.id) && l.status !== 'completed') && (
           <div className="mb-12">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
@@ -319,7 +321,7 @@ export default function VendorDashboard() {
               <h2 className="text-3xl font-bold text-slate-900 dark:text-white">Active Projects</h2>
             </div>
             <div className="grid gap-5">
-              {leads.filter(l => l.bid_status === 'accepted' || l.bid_status === 'bid_accepted').map((lead) => (
+              {leads.filter(l => (l.bid_status === 'accepted' || l.bid_status === 'bid_accepted' || l.selected_vendor_id === user?.id) && l.status !== 'completed').map((lead) => (
                 <Card
                   key={lead.id}
                   className="p-6 border-l-4 border-l-green-500 bg-white dark:bg-slate-900 shadow-md hover:shadow-xl transition-all cursor-pointer"
@@ -373,7 +375,7 @@ export default function VendorDashboard() {
             <Card className="p-16 flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
               <Loader2 className="h-10 w-10 animate-spin text-blue-600 dark:text-blue-400" />
             </Card>
-          ) : leads.filter(l => l.bid_status !== 'accepted' && l.bid_status !== 'bid_accepted').length === 0 ? (
+          ) : leads.filter(l => l.bid_status !== 'accepted' && l.bid_status !== 'bid_accepted' && l.selected_vendor_id !== user?.id && l.status !== 'completed').length === 0 ? (
             <Card className="p-12 text-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-dashed border-2 border-slate-300 dark:border-slate-700">
               <div className="bg-blue-100 dark:bg-blue-900/30 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
                 <Inbox className="h-8 w-8 text-blue-600 dark:text-blue-400" />
@@ -385,7 +387,7 @@ export default function VendorDashboard() {
             </Card>
           ) : (
             <div className="grid gap-5">
-              {leads.filter(l => l.bid_status !== 'accepted' && l.bid_status !== 'bid_accepted').map((lead) => {
+              {leads.filter(l => l.bid_status !== 'accepted' && l.bid_status !== 'bid_accepted' && l.selected_vendor_id !== user?.id && l.status !== 'completed').map((lead) => {
                 const badge = getBidBadge(lead.bid_status);
                 const isNotBid = lead.bid_status === 'not_bid';
 
@@ -442,6 +444,35 @@ export default function VendorDashboard() {
             </div>
           )}
         </div>
+
+        {/* Completed Projects */}
+        {leads.some(l => l.status === 'completed') && (
+          <div className="mt-16 pt-12 border-t border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                <CheckCircle2 className="h-6 w-6 text-slate-400 dark:text-slate-500" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-700 dark:text-slate-300">Completed History</h2>
+            </div>
+            <div className="grid gap-4">
+              {leads.filter(l => l.status === 'completed').map((lead) => (
+                <Card
+                  key={lead.id}
+                  className="p-5 bg-slate-50/50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 opacity-75 hover:opacity-100 transition-all cursor-pointer"
+                  onClick={() => navigate(`/vendor/lead/${lead.id}`)}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-bold text-slate-700 dark:text-slate-200">{lead.title}</h3>
+                      <p className="text-xs text-slate-500 mt-1">Completed on {new Date(lead.created_at).toLocaleDateString()}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" className="text-slate-500">View Archive</Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
