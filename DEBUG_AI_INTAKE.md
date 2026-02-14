@@ -22,7 +22,7 @@ echo $OPENAI_API_KEY
 **Fix:**
 ```bash
 # Set the environment variable
-export OPENAI_API_KEY="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"
+export OPENAI_API_KEY="sk-proj-..."
 
 # Verify it's set
 echo $OPENAI_API_KEY
