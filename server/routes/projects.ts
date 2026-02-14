@@ -629,14 +629,25 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
 
     if (!isOwner) {
       // If not owner, verify this user is a vendor for this project
-      const { data: routing } = await supabaseAdmin
-        .from("project_routing")
-        .select("id")
-        .eq("project_id", projectId)
-        .eq("vendor_id", userId)
-        .maybeSingle();
+      // Check routing, responses, or selection
+      const [{ data: routing }, { data: response }] = await Promise.all([
+        supabaseAdmin
+          .from("project_routing")
+          .select("id")
+          .eq("project_id", projectId)
+          .eq("vendor_id", userId)
+          .maybeSingle(),
+        supabaseAdmin
+          .from("vendor_responses")
+          .select("id")
+          .eq("project_id", projectId)
+          .eq("vendor_id", userId)
+          .maybeSingle()
+      ]);
 
-      if (!routing) {
+      const isSelectedVendor = project.selected_vendor_id === userId;
+
+      if (!routing && !response && !isSelectedVendor) {
         return res.status(403).json({ error: "Not authorized to view messages" });
       }
     }
@@ -731,14 +742,27 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
     const vendorId = isOwner ? targetVendorId : userId;
 
     if (!isOwner) {
-      const { data: routing } = await supabaseAdmin
-        .from("project_routing")
-        .select("id")
-        .eq("project_id", projectId)
-        .eq("vendor_id", userId)
-        .maybeSingle();
+      // Verify vendor authorization
+      const [{ data: routing }, { data: response }] = await Promise.all([
+        supabaseAdmin
+          .from("project_routing")
+          .select("id")
+          .eq("project_id", projectId)
+          .eq("vendor_id", userId)
+          .maybeSingle(),
+        supabaseAdmin
+          .from("vendor_responses")
+          .select("id")
+          .eq("project_id", projectId)
+          .eq("vendor_id", userId)
+          .maybeSingle()
+      ]);
 
-      if (!routing) return res.status(403).json({ error: "Not authorized" });
+      const isSelectedVendor = project.selected_vendor_id === userId;
+
+      if (!routing && !response && !isSelectedVendor) {
+        return res.status(403).json({ error: "Not authorized" });
+      }
     }
 
     // Find vendor_response_id to link the message
