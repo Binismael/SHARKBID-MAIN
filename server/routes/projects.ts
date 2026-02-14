@@ -634,10 +634,19 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
     }
 
     const isOwner = project.business_id === userId;
+
+    // Fetch user profile to check role
+    const { data: userProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const isAdmin = userProfile?.role === "admin";
     let vendorId = isOwner ? targetVendorId : userId;
 
-    if (!isOwner) {
-      // If not owner, verify this user is a vendor for this project
+    if (!isOwner && !isAdmin) {
+      // If not owner or admin, verify this user is a vendor for this project
       // Check routing, responses, or selection
       const [{ data: routing }, { data: response }] = await Promise.all([
         supabaseAdmin
@@ -677,17 +686,21 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
       .select("*")
       .eq("project_id", projectId);
 
-    if (vendorId) {
+    if (vendorId || isAdmin) {
       const { data: response } = await supabaseAdmin
         .from("vendor_responses")
         .select("id")
         .eq("project_id", projectId)
-        .eq("vendor_id", vendorId)
+        .eq("vendor_id", vendorId || '')
         .maybeSingle();
 
       // Simplified filter: messages linked to this vendor's bid OR messages between owner and vendor without a link
-      // This ensures business messages always show up even if the link is missing.
-      query = query.or(`vendor_response_id.eq.${response?.id || '00000000-0000-0000-0000-000000000000'},and(sender_id.eq.${project.business_id},sender_id.neq.${userId}),and(sender_id.eq.${vendorId})`);
+      // For Admin, if no vendorId is provided, they see everything for this project
+      if (isAdmin && !vendorId) {
+        query = query.eq("project_id", projectId);
+      } else {
+        query = query.or(`vendor_response_id.eq.${response?.id || '00000000-0000-0000-0000-000000000000'},and(sender_id.eq.${project.business_id},sender_id.neq.${userId}),and(sender_id.eq.${vendorId})`);
+      }
     }
 
     const { data: messages, error: msgError } = await query.order("created_at", { ascending: true });
@@ -854,9 +867,18 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
     if (!project) return res.status(404).json({ error: "Project not found" });
 
     const isOwner = project.business_id === userId;
-    const vendorId = isOwner ? targetVendorId : userId;
 
-    if (!isOwner) {
+    // Fetch user profile to check role
+    const { data: userProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const isAdmin = userProfile?.role === "admin";
+    const vendorId = isOwner ? targetVendorId : (isAdmin ? targetVendorId : userId);
+
+    if (!isOwner && !isAdmin) {
       // Verify vendor authorization
       const [{ data: routing }, { data: response }] = await Promise.all([
         supabaseAdmin

@@ -29,7 +29,7 @@ interface ProjectMessagesProps {
 }
 
 export default function ProjectMessages({ projectId, vendorId }: ProjectMessagesProps) {
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -193,10 +193,12 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
             <MessageCircle className="h-6 w-6 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white leading-none">Project Workspace</h3>
+            <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white leading-none">
+              {userRole === 'admin' ? 'Monitoring Room' : 'Project Workspace'}
+            </h3>
             <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-bold mt-1.5 flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Secure Direct Line
+              <span className={cn("h-1.5 w-1.5 rounded-full animate-pulse", userRole === 'admin' ? "bg-amber-500" : "bg-emerald-500")} />
+              {userRole === 'admin' ? 'Admin Supervision Active' : 'Secure Direct Line'}
             </p>
           </div>
         </div>

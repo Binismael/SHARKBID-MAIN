@@ -46,7 +46,7 @@ interface Bid {
 
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { user } = useAuth();
+  const { user, userRole } = useAuth();
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
   const [bids, setBids] = useState<Bid[]>([]);
@@ -447,13 +447,15 @@ export default function ProjectDetail() {
             </section>
 
             {/* Messaging System */}
-            {project.selected_vendor_id && (
+            {(project.selected_vendor_id || userRole === 'admin') && (
               <section className="pt-12 space-y-6">
                 <div className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-                  <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Workspace Messages</h2>
+                  <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+                    {userRole === 'admin' ? 'Project Monitoring Room' : 'Workspace Messages'}
+                  </h2>
                 </div>
-                <ProjectMessages projectId={project.id} vendorId={project.selected_vendor_id} />
+                <ProjectMessages projectId={project.id} vendorId={project.selected_vendor_id || undefined} />
               </section>
             )}
           </div>
