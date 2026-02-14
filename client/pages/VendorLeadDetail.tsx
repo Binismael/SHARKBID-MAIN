@@ -240,296 +240,342 @@ export default function VendorLeadDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950">
       {/* Header */}
-      <div className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-6">
+      <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4 lg:py-6">
           <Button
             onClick={() => navigate('/vendor/dashboard')}
             variant="ghost"
-            className="gap-2 mb-4"
+            size="sm"
+            className="gap-2 mb-2 lg:mb-4 text-slate-500 hover:text-slate-900 px-0 hover:bg-transparent"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
+            <span className="text-xs font-semibold uppercase tracking-wider">Back to Dashboard</span>
           </Button>
-          <h1 className="text-3xl font-bold">{project.title}</h1>
-          <p className="text-muted-foreground mt-1">{service?.name || 'Service'}</p>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase leading-none">
+                {project.title}
+              </h1>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-[10px] px-2 py-0.5 rounded bg-blue-50 text-blue-600 font-bold uppercase tracking-widest border border-blue-100">
+                  {service?.name || 'Lead Opportunity'}
+                </span>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                  Ref: {project.id.slice(0, 8)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {project.status === 'completed' ? (
+                <div className="bg-purple-50 text-purple-700 px-4 py-2 rounded-xl border border-purple-100 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Project Completed
+                </div>
+              ) : project.selected_vendor_id === user.id ? (
+                <div className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl border border-emerald-100 font-bold text-xs uppercase tracking-widest flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Selected Partner
+                </div>
+              ) : (
+                <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-xl border border-blue-100 font-bold text-xs uppercase tracking-widest">
+                  Open Lead
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Project Details */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Description */}
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Project Description</h2>
-            <p className="text-muted-foreground whitespace-pre-wrap">{project.description}</p>
-          </Card>
-
+      <div className="container mx-auto px-4 py-8 lg:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Project Details */}
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Project Details</h2>
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <p className="text-sm text-muted-foreground uppercase font-medium mb-1">Budget Range</p>
-                <p className="text-lg font-semibold">
-                  ${project.budget_min?.toLocaleString()} - ${project.budget_max?.toLocaleString()}
-                </p>
+          <div className="lg:col-span-2 space-y-8">
+            {/* Description Card */}
+            <section className="space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Project Briefing</h2>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground uppercase font-medium mb-1">Location</p>
-                <p className="text-lg font-semibold">
-                  {project.project_city}, {project.project_state} {project.project_zip}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground uppercase font-medium mb-1">Timeline</p>
-                <p className="text-lg font-semibold">
-                  {project.timeline_start && project.timeline_end
-                    ? `${project.timeline_start} to ${project.timeline_end}`
-                    : 'Not specified'}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground uppercase font-medium mb-1">Posted</p>
-                <p className="text-lg font-semibold">{new Date(project.created_at).toLocaleDateString()}</p>
-              </div>
-            </div>
-          </Card>
+              <Card className="p-8 border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 dark:bg-blue-900/10 rounded-full -mr-16 -mt-16 blur-3xl" />
+                <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed relative z-10 font-medium">{project.description}</p>
+              </Card>
+            </section>
 
-          {/* Additional Details from AI Chat */}
-          {project.project_details && (
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Additional Information</h2>
-              <div className="space-y-2 text-sm">
-                {project.project_details.special_requirements && (
-                  <div>
-                    <p className="text-muted-foreground font-medium">Special Requirements</p>
-                    <p>{project.project_details.special_requirements}</p>
-                  </div>
-                )}
-                {project.project_details.business_size && (
-                  <div>
-                    <p className="text-muted-foreground font-medium">Client Company Size</p>
-                    <p>{project.project_details.business_size} employees</p>
-                  </div>
-                )}
+            {/* Project Specs */}
+            <section className="space-y-4 pt-4">
+              <div className="flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Project Specifications</h2>
               </div>
-            </Card>
-          )}
-
-          {/* Messaging System */}
-          {(existingBid || project.selected_vendor_id === user.id) && (
-            <div className="pt-8">
-              <div className="flex items-center gap-2 mb-6">
-                <MessageSquare className="h-6 w-6 text-primary" />
-                <h2 className="text-2xl font-bold">Messages</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="p-6 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all hover:shadow-md">
+                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Budget Range</p>
+                  <p className="text-lg font-black text-slate-900 dark:text-white">
+                    ${project.budget_min?.toLocaleString()} - ${project.budget_max?.toLocaleString()}
+                  </p>
+                </Card>
+                <Card className="p-6 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all hover:shadow-md">
+                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Location</p>
+                  <p className="text-lg font-black text-slate-900 dark:text-white">
+                    {project.project_city}, {project.project_state}
+                  </p>
+                </Card>
+                <Card className="p-6 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all hover:shadow-md">
+                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Desired Timeline</p>
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1">
+                    {project.timeline_start && project.timeline_end
+                      ? `${new Date(project.timeline_start).toLocaleDateString()} to ${new Date(project.timeline_end).toLocaleDateString()}`
+                      : 'Flexible Timeline'}
+                  </p>
+                </Card>
+                <Card className="p-6 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all hover:shadow-md">
+                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Lead Since</p>
+                  <p className="text-sm font-bold text-slate-700 dark:text-slate-300 mt-1">
+                    {new Date(project.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </Card>
               </div>
-              <ProjectMessages projectId={project.id} />
-            </div>
-          )}
-        </div>
+            </section>
 
-        {/* Bid Section */}
-        <div className="space-y-6">
-          {project.selected_vendor_id === user.id && project.status !== 'completed' && (
-            <Card className="p-6 border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
-              <h3 className="font-bold text-blue-900 dark:text-blue-100 mb-2">Active Project</h3>
-              <p className="text-sm text-blue-800 dark:text-blue-200 mb-4">
-                You have been selected for this project! You can now coordinate with the business and mark it as finished when done.
-              </p>
-              <Button
-                onClick={() => handleStatusUpdate('complete')}
-                disabled={!!updatingStatus}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold"
-              >
-                {updatingStatus === 'complete' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
-                Submit Finished Project
-              </Button>
-            </Card>
-          )}
-
-          {project.status === 'completed' && (
-            <Card className="p-6 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800">
-              <div className="flex items-center gap-2 text-green-700 dark:text-green-400 font-bold mb-2">
-                <CheckCircle2 className="h-5 w-5" />
-                Project Completed
-              </div>
-              <p className="text-sm text-green-600 dark:text-green-300">
-                This project has been marked as finished.
-              </p>
-            </Card>
-          )}
-
-          {existingBid ? (
-            <Card className="p-6">
-              <div className="flex items-center gap-2 mb-4 text-green-600">
-                <CheckCircle2 className="h-5 w-5" />
-                <h3 className="font-semibold">Bid Submitted</h3>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Your Bid Amount</p>
-                  <p className="text-2xl font-bold">${existingBid.bid_amount.toLocaleString()}</p>
+            {/* Additional Intel */}
+            {project.project_details && (
+              <section className="space-y-4 pt-4">
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                  <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Additional Intel</h2>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Proposed Timeline</p>
-                  <p className="text-sm font-medium">{existingBid.proposed_timeline}</p>
-                </div>
-                {existingBid.response_notes && (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Your Notes</p>
-                    <p className="text-sm">{existingBid.response_notes}</p>
+                <Card className="p-8 border-slate-200 dark:border-slate-800 shadow-sm bg-slate-50/50 dark:bg-slate-900/50">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {project.project_details.special_requirements && (
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Special Requirements</p>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed italic border-l-2 border-slate-200 dark:border-slate-700 pl-4">{project.project_details.special_requirements}</p>
+                      </div>
+                    )}
+                    {project.project_details.business_size && (
+                      <div className="space-y-2">
+                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Client Context</p>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-slate-400" />
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-300 tracking-tight">{project.project_details.business_size} Employee Org</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-                <div className="pt-2 border-t space-y-3">
-                  <p className="text-xs text-muted-foreground mb-2">Status: <span className="font-medium capitalize">{existingBid.status}</span></p>
+                </Card>
+              </section>
+            )}
 
-                  {project.status !== 'completed' && (
-                    <div className="grid grid-cols-1 gap-2">
-                      <Button
-                        onClick={() => setShowBidForm(!showBidForm)}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        {showBidForm ? 'Cancel Edit' : 'Edit Bid'}
+            {/* Messaging System */}
+            {(existingBid || project.selected_vendor_id === user.id) && (
+              <section className="pt-12 space-y-6">
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                  <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Workspace Communication</h2>
+                </div>
+                <ProjectMessages projectId={project.id} />
+              </section>
+            )}
+          </div>
+
+          {/* Action Sidebar */}
+          <div className="space-y-6">
+            <div className="sticky top-28 space-y-6">
+              {/* Active Selection Status */}
+              {project.selected_vendor_id === user.id && project.status !== 'completed' && (
+                <Card className="p-8 border-none bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-2xl shadow-blue-500/20 relative overflow-hidden group">
+                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl transition-all group-hover:scale-110" />
+                   <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4 text-blue-100">Project Management</h3>
+                   <p className="text-sm font-medium leading-relaxed mb-8 text-blue-50 opacity-90 relative z-10">
+                     You are the lead partner. Use the tools below to manage project completion and communication.
+                   </p>
+                   <Button
+                    onClick={() => handleStatusUpdate('complete')}
+                    disabled={!!updatingStatus}
+                    className="w-full bg-white text-blue-700 hover:bg-blue-50 font-black uppercase text-[10px] tracking-widest h-12 shadow-xl relative z-10"
+                  >
+                    {updatingStatus === 'complete' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                    Finish Project
+                  </Button>
+                </Card>
+              )}
+
+              {/* Status Section */}
+              <Card className="p-8 border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900">
+                {existingBid ? (
+                  <div className="space-y-8">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                        <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Active Proposal</h3>
+                      </div>
+                      <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-100 italic">
+                        {existingBid.status}
+                      </span>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div>
+                        <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-2">Submitted Amount</p>
+                        <p className="text-4xl font-black text-slate-900 dark:text-white tracking-tighter">${existingBid.bid_amount.toLocaleString()}</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-6">
+                        <div>
+                          <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Proposed Timeline</p>
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-300">{existingBid.proposed_timeline}</p>
+                        </div>
+                        {existingBid.response_notes && (
+                          <div>
+                            <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">Proposal Notes</p>
+                            <p className="text-xs text-slate-500 italic leading-relaxed">"{existingBid.response_notes}"</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3">
+                        {project.status !== 'completed' && (
+                          <>
+                            <Button
+                              onClick={() => setShowBidForm(!showBidForm)}
+                              variant="outline"
+                              className="w-full font-black uppercase text-[10px] tracking-widest h-11 border-slate-200"
+                            >
+                              {showBidForm ? 'Discard Changes' : 'Refine Proposal'}
+                            </Button>
+
+                            {project.selected_vendor_id !== user.id && (
+                              <Button
+                                onClick={() => handleStatusUpdate('decline')}
+                                variant="ghost"
+                                disabled={!!updatingStatus}
+                                className="w-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 font-bold text-[10px] uppercase tracking-widest transition-all"
+                              >
+                                {updatingStatus === 'decline' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                                Withdraw Interest
+                              </Button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {showBidForm && (
+                      <form onSubmit={handleSubmitBid} className="pt-8 border-t border-slate-100 dark:border-slate-800 space-y-5 animate-in fade-in slide-in-from-top-4 duration-300">
+                        <div className="space-y-4">
+                          <div>
+                            <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-1 mb-2 block">New Amount ($)</label>
+                            <Input
+                              type="number"
+                              placeholder="0.00"
+                              value={bidAmount}
+                              onChange={(e) => setBidAmount(e.target.value)}
+                              className="h-12 font-bold focus-visible:ring-blue-500/20 border-slate-200"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-1 mb-2 block">New Timeline</label>
+                            <Input
+                              placeholder="e.g., 2-3 weeks"
+                              value={proposedTimeline}
+                              onChange={(e) => setProposedTimeline(e.target.value)}
+                              className="h-12 font-bold focus-visible:ring-blue-500/20 border-slate-200"
+                            />
+                          </div>
+                        </div>
+                        <Button type="submit" disabled={submitting} className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black uppercase text-[10px] tracking-widest h-12 shadow-xl">
+                          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Update Proposal'}
+                        </Button>
+                      </form>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white mb-2 leading-none">Submit Bid</h3>
+                      <p className="text-xs text-slate-400 font-medium leading-relaxed">Present your value proposition to this business client.</p>
+                    </div>
+
+                    <form onSubmit={handleSubmitBid} className="space-y-5">
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-1 mb-2 block tracking-widest">Investment ($) *</label>
+                          <Input
+                            type="number"
+                            placeholder="Enter your fee"
+                            value={bidAmount}
+                            onChange={(e) => setBidAmount(e.target.value)}
+                            className="h-12 font-bold border-slate-200 shadow-sm"
+                            step="0.01"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-1 mb-2 block tracking-widest">Timeline *</label>
+                          <Input
+                            placeholder="e.g., 30 days"
+                            value={proposedTimeline}
+                            onChange={(e) => setProposedTimeline(e.target.value)}
+                            className="h-12 font-bold border-slate-200 shadow-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-black uppercase text-slate-400 tracking-widest ml-1 mb-2 block tracking-widest">Why us? *</label>
+                          <textarea
+                            placeholder="Describe your strategy..."
+                            value={responseNotes}
+                            onChange={(e) => setResponseNotes(e.target.value)}
+                            rows={4}
+                            className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm bg-white dark:bg-slate-900 font-medium focus:ring-2 focus:ring-blue-500/20 transition-all outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      {error && (
+                        <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl flex gap-2">
+                          <AlertCircle className="h-4 w-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                          <p className="text-[10px] font-bold text-rose-600 uppercase tracking-tight">{error}</p>
+                        </div>
+                      )}
+
+                      <Button type="submit" disabled={submitting} className="w-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black uppercase text-[10px] tracking-widest h-12 shadow-2xl">
+                        {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Send Proposal'}
                       </Button>
 
-                      {project.selected_vendor_id !== user.id && (
-                        <Button
-                          onClick={() => handleStatusUpdate('decline')}
-                          variant="ghost"
-                          disabled={!!updatingStatus}
-                          className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          {updatingStatus === 'decline' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                          Cancel / Decline Project
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {showBidForm && (
-                <form onSubmit={handleSubmitBid} className="mt-6 pt-6 border-t space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Bid Amount ($) *</label>
-                    <Input
-                      type="number"
-                      placeholder="0.00"
-                      value={bidAmount}
-                      onChange={(e) => setBidAmount(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Proposed Timeline *</label>
-                    <Input
-                      placeholder="e.g., 2-3 weeks, 30 days"
-                      value={proposedTimeline}
-                      onChange={(e) => setProposedTimeline(e.target.value)}
-                      className="mt-1"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Notes</label>
-                    <textarea
-                      placeholder="Tell the business about your approach..."
-                      value={responseNotes}
-                      onChange={(e) => setResponseNotes(e.target.value)}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background mt-1"
-                    />
-                  </div>
-                  <Button type="submit" disabled={submitting} className="w-full gap-2">
-                    {submitting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Updating...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4" />
-                        Update Bid
-                      </>
-                    )}
-                  </Button>
-                </form>
-              )}
-            </Card>
-          ) : (
-            <Card className="p-6 sticky top-6">
-              <h3 className="text-lg font-semibold mb-4">Submit Your Bid</h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                Submit your bid to show the business you're interested in this project.
-              </p>
-
-              <form onSubmit={handleSubmitBid} className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium">Bid Amount ($) *</label>
-                  <Input
-                    type="number"
-                    placeholder="Enter your bid amount"
-                    value={bidAmount}
-                    onChange={(e) => setBidAmount(e.target.value)}
-                    className="mt-1"
-                    step="0.01"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Proposed Timeline *</label>
-                  <Input
-                    placeholder="e.g., 2-3 weeks, 30 days"
-                    value={proposedTimeline}
-                    onChange={(e) => setProposedTimeline(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Notes</label>
-                  <textarea
-                    placeholder="Tell the business about your approach, experience, and why you're a good fit..."
-                    value={responseNotes}
-                    onChange={(e) => setResponseNotes(e.target.value)}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-border rounded-md text-sm bg-background mt-1"
-                  />
-                </div>
-
-                {error && (
-                  <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-md flex gap-2">
-                    <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-destructive">{error}</p>
+                      <Button
+                        onClick={() => handleStatusUpdate('decline')}
+                        variant="ghost"
+                        disabled={!!updatingStatus}
+                        className="w-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 font-bold text-[10px] uppercase tracking-widest"
+                      >
+                        {updatingStatus === 'decline' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                        Skip Lead
+                      </Button>
+                    </form>
                   </div>
                 )}
+              </Card>
 
-                <Button type="submit" disabled={submitting} className="w-full gap-2">
-                  {submitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="h-4 w-4" />
-                      Submit Bid
-                    </>
-                  )}
-                </Button>
-
-                <Button
-                  onClick={() => handleStatusUpdate('decline')}
-                  variant="ghost"
-                  disabled={!!updatingStatus}
-                  className="w-full text-slate-500 hover:text-red-600 hover:bg-red-50"
-                >
-                  {updatingStatus === 'decline' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Decline Lead
-                </Button>
-              </form>
-            </Card>
-          )}
+              {/* Marketplace Tips */}
+              <Card className="p-8 bg-slate-900 border-none shadow-2xl relative overflow-hidden group">
+                <div className="absolute bottom-0 left-0 w-32 h-32 bg-indigo-500/10 rounded-full -ml-16 -mb-16 blur-3xl transition-all group-hover:scale-110" />
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-4 text-slate-500">Marketplace Tips</h3>
+                <ul className="space-y-4">
+                  <li className="flex gap-3">
+                    <div className="h-1 w-4 rounded-full bg-blue-500 mt-1.5 shrink-0" />
+                    <p className="text-[11px] font-bold text-slate-400 leading-relaxed uppercase tracking-tighter">Accurate timelines often lead to higher selection rates.</p>
+                  </li>
+                  <li className="flex gap-3">
+                    <div className="h-1 w-4 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
+                    <p className="text-[11px] font-bold text-slate-400 leading-relaxed uppercase tracking-tighter">Transparency in notes builds trust with clients.</p>
+                  </li>
+                </ul>
+              </Card>
+            </div>
+          </div>
         </div>
       </div>
     </div>

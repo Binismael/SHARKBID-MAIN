@@ -116,25 +116,38 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
   }
 
   return (
-    <Card className="flex flex-col h-[600px] overflow-hidden border-slate-200 dark:border-slate-800 shadow-xl rounded-2xl bg-white dark:bg-slate-900">
-      <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-3">
-        <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-          <MessageCircle className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+    <Card className="flex flex-col h-[650px] overflow-hidden border-slate-200 dark:border-slate-800 shadow-2xl rounded-3xl bg-white dark:bg-slate-900 border-none ring-1 ring-slate-200/50">
+      <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-xl flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 rotate-3 group-hover:rotate-0 transition-transform">
+            <MessageCircle className="h-6 w-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white leading-none">Project Workspace</h3>
+            <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-bold mt-1.5 flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Secure Direct Line
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-bold text-slate-900 dark:text-white">Project Messages</h3>
-          <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">Direct Communication</p>
+        <div className="flex -space-x-2">
+          <div className="h-8 w-8 rounded-full border-2 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            <User className="h-4 w-4 text-slate-400" />
+          </div>
+          <div className="h-8 w-8 rounded-full border-2 border-white dark:border-slate-900 bg-blue-600 flex items-center justify-center">
+            <User className="h-4 w-4 text-white" />
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800">
+      <div className="flex-1 overflow-y-auto px-8 py-10 space-y-8 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 bg-slate-50/30 dark:bg-slate-950/30">
         {messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center p-8 text-slate-400">
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-full mb-4">
-              <User className="h-10 w-10 opacity-20" />
+          <div className="h-full flex flex-col items-center justify-center text-center p-12">
+            <div className="p-6 bg-white dark:bg-slate-800 rounded-3xl mb-6 shadow-xl shadow-slate-200/50 dark:shadow-none">
+              <MessageCircle className="h-12 w-12 text-blue-600 opacity-20" />
             </div>
-            <p className="text-sm font-medium">No messages yet</p>
-            <p className="text-xs mt-1">Send a message to start the conversation.</p>
+            <h4 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white mb-2">Initialize Conversation</h4>
+            <p className="text-xs text-slate-400 font-medium max-w-[200px] leading-relaxed">Your secure workspace is ready. Send a message to begin coordination.</p>
           </div>
         ) : (
           messages.map((msg, idx) => {
@@ -146,32 +159,39 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
               <div
                 key={msg.id}
                 className={cn(
-                  "flex flex-col",
+                  "flex flex-col group",
                   isMe ? "items-end" : "items-start",
-                  isSameSender ? "mt-1" : "mt-4"
+                  isSameSender ? "mt-1" : "mt-6"
                 )}
               >
                 {!isMe && !isSameSender && (
-                  <p className="text-[10px] font-bold text-slate-500 uppercase ml-1 mb-1 tracking-tight">
-                    {msg.profiles?.company_name || 'Partner'}
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-2">
+                    {msg.profiles?.company_name || 'Partner Account'}
                   </p>
                 )}
 
                 <div
                   className={cn(
-                    "max-w-[85%] px-4 py-2.5 shadow-sm transition-all hover:shadow-md",
+                    "max-w-[80%] px-5 py-3.5 shadow-sm transition-all relative",
                     isMe
-                      ? "bg-blue-600 text-white rounded-2xl rounded-tr-none"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-2xl rounded-tl-none"
+                      ? "bg-blue-600 text-white rounded-[2rem] rounded-tr-none shadow-blue-500/10 hover:shadow-blue-500/20"
+                      : "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-[2rem] rounded-tl-none border border-slate-100 dark:border-slate-700 hover:shadow-lg"
                   )}
                 >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.message_text}</p>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">{msg.message_text}</p>
+
+                  <div className={cn(
+                    "absolute bottom-0 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap py-1 px-2 bg-slate-900 text-white text-[8px] font-black uppercase tracking-widest rounded-full shadow-2xl",
+                    isMe ? "-left-12 translate-y-1/2" : "-right-12 translate-y-1/2"
+                  )}>
+                    {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
+                  </div>
                 </div>
 
                 {!isSameSender || (idx === messages.length - 1) ? (
                   <p className={cn(
-                    "text-[9px] mt-1 text-slate-400 font-medium",
-                    isMe ? "mr-1" : "ml-1"
+                    "text-[8px] mt-2 text-slate-400 font-black uppercase tracking-widest opacity-60",
+                    isMe ? "mr-2 text-right" : "ml-2"
                   )}>
                     {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                   </p>
@@ -183,15 +203,15 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 bg-slate-50/50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800">
-        <form onSubmit={handleSendMessage} className="flex gap-2 items-end bg-white dark:bg-slate-800 p-2 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+      <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+        <form onSubmit={handleSendMessage} className="flex gap-3 items-end bg-slate-50 dark:bg-slate-800/50 p-3 rounded-[2.5rem] border border-slate-200/50 dark:border-slate-700/50 focus-within:bg-white dark:focus-within:bg-slate-800 focus-within:ring-4 focus-within:ring-blue-500/5 transition-all duration-300">
           <textarea
-            placeholder="Type your message..."
+            placeholder="Write a message..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             disabled={sending}
             rows={1}
-            className="flex-1 bg-transparent border-none focus:ring-0 resize-none py-2 px-3 text-sm min-h-[40px] max-h-[120px]"
+            className="flex-1 bg-transparent border-none focus:ring-0 resize-none py-3 px-5 text-sm min-h-[48px] max-h-[120px] font-medium placeholder:text-slate-400"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -203,13 +223,16 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
             type="submit"
             size="icon"
             disabled={sending || !newMessage.trim()}
-            className="h-10 w-10 rounded-xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20 shrink-0"
+            className="h-12 w-12 rounded-full bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-500/30 shrink-0 transition-transform active:scale-95"
           >
-            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            {sending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5 -rotate-12 translate-x-0.5" />}
           </Button>
         </form>
         {error && (
-          <p className="mt-2 text-[10px] text-red-500 text-center font-medium">{error}</p>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <div className="h-1 w-1 rounded-full bg-rose-500" />
+            <p className="text-[10px] text-rose-500 font-black uppercase tracking-widest">{error}</p>
+          </div>
         )}
       </div>
     </Card>

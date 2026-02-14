@@ -205,51 +205,65 @@ export default function ProjectDetail() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      draft: 'bg-gray-100 text-gray-800',
-      open: 'bg-green-100 text-green-800',
-      in_review: 'bg-blue-100 text-blue-800',
-      selected: 'bg-purple-100 text-purple-800',
-      completed: 'bg-emerald-100 text-emerald-800',
-      cancelled: 'bg-red-100 text-red-800',
+      draft: 'bg-slate-100 text-slate-700 border-slate-200',
+      open: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+      in_review: 'bg-blue-50 text-blue-700 border-blue-100',
+      selected: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+      completed: 'bg-purple-50 text-purple-700 border-purple-100',
+      cancelled: 'bg-rose-50 text-rose-700 border-rose-100',
     };
     return colors[status] || colors.draft;
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950">
       {/* Header */}
-      <div className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-6">
+      <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4 lg:py-6">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate('/business/dashboard')}
-            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-4 px-0"
+            className="flex items-center gap-2 text-slate-500 hover:text-slate-900 mb-2 lg:mb-4 px-0 hover:bg-transparent"
           >
-            <ArrowLeft size={20} />
-            Back to Dashboard
+            <ArrowLeft size={16} />
+            <span className="text-xs font-semibold uppercase tracking-wider">Back to Dashboard</span>
           </Button>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">{project.title}</h1>
-              <p className="text-muted-foreground mt-1">
-                Created {new Date(project.created_at).toLocaleDateString()}
-              </p>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+                  {project.title}
+                </h1>
+                <div className="flex items-center gap-3 mt-2">
+                  <span className={`text-[10px] px-2.5 py-1 rounded-md font-bold uppercase tracking-widest border ${getStatusColor(project.status)}`}>
+                    {project.status.replace('_', ' ')}
+                  </span>
+                  <p className="text-xs font-medium text-slate-400">
+                    Created {new Date(project.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                  </p>
+                </div>
+              </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="icon" disabled>
-                <Edit2 className="h-4 w-4" />
+              <Button variant="outline" size="sm" className="font-bold text-xs uppercase tracking-widest border-slate-200 dark:border-slate-800" disabled>
+                <Edit2 className="h-3.5 w-3.5 mr-2" />
+                Edit
               </Button>
               <Button
                 variant="destructive"
-                size="icon"
+                size="sm"
+                className="font-bold text-xs uppercase tracking-widest shadow-lg shadow-rose-500/20"
                 onClick={handleDelete}
                 disabled={deleting}
               >
                 {deleting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <Trash2 className="h-4 w-4" />
+                  <>
+                    <Trash2 className="h-3.5 w-3.5 mr-2" />
+                    Delete
+                  </>
                 )}
               </Button>
             </div>
@@ -258,43 +272,54 @@ export default function ProjectDetail() {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="container mx-auto px-4 py-8 lg:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Status Badge */}
-            <div>
-              <span className={`text-xs px-3 py-1 rounded-full font-medium ${getStatusColor(project.status)}`}>
-                {project.status.charAt(0).toUpperCase() + project.status.slice(1).replace('_', ' ')}
-              </span>
-            </div>
+          <div className="lg:col-span-2 space-y-8">
+            {/* Description Section */}
+            <section className="space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-blue-600" />
+                <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Project Overview</h2>
+              </div>
+              <Card className="p-8 border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden relative group">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50/50 dark:bg-blue-900/10 rounded-full -mr-16 -mt-16 blur-3xl transition-all group-hover:scale-110" />
+                <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed relative z-10">{project.description || "No description provided."}</p>
 
-            {/* Description */}
-            {project.description && (
-              <Card className="p-6">
-                <h2 className="text-lg font-semibold mb-3">Description</h2>
-                <p className="text-muted-foreground whitespace-pre-wrap">{project.description}</p>
+                {project.special_requirements && (
+                  <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800 relative z-10">
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Requirements</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap italic">{project.special_requirements}</p>
+                  </div>
+                )}
               </Card>
-            )}
-
-            {/* Requirements */}
-            {project.special_requirements && (
-              <Card className="p-6">
-                <h2 className="text-lg font-semibold mb-3">Special Requirements</h2>
-                <p className="text-muted-foreground whitespace-pre-wrap">{project.special_requirements}</p>
-              </Card>
-            )}
+            </section>
 
             {/* Bids Received */}
-            <div className="pt-4">
-              <h2 className="text-2xl font-bold mb-6">Vendor Proposals</h2>
+            <section className="space-y-6 pt-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Vendor Proposals</h2>
+                </div>
+                {bids.length > 0 && (
+                  <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500 uppercase">
+                    {bids.length} Received
+                  </span>
+                )}
+              </div>
+
               {bids.length === 0 ? (
-                <Card className="p-12 text-center bg-muted/20 border-dashed">
-                  <p className="text-muted-foreground">No proposals received yet.</p>
+                <Card className="p-16 text-center bg-slate-50/30 dark:bg-slate-900/30 border-dashed border-2 border-slate-200 dark:border-slate-800">
+                  <div className="p-4 bg-white dark:bg-slate-800 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6 shadow-sm">
+                    <Briefcase className="h-8 w-8 text-slate-300" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 uppercase tracking-tight">No proposals yet</h3>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 max-w-xs mx-auto">Vendors are currently reviewing your project. We'll notify you as soon as someone submits a bid.</p>
                   <Button
                     variant="outline"
                     onClick={() => navigate('/business/vendors')}
-                    className="mt-4"
+                    className="font-bold text-xs uppercase tracking-widest px-8"
                   >
                     Browse & Invite Vendors
                   </Button>
@@ -304,113 +329,165 @@ export default function ProjectDetail() {
                   {bids.map((bid) => {
                     const isSelected = project.selected_vendor_id === bid.vendor_id;
                     return (
-                      <Card key={bid.id} className={`p-6 transition-all ${isSelected ? 'border-primary ring-1 ring-primary' : ''}`}>
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <h3 className="text-lg font-bold">{bid.vendor_profile?.company_name || 'Expert Vendor'}</h3>
-                              {isSelected && (
-                                <span className="px-3 py-1 bg-primary text-primary-foreground rounded-full text-xs font-bold uppercase">
-                                  Selected Vendor
-                                </span>
+                      <Card key={bid.id} className={`p-0 overflow-hidden transition-all duration-300 hover:shadow-xl border-slate-200 dark:border-slate-800 ${isSelected ? 'ring-2 ring-blue-600 shadow-blue-500/10' : ''}`}>
+                        <div className="p-6 lg:p-8">
+                          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                            <div className="flex-1 space-y-4">
+                              <div className="flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold text-xl shadow-inner">
+                                  {bid.vendor_profile?.company_name?.[0] || 'V'}
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-3">
+                                    <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white leading-none">{bid.vendor_profile?.company_name || 'Expert Vendor'}</h3>
+                                    {isSelected && (
+                                      <span className="px-2.5 py-0.5 bg-blue-600 text-white rounded text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20">
+                                        Selected
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-slate-400 mt-1 font-medium">{bid.vendor_profile?.contact_email}</p>
+                                </div>
+                              </div>
+
+                              <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 italic leading-relaxed">
+                                "{bid.response_notes || "No notes provided with this bid."}"
+                              </p>
+
+                              <div className="flex items-center gap-8 pt-2">
+                                <div>
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Investment</p>
+                                  <p className="font-black text-xl text-blue-600 tracking-tighter mt-1">${bid.bid_amount.toLocaleString()}</p>
+                                </div>
+                                <div className="h-8 w-px bg-slate-100 dark:bg-slate-800" />
+                                <div>
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Proposed Time</p>
+                                  <p className="font-bold text-sm text-slate-700 dark:text-slate-300 mt-1">{bid.proposed_timeline}</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="lg:text-right">
+                              {!project.selected_vendor_id ? (
+                                <Button
+                                  onClick={() => handleAssignVendor(bid.vendor_id, bid.id)}
+                                  disabled={!!assigning}
+                                  className="w-full lg:w-auto bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 font-bold uppercase text-[10px] tracking-[0.2em] px-8 h-12 shadow-xl"
+                                >
+                                  {assigning === bid.vendor_id ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Accept Proposal'}
+                                </Button>
+                              ) : isSelected && (
+                                <div className="inline-flex items-center gap-2 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30 px-4 py-2 rounded-xl border border-emerald-100 dark:border-emerald-900/50">
+                                  <CheckCircle2 className="h-5 w-5" />
+                                  <span className="font-bold text-xs uppercase tracking-widest tracking-tighter">Project Active</span>
+                                </div>
                               )}
                             </div>
-                            <p className="text-sm text-muted-foreground mb-4">{bid.response_notes}</p>
-
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase">Bid Amount</p>
-                                <p className="font-bold text-lg text-primary">${bid.bid_amount.toLocaleString()}</p>
-                              </div>
-                              <div>
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase">Timeline</p>
-                                <p className="font-semibold text-sm">{bid.proposed_timeline}</p>
-                              </div>
-                            </div>
                           </div>
-
-                          {!project.selected_vendor_id ? (
-                            <Button
-                              onClick={() => handleAssignVendor(bid.vendor_id, bid.id)}
-                              disabled={!!assigning}
-                              className="bg-primary hover:bg-primary/90 font-bold"
-                            >
-                              {assigning === bid.vendor_id ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Accept Proposal'}
-                            </Button>
-                          ) : isSelected && (
-                            <div className="flex items-center gap-2 text-green-600 font-bold">
-                              <CheckCircle2 className="h-5 w-5" />
-                              Assigned
-                            </div>
-                          )}
                         </div>
                       </Card>
                     );
                   })}
                 </div>
               )}
-            </div>
+            </section>
 
             {/* Messaging System */}
             {project.selected_vendor_id && (
-              <div className="pt-8">
-                <div className="flex items-center gap-2 mb-6">
-                  <MessageSquare className="h-6 w-6 text-primary" />
-                  <h2 className="text-2xl font-bold">Messages</h2>
+              <section className="pt-12 space-y-6">
+                <div className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                  <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Workspace Messages</h2>
                 </div>
                 <ProjectMessages projectId={project.id} vendorId={project.selected_vendor_id} />
-              </div>
+              </section>
             )}
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-4">
-            {/* Budget Card */}
-            <Card className="p-6">
-              <h3 className="text-sm font-semibold uppercase text-muted-foreground mb-3">Budget</h3>
-              {project.budget_min && project.budget_max ? (
-                <p className="text-2xl font-bold">
-                  ${project.budget_min.toLocaleString()} - ${project.budget_max.toLocaleString()}
-                </p>
-              ) : (
-                <p className="text-muted-foreground">Not specified</p>
-              )}
-            </Card>
+          <div className="space-y-6">
+            <div className="sticky top-28 space-y-6">
+              {/* Main Info Sidebar Card */}
+              <Card className="p-8 border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none space-y-8 bg-white dark:bg-slate-900 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 dark:bg-slate-800 rounded-full -mr-12 -mt-12" />
 
-            {/* Timeline Card */}
-            <Card className="p-6">
-              <h3 className="text-sm font-semibold uppercase text-muted-foreground mb-3">Timeline</h3>
-              {project.timeline_start && project.timeline_end ? (
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Start</p>
-                    <p className="font-medium">{new Date(project.timeline_start).toLocaleDateString()}</p>
+                {/* Budget */}
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <TrendingUp className="h-3.5 w-3.5 text-blue-500" />
+                    <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Investment Range</h3>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">End</p>
-                    <p className="font-medium">{new Date(project.timeline_end).toLocaleDateString()}</p>
+                  {project.budget_min && project.budget_max ? (
+                    <p className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">
+                      ${project.budget_min.toLocaleString()} - ${project.budget_max.toLocaleString()}
+                    </p>
+                  ) : (
+                    <p className="text-slate-400 font-medium italic">Unspecified Budget</p>
+                  )}
+                </div>
+
+                {/* Timeline */}
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Clock className="h-3.5 w-3.5 text-orange-500" />
+                    <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Expected Timeline</h3>
+                  </div>
+                  {project.timeline_start && project.timeline_end ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">Start Date</p>
+                        <p className="font-bold text-xs text-slate-700 dark:text-slate-300">{new Date(project.timeline_start).toLocaleDateString()}</p>
+                      </div>
+                      <div className="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">End Date</p>
+                        <p className="font-bold text-xs text-slate-700 dark:text-slate-300">{new Date(project.timeline_end).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 font-medium italic">Unspecified Timeline</p>
+                  )}
+                </div>
+
+                {/* Location */}
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-3">
+                    <AlertCircle className="h-3.5 w-3.5 text-emerald-500" />
+                    <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Project Location</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold text-slate-700 dark:text-slate-200 tracking-tight">
+                      {project.project_city ? `${project.project_city}, ` : ''}{project.project_state} {project.project_zip}
+                    </p>
                   </div>
                 </div>
-              ) : (
-                <p className="text-muted-foreground">Not specified</p>
-              )}
-            </Card>
 
-            {/* Location Card */}
-            <Card className="p-6">
-              <h3 className="text-sm font-semibold uppercase text-muted-foreground mb-3">Location</h3>
-              <p className="font-medium">
-                {project.project_city}, {project.project_state} {project.project_zip}
-              </p>
-            </Card>
-
-            {/* Company Size Card */}
-            {project.business_size && (
-              <Card className="p-6">
-                <h3 className="text-sm font-semibold uppercase text-muted-foreground mb-3">Company Size</h3>
-                <p className="font-medium">{project.business_size}</p>
+                {/* Company Size */}
+                {project.business_size && (
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-3">
+                      <User className="h-3.5 w-3.5 text-indigo-500" />
+                      <h3 className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">Organization</h3>
+                    </div>
+                    <p className="font-bold text-slate-700 dark:text-slate-200 tracking-tight">{project.business_size} Employees</p>
+                  </div>
+                )}
               </Card>
-            )}
+
+              {/* Quick Actions / Tips */}
+              <Card className="p-6 bg-gradient-to-br from-slate-900 to-slate-800 text-white border-none shadow-2xl">
+                <h3 className="text-sm font-bold uppercase tracking-widest mb-4">Pro Tips</h3>
+                <ul className="space-y-4">
+                  <li className="flex gap-3 items-start">
+                    <div className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
+                    <p className="text-[11px] text-slate-300 font-medium leading-relaxed">Selecting a vendor will automatically notify others that the position is filled.</p>
+                  </li>
+                  <li className="flex gap-3 items-start">
+                    <div className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-400 shrink-0" />
+                    <p className="text-[11px] text-slate-300 font-medium leading-relaxed">Use the Workspace Messages to coordinate delivery and milestones.</p>
+                  </li>
+                </ul>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
