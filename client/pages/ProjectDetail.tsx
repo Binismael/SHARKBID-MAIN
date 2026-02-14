@@ -46,7 +46,7 @@ interface Bid {
 
 export default function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
-  const { user, userRole } = useAuth();
+  const { user, userRole, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
   const [bids, setBids] = useState<Bid[]>([]);
@@ -203,7 +203,7 @@ export default function ProjectDetail() {
     }
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
