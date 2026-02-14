@@ -86,13 +86,19 @@ export default function VendorDashboard() {
         const bidsData = bidsResult.data;
         const bidMap = new Map(bidsData?.map((b: any) => [b.project_id, b.status]) || []);
 
-        // 2. Fetch projects where this vendor is the selected vendor
-        const { data: assignedProjects, error: assignedError } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('selected_vendor_id', user.id);
+        // 2. Fetch projects where this vendor is the selected vendor via server-side API
+        const assignedResponse = await fetch('/api/projects/vendor', {
+          headers: {
+            'x-user-id': user.id
+          }
+        });
+        const assignedResult = await assignedResponse.json();
 
-        if (assignedError) throw assignedError;
+        if (!assignedResult.success) {
+          throw assignedResult.error || 'Failed to load assigned projects';
+        }
+
+        const assignedProjects = assignedResult.data;
 
         // 3. Fetch routed leads for this vendor via server-side API
         const response = await fetch('/api/projects/routed', {

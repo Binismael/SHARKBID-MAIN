@@ -300,6 +300,37 @@ export const handleGetBusinessProjects: RequestHandler = async (req, res) => {
   }
 };
 
+// Get projects where a vendor is assigned (bypass RLS)
+export const handleGetVendorProjects: RequestHandler = async (req, res) => {
+  try {
+    const userId = req.headers["x-user-id"] as string;
+
+    if (!userId) {
+      return res.status(400).json({ error: "Missing x-user-id header" });
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("projects")
+      .select("*")
+      .eq("selected_vendor_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    res.json({
+      success: true,
+      data: data || [],
+    });
+  } catch (error) {
+    console.error("Get vendor projects error:", error);
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Unknown error",
+    });
+  }
+};
+
 // Get unrouted open projects for a specific vendor (bypass RLS)
 export const handleGetUnroutedProjects: RequestHandler = async (req, res) => {
   try {
