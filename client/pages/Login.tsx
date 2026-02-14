@@ -31,7 +31,7 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
+
     if (!email || !password) {
       setError("Please fill in all fields");
       return;
@@ -45,6 +45,8 @@ export default function Login() {
       const message = getErrorMessage(error);
       if (message.includes("Invalid login credentials") || message.includes("Invalid")) {
         setError("Invalid email or password. Please try again.");
+      } else if (message.includes("Failed to fetch") || message.includes("network")) {
+        setError("Connection to server failed. Please check your connection or try again later.");
       } else {
         setError(message || "Login failed. Please check your credentials.");
       }

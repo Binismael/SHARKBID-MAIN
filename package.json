@@ -10,7 +10,7 @@
       "dist/server/**/*.js"
     ]
   },
-"scripts": {
+  "scripts": {
     "dev": "node scripts/dev.js",
     "dev:client": "vite",
     "dev:server": "tsx watch server/dev-server.ts",
@@ -28,6 +28,7 @@
     "autoprefixer": "^10.4.21",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "express-http-proxy": "^2.1.2",
     "pg": "^8.18.0",
     "postcss": "^8.5.6",
     "react": "^18.3.1",
@@ -74,6 +75,7 @@
     "@tanstack/react-query": "^5.84.2",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
+    "@types/express-http-proxy": "^1.6.7",
     "@types/node": "^24.2.1",
     "@types/react": "^18.3.23",
     "@types/react-dom": "^18.3.7",

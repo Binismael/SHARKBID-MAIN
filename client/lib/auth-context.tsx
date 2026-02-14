@@ -194,8 +194,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (signInError) {
         throw signInError;
       }
-    } catch (err) {
-      const message = getErrorMessage(err);
+    } catch (err: any) {
+      console.error("SignIn error caught in AuthContext:", err);
+      let message = getErrorMessage(err);
+
+      if (message.includes("Failed to fetch") || (err.name === 'TypeError' && message.includes('fetch'))) {
+        message = "Connection to authentication server failed. This might be a temporary network issue or a blocked request. Please try again or check your internet connection.";
+      }
+
       setError(message);
       throw err;
     }

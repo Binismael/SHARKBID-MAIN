@@ -1,16 +1,5 @@
 import { RequestHandler } from "express";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.VITE_SB_SUPABASE_URL || "";
-const supabaseServiceKey = process.env.SB_SUPABASE_SERVICE_ROLE_KEY || "";
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.warn("⚠️ [CREATE-PROJECT] Supabase credentials missing. Project creation will fail.");
-}
-
-const supabaseAdmin = (supabaseUrl && supabaseServiceKey)
-  ? createClient(supabaseUrl, supabaseServiceKey)
-  : null;
+import { supabaseAdmin } from "../lib/supabase";
 
 interface CreateProjectRequest {
   title: string;
