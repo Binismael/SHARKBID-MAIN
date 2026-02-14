@@ -256,6 +256,16 @@ export default function Login() {
                   <span className="text-[8px] font-black uppercase text-slate-600 tracking-[0.2em]">Biometric Ready</span>
                 </div>
               </motion.div>
+
+              {/* Footer */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.4 }}
+                className="mt-12 text-center"
+              >
+                <p className="text-[8px] font-black uppercase text-slate-800 tracking-[0.2em]">© 2026 Sharkbid Platforms Inc. All Rights Reserved.</p>
+              </motion.div>
             </div>
           </motion.div>
         </div>

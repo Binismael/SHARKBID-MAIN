@@ -159,7 +159,7 @@ export function AssetUploadModal({
                 <Input
                   value={tags}
                   onChange={(e) => setTags(e.target.value)}
-                  placeholder="e.g. web, banner, 2025"
+                  placeholder="e.g. web, banner, 2026"
                   disabled={uploading}
                 />
               </div>
@@ -188,7 +188,7 @@ export function AssetUploadModal({
                   <Input
                     value={campaign}
                     onChange={(e) => setCampaign(e.target.value)}
-                    placeholder="e.g. Summer 2025"
+                    placeholder="e.g. Summer 2026"
                     disabled={uploading}
                   />
                 </div>

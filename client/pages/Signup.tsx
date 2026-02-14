@@ -347,7 +347,7 @@ export default function Signup() {
               <span className="text-[8px] font-black uppercase text-slate-700 tracking-[0.2em]">GDPR Protected</span>
             </div>
           </div>
-          <p className="text-[8px] font-black uppercase text-slate-800 tracking-[0.2em]">© {new Date().getFullYear()} Sharkbid Platforms Inc. All Rights Reserved.</p>
+          <p className="text-[8px] font-black uppercase text-slate-800 tracking-[0.2em]">© 2026 Sharkbid Platforms Inc. All Rights Reserved.</p>
         </motion.div>
       </div>
     </div>
