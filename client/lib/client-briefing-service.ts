@@ -4,10 +4,22 @@ function formatError(error: any): string {
   if (!error) return "Unknown error";
   if (typeof error === "string") return error;
   if (error instanceof Error) return error.message;
-  if (error.message) return error.message;
-  if (error.error_description) return error.error_description;
-  if (error.details) return `${error.message} - ${error.details}`;
-  return JSON.stringify(error);
+  if (error.message && typeof error.message === "string") return error.message;
+  if (error.error_description && typeof error.error_description === "string") return error.error_description;
+
+  if (error.details) {
+    const detailsStr = typeof error.details === "string"
+      ? error.details
+      : JSON.stringify(error.details);
+    return `${error.message || "Error"}: ${detailsStr}`;
+  }
+
+  try {
+    const json = JSON.stringify(error);
+    return json === "{}" ? "An unexpected error occurred" : json;
+  } catch (e) {
+    return String(error);
+  }
 }
 
 export interface ProjectBriefing {

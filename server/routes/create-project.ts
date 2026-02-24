@@ -62,8 +62,11 @@ export const handleCreateProject: RequestHandler = async (req, res) => {
         project_city: projectData.project_city || "",
         project_state: projectData.project_state,
         project_zip: projectData.project_zip || "",
-        business_size: projectData.business_size || "",
-        special_requirements: projectData.special_requirements || "",
+        project_details: {
+          business_size: projectData.business_size || "",
+          special_requirements: projectData.special_requirements || "",
+          source: "web_form"
+        },
         status: "open",
       })
       .select()

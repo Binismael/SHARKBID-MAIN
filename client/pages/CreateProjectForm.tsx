@@ -38,11 +38,56 @@ const SERVICE_CATEGORIES = [
 ];
 
 const STATES = [
-  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware', 'Florida', 'Georgia',
-  'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland',
-  'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey',
-  'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina',
-  'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming',
+  { code: 'AL', name: 'Alabama' },
+  { code: 'AK', name: 'Alaska' },
+  { code: 'AZ', name: 'Arizona' },
+  { code: 'AR', name: 'Arkansas' },
+  { code: 'CA', name: 'California' },
+  { code: 'CO', name: 'Colorado' },
+  { code: 'CT', name: 'Connecticut' },
+  { code: 'DE', name: 'Delaware' },
+  { code: 'FL', name: 'Florida' },
+  { code: 'GA', name: 'Georgia' },
+  { code: 'HI', name: 'Hawaii' },
+  { code: 'ID', name: 'Idaho' },
+  { code: 'IL', name: 'Illinois' },
+  { code: 'IN', name: 'Indiana' },
+  { code: 'IA', name: 'Iowa' },
+  { code: 'KS', name: 'Kansas' },
+  { code: 'KY', name: 'Kentucky' },
+  { code: 'LA', name: 'Louisiana' },
+  { code: 'ME', name: 'Maine' },
+  { code: 'MD', name: 'Maryland' },
+  { code: 'MA', name: 'Massachusetts' },
+  { code: 'MI', name: 'Michigan' },
+  { code: 'MN', name: 'Minnesota' },
+  { code: 'MS', name: 'Mississippi' },
+  { code: 'MO', name: 'Missouri' },
+  { code: 'MT', name: 'Montana' },
+  { code: 'NE', name: 'Nebraska' },
+  { code: 'NV', name: 'Nevada' },
+  { code: 'NH', name: 'New Hampshire' },
+  { code: 'NJ', name: 'New Jersey' },
+  { code: 'NM', name: 'New Mexico' },
+  { code: 'NY', name: 'New York' },
+  { code: 'NC', name: 'North Carolina' },
+  { code: 'ND', name: 'North Dakota' },
+  { code: 'OH', name: 'Ohio' },
+  { code: 'OK', name: 'Oklahoma' },
+  { code: 'OR', name: 'Oregon' },
+  { code: 'PA', name: 'Pennsylvania' },
+  { code: 'RI', name: 'Rhode Island' },
+  { code: 'SC', name: 'South Carolina' },
+  { code: 'SD', name: 'South Dakota' },
+  { code: 'TN', name: 'Tennessee' },
+  { code: 'TX', name: 'Texas' },
+  { code: 'UT', name: 'Utah' },
+  { code: 'VT', name: 'Vermont' },
+  { code: 'VA', name: 'Virginia' },
+  { code: 'WA', name: 'Washington' },
+  { code: 'WV', name: 'West Virginia' },
+  { code: 'WI', name: 'Wisconsin' },
+  { code: 'WY', name: 'Wyoming' },
 ];
 
 export default function CreateProjectForm() {
@@ -118,11 +163,11 @@ export default function CreateProjectForm() {
         body: JSON.stringify(projectData),
       });
 
-      if (!response.ok) {
+        if (!response.ok) {
         let errorMessage = `Server error: ${response.status}`;
         try {
           const errorData = await response.json();
-          console.error('Server error response:', errorData);
+          console.error('Server error response details:', JSON.stringify(errorData, null, 2));
 
           // Format error message
           if (typeof errorData === 'object' && errorData !== null) {
@@ -130,8 +175,10 @@ export default function CreateProjectForm() {
               errorMessage = errorData.error;
             } else if (errorData.message && typeof errorData.message === 'string') {
               errorMessage = errorData.message;
-            } else if (errorData.details && typeof errorData.details === 'string') {
-              errorMessage = errorData.details;
+            } else if (errorData.details) {
+              errorMessage = typeof errorData.details === 'string'
+                ? errorData.details
+                : JSON.stringify(errorData.details);
             } else {
               errorMessage = JSON.stringify(errorData);
             }
@@ -153,8 +200,8 @@ export default function CreateProjectForm() {
     } catch (error) {
       const errorMessage = getErrorMessage(error);
 
-      console.error('Error creating project:', {
-        error,
+      console.error('Error creating project stack trace:', error);
+      console.error('Error creating project details:', {
         errorMessage,
         errorType: typeof error,
         stack: error instanceof Error ? error.stack : undefined,
@@ -384,7 +431,7 @@ export default function CreateProjectForm() {
                         >
                           <option value="">State...</option>
                           {STATES.map(state => (
-                            <option key={state} value={state}>{state}</option>
+                            <option key={state.code} value={state.code}>{state.name}</option>
                           ))}
                         </select>
                         <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3 rotate-90 text-slate-400 pointer-events-none" />

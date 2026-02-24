@@ -38,9 +38,19 @@ export function getErrorMessage(err: unknown): string {
   }
 
   // Final check for [object Object]
-  const finalMessage = message || String(err);
+  let finalMessage = message || String(err);
   if (finalMessage.includes('[object Object]') || finalMessage === 'Error: [object Object]') {
-    return 'An unexpected error occurred';
+    try {
+      // If we still have [object Object], try JSON stringify
+      const jsonString = JSON.stringify(err);
+      if (jsonString && jsonString !== '{}') {
+        finalMessage = jsonString;
+      } else {
+        finalMessage = 'An unexpected error occurred';
+      }
+    } catch (e) {
+      finalMessage = 'An unexpected error occurred';
+    }
   }
 
   return finalMessage;
