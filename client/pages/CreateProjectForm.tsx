@@ -201,11 +201,11 @@ export default function CreateProjectForm() {
       const errorMessage = getErrorMessage(error);
 
       console.error('Error creating project stack trace:', error);
-      console.error('Error creating project details:', {
+      console.error('Error creating project details:', JSON.stringify({
         errorMessage,
         errorType: typeof error,
         stack: error instanceof Error ? error.stack : undefined,
-      });
+      }, null, 2));
 
       toast.error(`Error: ${errorMessage}`);
     } finally {

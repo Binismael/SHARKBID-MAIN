@@ -22,7 +22,8 @@ interface Project {
   project_state: string;
   timeline_start?: string;
   timeline_end?: string;
-  project_details?: any;
+  business_size?: string;
+  special_requirements?: string;
   status: string;
   selected_vendor_id?: string;
   created_at: string;
@@ -362,7 +363,7 @@ export default function VendorLeadDetail() {
             </section>
 
             {/* Additional Intel */}
-            {project.project_details && (
+            {(project.special_requirements || project.business_size) && (
               <section className="space-y-4 pt-4">
                 <div className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
@@ -370,18 +371,18 @@ export default function VendorLeadDetail() {
                 </div>
                 <Card className="p-8 border-slate-200 dark:border-slate-800 shadow-sm bg-slate-50/50 dark:bg-slate-900/50">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {project.project_details.special_requirements && (
+                    {project.special_requirements && (
                       <div className="space-y-2">
                         <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Special Requirements</p>
-                        <p className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed italic border-l-2 border-slate-200 dark:border-slate-700 pl-4">{project.project_details.special_requirements}</p>
+                        <p className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed italic border-l-2 border-slate-200 dark:border-slate-700 pl-4">{project.special_requirements}</p>
                       </div>
                     )}
-                    {project.project_details.business_size && (
+                    {project.business_size && (
                       <div className="space-y-2">
                         <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Client Context</p>
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-slate-400" />
-                          <p className="text-sm font-bold text-slate-700 dark:text-slate-300 tracking-tight">{project.project_details.business_size} Employee Org</p>
+                          <p className="text-sm font-bold text-slate-700 dark:text-slate-300 tracking-tight">{project.business_size} Employee Org</p>
                         </div>
                       </div>
                     )}
