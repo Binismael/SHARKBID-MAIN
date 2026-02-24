@@ -86,17 +86,15 @@ export function AIAssistant({
 
   const isHidden = ['/business/intake'].includes(location.pathname);
 
-  if (isHidden) return null;
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-    if (isOpen && !isMinimized) {
+    if (isOpen && !isMinimized && !isHidden) {
       scrollToBottom();
     }
-  }, [messages, isOpen, isMinimized]);
+  }, [messages, isOpen, isMinimized, isHidden]);
 
   const defaultSystemPrompt = `You are a helpful assistant for Sharkbid, a B2B marketplace connecting businesses with vendors.
 Your current user is a ${userRole || 'visitor'}.
@@ -175,7 +173,7 @@ Be friendly, professional, and concise. Use markdown for formatting if helpful.`
       }
 
       const data = await response.json();
-      
+
       const assistantMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
@@ -200,6 +198,8 @@ Be friendly, professional, and concise. Use markdown for formatting if helpful.`
       setIsLoading(false);
     }
   };
+
+  if (isHidden) return null;
 
   if (!isOpen) {
     return (
