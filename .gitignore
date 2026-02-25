@@ -25,5 +25,4 @@ dist-ssr
 
 .config/
 .env
-.env.local
-.env.*.local
+.env.*
