@@ -360,11 +360,26 @@ export const handleGetBusinessProjects: RequestHandler = async (req, res) => {
       return res.status(400).json({ error: "Missing x-user-id header" });
     }
 
-    const { data, error } = await supabaseAdmin
+    // Check if user is an admin
+    const { data: userProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const isAdmin = userProfile?.role === "admin";
+
+    let query = supabaseAdmin
       .from("projects")
       .select("*")
-      .eq("business_id", userId)
       .order("created_at", { ascending: false });
+
+    // If not admin, only show their own projects
+    if (!isAdmin) {
+      query = query.eq("business_id", userId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       throw error;

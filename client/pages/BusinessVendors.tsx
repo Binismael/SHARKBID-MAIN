@@ -61,20 +61,24 @@ export default function BusinessVendors() {
 
         // Fetch my projects
         if (user) {
-          let query = supabase
-            .from('projects')
-            .select('id, title')
-            .neq('status', 'completed')
-            .neq('status', 'cancelled');
+          try {
+            const response = await fetch('/api/projects/business', {
+              headers: {
+                'x-user-id': user.id
+              }
+            });
+            const result = await response.json();
 
-          // Only filter by business_id if not an admin
-          if (userRole !== 'admin') {
-            query = query.eq('business_id', user.id);
+            if (result.success) {
+              // Filter out completed and cancelled projects for the invitation modal
+              const activeProjects = (result.data || []).filter((p: any) =>
+                p.status !== 'completed' && p.status !== 'cancelled'
+              );
+              setMyProjects(activeProjects);
+            }
+          } catch (projErr) {
+            console.error('Error fetching projects for modal:', projErr);
           }
-
-          const { data: projectData } = await query;
-
-          setMyProjects(projectData || []);
         }
 
         setError(null);

@@ -131,14 +131,24 @@ export default function BusinessVendorDetail() {
 
         // Fetch my projects
         if (user) {
-          const { data: projectData } = await supabase
-            .from('projects')
-            .select('id, title')
-            .eq('business_id', user.id)
-            .neq('status', 'completed')
-            .neq('status', 'cancelled');
-          
-          setMyProjects(projectData || []);
+          try {
+            const response = await fetch('/api/projects/business', {
+              headers: {
+                'x-user-id': user.id
+              }
+            });
+            const result = await response.json();
+
+            if (result.success) {
+              // Filter out completed and cancelled projects for the invitation modal
+              const activeProjects = (result.data || []).filter((p: any) =>
+                p.status !== 'completed' && p.status !== 'cancelled'
+              );
+              setMyProjects(activeProjects);
+            }
+          } catch (projErr) {
+            console.error('Error fetching projects for modal:', projErr);
+          }
         }
 
         setError(null);
@@ -159,18 +169,24 @@ export default function BusinessVendorDetail() {
 
     try {
       setInviting(true);
-      
-      const { error: routeError } = await supabase
-        .from('project_routing')
-        .upsert([
-          {
-            project_id: selectedProject,
-            vendor_id: vendor.user_id,
-            status: 'routed'
-          }
-        ], { onConflict: 'project_id, vendor_id' });
 
-      if (routeError) throw routeError;
+      const response = await fetch('/api/projects/upsert-routing', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          projectId: selectedProject,
+          vendorId: vendor.user_id,
+          status: 'routed'
+        })
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw result.error || 'Failed to send invitation';
+      }
 
       toast.success(`Invitation sent to ${vendor.company_name}`);
       setShowInviteModal(false);
