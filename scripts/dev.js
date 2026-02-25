@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Set up environment variables
-process.env.API_PORT = process.env.API_PORT || '5173';
+process.env.API_PORT = process.env.API_PORT || '3001';
 
 console.log('🚀 Starting Fusion development servers...\n');
 

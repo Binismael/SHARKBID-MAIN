@@ -6,14 +6,14 @@ import path from "path";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 5173,
     fs: {
       allow: [".", "./client", "./shared"],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:5173',
+        target: 'http://localhost:3001',
         changeOrigin: true,
       },
     },

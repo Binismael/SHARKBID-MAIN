@@ -3,7 +3,7 @@ dotenv.config({ override: true });
 import { createServer } from "./index";
 
 const app = createServer();
-const port = process.env.API_PORT || 5173;
+const port = process.env.API_PORT || 3001;
 
 app.listen(port, () => {
   console.log(`🔧 Express API server running on http://localhost:${port}`);
