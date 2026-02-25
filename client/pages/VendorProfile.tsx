@@ -3,16 +3,28 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { AlertCircle, Loader2, Save, X, Plus, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  AlertCircle,
+  Loader2,
+  Save,
+  X,
+  Plus,
+  ArrowLeft,
+  Camera,
+  Upload
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { getErrorMessage } from '@/lib/utils';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface VendorProfile {
   company_name: string;
   company_description: string;
   contact_phone: string;
   contact_email: string;
+  avatar_url?: string;
   years_in_business?: number;
   employee_count?: number;
   certifications?: string[];
@@ -89,6 +101,7 @@ export default function VendorProfile() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -97,6 +110,7 @@ export default function VendorProfile() {
     company_description: '',
     contact_phone: '',
     contact_email: '',
+    avatar_url: '',
     years_in_business: 0,
     employee_count: 0,
     certifications: [],
@@ -191,6 +205,40 @@ export default function VendorProfile() {
     }));
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !user) return;
+
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+    const filePath = `avatars/${fileName}`;
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      // Upload image to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('assets')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('assets')
+        .getPublicUrl(filePath);
+
+      setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
+      toast.success('Avatar uploaded successfully!');
+    } catch (err) {
+      const message = getErrorMessage(err || 'Failed to upload avatar');
+      setError(message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!user || !profile.company_name || selectedServices.length === 0 || selectedStates.length === 0) {
       setError('Please fill in all required fields');
@@ -222,6 +270,7 @@ export default function VendorProfile() {
           company_description: profile.company_description,
           contact_phone: profile.contact_phone,
           contact_email: profile.contact_email,
+          avatar_url: profile.avatar_url,
           years_in_business: profile.years_in_business,
           employee_count: profile.employee_count,
           certifications: profile.certifications,
@@ -293,6 +342,41 @@ export default function VendorProfile() {
             <p className="text-sm text-destructive">{error}</p>
           </Card>
         )}
+
+        {/* Profile Avatar */}
+        <Card className="p-6 mb-6 flex flex-col items-center">
+          <div className="relative group">
+            <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
+              <AvatarImage src={profile.avatar_url} />
+              <AvatarFallback className="bg-primary/10 text-primary text-4xl font-bold">
+                {profile.company_name?.[0] || 'V'}
+              </AvatarFallback>
+            </Avatar>
+            <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+              <div className="text-white flex flex-col items-center">
+                {uploading ? (
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                ) : (
+                  <>
+                    <Camera className="h-6 w-6" />
+                    <span className="text-[10px] font-bold uppercase mt-1">Change</span>
+                  </>
+                )}
+              </div>
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                disabled={uploading}
+              />
+            </label>
+          </div>
+          <div className="mt-4 text-center">
+            <h3 className="text-lg font-bold">{profile.company_name || 'Your Company'}</h3>
+            <p className="text-xs text-muted-foreground uppercase tracking-widest font-black mt-1">Vendor Partner</p>
+          </div>
+        </Card>
 
         {/* Company Info */}
         <Card className="p-6 mb-6">

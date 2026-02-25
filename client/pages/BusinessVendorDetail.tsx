@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, AlertCircle, Loader2, CheckCircle2, Briefcase, Building2, Mail, Phone, Calendar, Users, MapPin } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Loader2, CheckCircle2, Briefcase, Building2, Mail, Phone, Calendar, Users, MapPin, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { getErrorMessage } from '@/lib/utils';
+import { getErrorMessage, cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface VendorProfile {
   id: string;
@@ -15,6 +16,8 @@ interface VendorProfile {
   company_description: string;
   contact_email: string;
   contact_phone: string;
+  avatar_url?: string;
+  likes_count: number;
   vendor_services: string[];
   vendor_coverage_areas: string[];
   certifications: string[];
@@ -52,7 +55,10 @@ export default function BusinessVendorDetail() {
   const [myProjects, setMyProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [liking, setLiking] = useState(false);
+
   // For Invite Modal
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string>('');
@@ -77,6 +83,19 @@ export default function BusinessVendorDetail() {
         if (!data) throw new Error('Vendor not found');
 
         setVendor(data);
+        setLikesCount(data.likes_count || 0);
+
+        // Check if current user liked this vendor
+        if (user) {
+          const { data: likeData } = await supabase
+            .from('profile_likes')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('profile_id', vendorId)
+            .maybeSingle();
+
+          setIsLiked(!!likeData);
+        }
 
         // Fetch service category names
         if (data.vendor_services && data.vendor_services.length > 0) {
@@ -164,6 +183,44 @@ export default function BusinessVendorDetail() {
     }
   };
 
+  const toggleLike = async () => {
+    if (!user || !vendor || liking) return;
+
+    setLiking(true);
+    try {
+      if (isLiked) {
+        // Unlike
+        const { error } = await supabase
+          .from('profile_likes')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('profile_id', vendor.id);
+
+        if (error) throw error;
+        setIsLiked(false);
+        setLikesCount(prev => Math.max(0, prev - 1));
+      } else {
+        // Like
+        const { error } = await supabase
+          .from('profile_likes')
+          .insert({
+            user_id: user.id,
+            profile_id: vendor.id
+          });
+
+        if (error) throw error;
+        setIsLiked(true);
+        setLikesCount(prev => prev + 1);
+        toast.success(`You liked ${vendor.company_name}`);
+      }
+    } catch (err) {
+      const message = getErrorMessage(err || 'Failed to toggle like');
+      toast.error(message);
+    } finally {
+      setLiking(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 dark:from-slate-950 flex items-center justify-center">
@@ -211,13 +268,42 @@ export default function BusinessVendorDetail() {
                 <ArrowLeft className="h-4 w-4" />
                 Back to Vendors
               </Button>
-              <div className="flex items-center gap-3">
-                <h1 className="text-4xl font-bold text-slate-900 dark:text-white">
-                  {vendor.company_name}
-                </h1>
-                <CheckCircle2 className="h-6 w-6 text-blue-500" />
+              <div className="flex items-center gap-6">
+                <Avatar className="h-20 w-20 border-2 border-white shadow-md">
+                  <AvatarImage src={vendor.avatar_url} />
+                  <AvatarFallback className="bg-blue-100 text-blue-600 text-2xl font-bold">
+                    {vendor.company_name?.[0] || 'V'}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-4xl font-bold text-slate-900 dark:text-white">
+                      {vendor.company_name}
+                    </h1>
+                    <CheckCircle2 className="h-6 w-6 text-blue-500" />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={toggleLike}
+                      disabled={liking || !user}
+                      className={cn(
+                        "ml-2 transition-all hover:scale-110 active:scale-95",
+                        isLiked ? "text-rose-500 hover:text-rose-600" : "text-slate-300 hover:text-slate-400"
+                      )}
+                    >
+                      <Heart className={cn("h-7 w-7", isLiked ? "fill-current" : "")} />
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <p className="text-slate-600 dark:text-slate-400">Verified Expert Vendor</p>
+                    <span className="text-slate-300 mx-2">•</span>
+                    <span className="text-sm font-bold text-slate-500 flex items-center gap-1.5">
+                      <Heart className="h-3.5 w-3.5 fill-slate-500" />
+                      {likesCount} likes
+                    </span>
+                  </div>
+                </div>
               </div>
-              <p className="text-slate-600 dark:text-slate-400 mt-2">Verified Expert Vendor</p>
             </div>
             <Button
               onClick={() => setShowInviteModal(true)}
