@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }).then(res => res.json());
 
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout")), 3000)
+          setTimeout(() => reject(new Error("Timeout")), 10000)
         );
 
         const result = await Promise.race([apiPromise, timeoutPromise]) as any;
