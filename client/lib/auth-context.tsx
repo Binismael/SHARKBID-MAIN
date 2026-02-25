@@ -33,32 +33,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let mounted = true;
 
     const fetchProfileWithTimeout = async (userId: string, metadataRole: any) => {
+      const startTime = Date.now();
       try {
-        // Try fetching via server-side API first (bypasses RLS recursion)
-        const apiPromise = fetch('/api/profiles/me', {
-          headers: { 'x-user-id': userId }
-        }).then(res => res.json());
-
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout")), 10000)
-        );
-
-        const result = await Promise.race([apiPromise, timeoutPromise]) as any;
-
-        if (result && result.success && result.data) {
-          return result.data.role as "admin" | "business" | "vendor";
-        }
-
-        // Fallback to direct supabase fetch if API fails or is missing
-        const { data: profile } = await supabase
+        // Try fetching via direct Supabase first (usually fastest and most reliable for basic data)
+        const supabasePromise = supabase
           .from("profiles")
           .select("role")
           .eq("user_id", userId)
           .maybeSingle();
 
-        return (profile?.role || metadataRole || "business") as "admin" | "business" | "vendor";
+        // Also try server-side API (background)
+        const apiPromise = fetch('/api/profiles/me', {
+          headers: { 'x-user-id': userId }
+        }).then(res => res.json()).catch(e => ({ success: false, error: e.message }));
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout")), 15000)
+        );
+
+        // We race the Supabase direct call against the timeout
+        const result = await Promise.race([supabasePromise, timeoutPromise]) as any;
+        const duration = Date.now() - startTime;
+
+        if (result && result.data) {
+          console.log(`Profile fetched via Supabase in ${duration}ms`);
+          return (result.data.role || metadataRole || "business") as "admin" | "business" | "vendor";
+        }
+
+        // If Supabase was empty or failed quickly, wait a bit for API
+        const apiResult = await apiPromise;
+        if (apiResult && apiResult.success && apiResult.data) {
+          console.log(`Profile fetched via API as fallback`);
+          return apiResult.data.role as "admin" | "business" | "vendor";
+        }
+
+        return (metadataRole || "business") as "admin" | "business" | "vendor";
       } catch (err) {
-        console.error("Profile fetch timeout or exception:", err);
+        const duration = Date.now() - startTime;
+        console.error(`Profile fetch error/timeout after ${duration}ms:`, err);
         return (metadataRole || "business") as "admin" | "business" | "vendor";
       }
     };
