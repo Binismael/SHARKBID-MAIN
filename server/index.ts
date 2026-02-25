@@ -17,8 +17,6 @@ export function createServer() {
 
   // Middleware
   app.use(cors());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
 
   // Supabase Proxy
   const supabaseUrl = (process.env.VITE_SUPABASE_URL || "https://kpytttekmeoeqskfopqj.supabase.co").replace(/\/$/, "");
@@ -47,6 +45,10 @@ export function createServer() {
 
       return proxyReqOpts;
     },
+    proxyErrorHandler: (err, res, next) => {
+      console.error("[PROXY ERROR] for /api/v1/supabase:", err);
+      res.status(500).json({ error: "Proxy Error", message: err.message });
+    },
     userResHeaderDecorator: (headers, userReq, userRes, proxyReq, proxyRes) => {
       // Skip headers that should be handled by Express or might cause issues
       const skipHeaders = ['content-encoding', 'transfer-encoding', 'content-length', 'connection', 'keep-alive'];
@@ -59,6 +61,9 @@ export function createServer() {
       return filteredHeaders;
     }
   }));
+
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
   app.use("/api/test-me", (req, res) => {
     res.json({ success: true, message: "Hit Express successfully!" });
