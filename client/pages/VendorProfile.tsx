@@ -28,6 +28,7 @@ interface VendorProfile {
   avatar_url?: string;
   portfolio_url?: string;
   linkedin_url?: string;
+  is_approved?: boolean;
   years_in_business?: number;
   employee_count?: number;
   certifications?: string[];
@@ -121,6 +122,7 @@ export default function VendorProfile() {
     certifications: [],
     vendor_services: [],
     vendor_coverage_areas: [],
+    is_approved: false,
   });
 
   const [services, setServices] = useState<ServiceCategory[]>([]);
@@ -298,7 +300,7 @@ export default function VendorProfile() {
           vendor_coverage_areas: coverageAreaIds,
           portfolio_url: profile.portfolio_url,
           linkedin_url: profile.linkedin_url,
-          is_approved: false,
+          is_approved: profile.is_approved,
         })
       });
 
