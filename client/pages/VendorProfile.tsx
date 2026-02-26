@@ -315,6 +315,11 @@ export default function VendorProfile() {
     } catch (err) {
       const message = getErrorMessage(err || 'Failed to save profile');
       setError(message);
+      if (message.includes("migration required")) {
+        toast.error("Database Update Needed", {
+          description: "Please run the SQL migration in your Supabase SQL Editor to enable portfolio links."
+        });
+      }
       console.error('Error:', err);
     } finally {
       setSaving(false);

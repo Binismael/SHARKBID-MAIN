@@ -41,17 +41,15 @@ export const handleUpdateProfile: RequestHandler = async (req, res) => {
     // Ensure we don't change the user_id
     delete profileUpdates.user_id;
 
-    const { data, error } = await supabaseAdmin
-      .from("profiles")
-      .upsert({
-        ...profileUpdates,
-        user_id: userId,
-        updated_at: new Date(),
-      }, { onConflict: 'user_id' })
-      .select()
-      .single();
-
-    if (error) throw error;
+    if (error) {
+      if (error.message.includes("portfolio_url") || error.message.includes("linkedin_url")) {
+        return res.status(400).json({
+          success: false,
+          error: "Database migration required. Please run the SQL in migrations/20240322_add_social_links.sql in your Supabase SQL Editor.",
+        });
+      }
+      throw error;
+    }
 
     res.json({
       success: true,
