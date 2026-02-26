@@ -230,7 +230,22 @@ export default function VendorProfile() {
         .getPublicUrl(filePath);
 
       setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
-      toast.success('Avatar uploaded successfully!');
+
+      // Automatically save to database so it doesn't disappear on refresh/navigation
+      await fetch('/api/profiles/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id
+        },
+        body: JSON.stringify({
+          ...profile,
+          avatar_url: publicUrl,
+          role: 'vendor'
+        })
+      });
+
+      toast.success('Avatar uploaded and saved successfully!');
     } catch (err) {
       const message = getErrorMessage(err || 'Failed to upload avatar');
       setError(message);
