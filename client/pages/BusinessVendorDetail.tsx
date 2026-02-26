@@ -8,6 +8,7 @@ import { getErrorMessage, cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ImagePreviewDialog } from '@/components/ImagePreviewDialog';
 
 interface VendorProfile {
   id: string;
@@ -285,12 +286,14 @@ export default function BusinessVendorDetail() {
                 Back to Vendors
               </Button>
               <div className="flex items-center gap-6">
-                <Avatar className="h-20 w-20 border-2 border-white shadow-md">
-                  <AvatarImage src={vendor.avatar_url} />
-                  <AvatarFallback className="bg-blue-100 text-blue-600 text-2xl font-bold">
-                    {vendor.company_name?.[0] || 'V'}
-                  </AvatarFallback>
-                </Avatar>
+                <ImagePreviewDialog src={vendor.avatar_url} alt={vendor.company_name}>
+                  <Avatar className="h-20 w-20 border-2 border-white shadow-md">
+                    <AvatarImage src={vendor.avatar_url} />
+                    <AvatarFallback className="bg-blue-100 text-blue-600 text-2xl font-bold">
+                      {vendor.company_name?.[0] || 'V'}
+                    </AvatarFallback>
+                  </Avatar>
+                </ImagePreviewDialog>
                 <div>
                   <div className="flex items-center gap-3">
                     <h1 className="text-4xl font-bold text-slate-900 dark:text-white">

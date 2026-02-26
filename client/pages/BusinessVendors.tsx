@@ -9,6 +9,7 @@ import { getErrorMessage } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ImagePreviewDialog } from '@/components/ImagePreviewDialog';
 
 interface Vendor {
   id: string;
@@ -198,12 +199,14 @@ export default function BusinessVendors() {
                   className="p-6 hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 group"
                 >
                   <div className="flex items-start gap-6">
-                    <Avatar className="h-16 w-16 rounded-xl shadow-lg border border-slate-100 dark:border-slate-800">
-                      <AvatarImage src={vendor.avatar_url} />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xl font-bold">
-                        {vendor.company_name?.[0] || 'V'}
-                      </AvatarFallback>
-                    </Avatar>
+                    <ImagePreviewDialog src={vendor.avatar_url} alt={vendor.company_name}>
+                      <Avatar className="h-16 w-16 rounded-xl shadow-lg border border-slate-100 dark:border-slate-800">
+                        <AvatarImage src={vendor.avatar_url} />
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xl font-bold">
+                          {vendor.company_name?.[0] || 'V'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </ImagePreviewDialog>
 
                     <div className="flex-1">
                       <div className="flex items-center justify-between gap-2 mb-1">

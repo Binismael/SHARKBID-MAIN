@@ -7,12 +7,15 @@ import { Search, Filter, User, Building, Shield, ArrowRight, Loader2, AlertCircl
 import { supabase } from "@/lib/supabase";
 import { getErrorMessage } from "@/lib/utils";
 import { toast } from "sonner";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ImagePreviewDialog } from "@/components/ImagePreviewDialog";
 
 interface UserProfile {
   id: string;
   user_id: string;
   company_name: string;
   contact_email: string;
+  avatar_url?: string;
   role: "business" | "vendor" | "admin";
   is_approved: boolean;
   created_at: string;
@@ -167,23 +170,26 @@ export default function AdminUsers() {
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div
-                      className={`h-12 w-12 rounded-full flex items-center justify-center ${
-                        u.role === "business"
-                          ? "bg-blue-100 text-blue-600"
-                          : u.role === "vendor"
-                          ? "bg-indigo-100 text-indigo-600"
-                          : "bg-slate-200 text-slate-600"
-                      }`}
-                    >
-                      {u.role === "business" ? (
-                        <Building className="h-6 w-6" />
-                      ) : u.role === "vendor" ? (
-                        <User className="h-6 w-6" />
-                      ) : (
-                        <Shield className="h-6 w-6" />
-                      )}
-                    </div>
+                    <ImagePreviewDialog src={u.avatar_url} alt={u.company_name}>
+                      <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-800 shadow-sm">
+                        <AvatarImage src={u.avatar_url} />
+                        <AvatarFallback className={`flex items-center justify-center ${
+                          u.role === "business"
+                            ? "bg-blue-100 text-blue-600"
+                            : u.role === "vendor"
+                            ? "bg-indigo-100 text-indigo-600"
+                            : "bg-slate-200 text-slate-600"
+                        }`}>
+                          {u.role === "business" ? (
+                            <Building className="h-5 w-5" />
+                          ) : u.role === "vendor" ? (
+                            <User className="h-5 w-5" />
+                          ) : (
+                            <Shield className="h-5 w-5" />
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                    </ImagePreviewDialog>
                     <div>
                       <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                         {u.company_name}
