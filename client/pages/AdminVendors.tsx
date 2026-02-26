@@ -6,12 +6,14 @@ import { Input } from '@/components/ui/input';
 import { AlertCircle, Loader2, CheckCircle2, Clock, Search, ChevronRight, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/lib/utils';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface Vendor {
   id: string;
   user_id: string;
   company_name: string;
   contact_email: string;
+  avatar_url?: string;
   vendor_services?: string[];
   is_approved: boolean;
   created_at: string;
@@ -184,6 +186,12 @@ export default function AdminVendors() {
                   onClick={() => navigate(`/admin/vendors/${vendor.id}`)}
                 >
                   <div className="flex items-start justify-between gap-6">
+                    <Avatar className="h-12 w-12 rounded-lg border border-slate-100 dark:border-slate-800">
+                      <AvatarImage src={vendor.avatar_url} />
+                      <AvatarFallback className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 font-bold">
+                        {vendor.company_name?.[0] || 'V'}
+                      </AvatarFallback>
+                    </Avatar>
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white">{vendor.company_name}</h3>

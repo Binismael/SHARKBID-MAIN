@@ -6,6 +6,7 @@ import { ArrowLeft, AlertCircle, Loader2, CheckCircle2, XCircle, Briefcase } fro
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/lib/utils';
 import { toast } from 'sonner';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface VendorProfile {
   id: string;
@@ -14,6 +15,7 @@ interface VendorProfile {
   company_description: string;
   contact_email: string;
   contact_phone: string;
+  avatar_url?: string;
   vendor_services: string[];
   vendor_coverage_areas: string[];
   certifications: string[];
@@ -212,7 +214,15 @@ export default function AdminVendorDetail() {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Vendor Details
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">{vendor.company_name}</p>
+          <div className="flex items-center gap-4 mt-4">
+            <Avatar className="h-12 w-12 border border-slate-200 dark:border-slate-700">
+              <AvatarImage src={vendor.avatar_url} />
+              <AvatarFallback className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 font-bold">
+                {vendor.company_name?.[0] || 'V'}
+              </AvatarFallback>
+            </Avatar>
+            <p className="text-xl font-bold text-slate-600 dark:text-slate-400">{vendor.company_name}</p>
+          </div>
         </div>
       </div>
 

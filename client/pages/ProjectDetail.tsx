@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import { getErrorMessage } from '@/lib/utils';
 import ProjectMessages from '@/components/ProjectMessages';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface Project {
   id: string;
@@ -41,6 +42,7 @@ interface Bid {
   vendor_profile?: {
     company_name: string;
     contact_email: string;
+    avatar_url?: string;
   };
 }
 
@@ -388,9 +390,12 @@ export default function ProjectDetail() {
                           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                             <div className="flex-1 space-y-4">
                               <div className="flex items-center gap-4">
-                                <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 font-bold text-xl shadow-inner">
-                                  {bid.vendor_profile?.company_name?.[0] || 'V'}
-                                </div>
+                                <Avatar className="h-12 w-12 rounded-xl border border-slate-100 dark:border-slate-800 shadow-inner">
+                                  <AvatarImage src={bid.vendor_profile?.avatar_url} />
+                                  <AvatarFallback className="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 text-slate-600 dark:text-slate-300 font-bold text-xl">
+                                    {bid.vendor_profile?.company_name?.[0] || 'V'}
+                                  </AvatarFallback>
+                                </Avatar>
                                 <div>
                                   <div className="flex items-center gap-3">
                                     <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white leading-none">{bid.vendor_profile?.company_name || 'Expert Vendor'}</h3>

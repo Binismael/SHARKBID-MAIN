@@ -164,7 +164,7 @@ export const handleGetProject: RequestHandler = async (req, res) => {
         const vendorIds = responses.map(r => r.vendor_id);
         const { data: profiles } = await supabaseAdmin
           .from("profiles")
-          .select("user_id, company_name, contact_email")
+          .select("user_id, company_name, contact_email, avatar_url")
           .in("user_id", vendorIds);
 
         const profileMap = (profiles || []).reduce((acc: any, p) => {
@@ -849,7 +849,7 @@ async function respondWithEnrichedMessages(res: any, messages: any[] | null, sup
     const senderIds = Array.from(new Set(messages.map(m => m.sender_id)));
     const { data: profiles } = await supabaseAdmin
       .from("profiles")
-      .select("user_id, company_name, contact_email, role")
+      .select("user_id, company_name, contact_email, role, avatar_url")
       .in("user_id", senderIds);
 
     const profileMap = (profiles || []).reduce((acc: any, p: any) => {
