@@ -3,6 +3,8 @@ import {
   Dialog,
   DialogContent,
   DialogTrigger,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +27,10 @@ export function ImagePreviewDialog({ src, alt, children, className }: ImagePrevi
         </div>
       </DialogTrigger>
       <DialogContent className="max-w-[90vw] md:max-w-3xl border-none bg-transparent p-0 shadow-none flex items-center justify-center">
+        <DialogTitle className="sr-only">{alt || "Image Preview"}</DialogTitle>
+        <DialogDescription className="sr-only">
+          Full screen preview of the selected image.
+        </DialogDescription>
         <div className="relative w-full h-full flex items-center justify-center p-4">
           <img
             src={src}
