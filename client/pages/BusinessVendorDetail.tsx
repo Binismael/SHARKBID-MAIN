@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, AlertCircle, Loader2, CheckCircle2, Briefcase, Building2, Mail, Phone, Calendar, Users, MapPin, Heart } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Loader2, CheckCircle2, Briefcase, Building2, Mail, Phone, Calendar, Users, MapPin, Heart, ExternalLink, Linkedin } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage, cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
@@ -18,6 +18,8 @@ interface VendorProfile {
   contact_email: string;
   contact_phone: string;
   avatar_url?: string;
+  portfolio_url?: string;
+  linkedin_url?: string;
   likes_count: number;
   vendor_services: string[];
   vendor_coverage_areas: string[];
@@ -426,6 +428,33 @@ export default function BusinessVendorDetail() {
                   <span className="text-slate-700 dark:text-slate-300">United States</span>
                 </div>
               </div>
+
+              {(vendor.portfolio_url || vendor.linkedin_url) && (
+                <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                  {vendor.portfolio_url && (
+                    <a
+                      href={vendor.portfolio_url.startsWith('http') ? vendor.portfolio_url : `https://${vendor.portfolio_url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 text-blue-600 hover:underline text-sm font-medium"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      View Portfolio
+                    </a>
+                  )}
+                  {vendor.linkedin_url && (
+                    <a
+                      href={vendor.linkedin_url.startsWith('http') ? vendor.linkedin_url : `https://${vendor.linkedin_url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 text-blue-600 hover:underline text-sm font-medium"
+                    >
+                      <Linkedin className="h-4 w-4" />
+                      LinkedIn Profile
+                    </a>
+                  )}
+                </div>
+              )}
             </Card>
 
             {/* Coverage Areas */}

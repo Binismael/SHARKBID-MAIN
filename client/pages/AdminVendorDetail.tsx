@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, AlertCircle, Loader2, CheckCircle2, XCircle, Briefcase } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Loader2, CheckCircle2, XCircle, Briefcase, ExternalLink, Linkedin } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -17,6 +17,8 @@ interface VendorProfile {
   contact_email: string;
   contact_phone: string;
   avatar_url?: string;
+  portfolio_url?: string;
+  linkedin_url?: string;
   vendor_services: string[];
   vendor_coverage_areas: string[];
   certifications: string[];
@@ -306,6 +308,36 @@ export default function AdminVendorDetail() {
                 <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Joined</p>
                 <p className="text-lg font-bold text-slate-900 dark:text-white mt-2">{new Date(vendor.created_at).toLocaleDateString()}</p>
               </div>
+
+              {vendor.portfolio_url && (
+                <div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Portfolio</p>
+                  <a
+                    href={vendor.portfolio_url.startsWith('http') ? vendor.portfolio_url : `https://${vendor.portfolio_url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-lg font-bold text-blue-600 hover:underline mt-2 flex items-center gap-2"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    View Portfolio
+                  </a>
+                </div>
+              )}
+
+              {vendor.linkedin_url && (
+                <div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">LinkedIn</p>
+                  <a
+                    href={vendor.linkedin_url.startsWith('http') ? vendor.linkedin_url : `https://${vendor.linkedin_url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-lg font-bold text-blue-600 hover:underline mt-2 flex items-center gap-2"
+                  >
+                    <Linkedin className="h-4 w-4" />
+                    LinkedIn Profile
+                  </a>
+                </div>
+              )}
             </div>
 
             {vendor.company_description && (

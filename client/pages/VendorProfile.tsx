@@ -26,6 +26,8 @@ interface VendorProfile {
   contact_phone: string;
   contact_email: string;
   avatar_url?: string;
+  portfolio_url?: string;
+  linkedin_url?: string;
   years_in_business?: number;
   employee_count?: number;
   certifications?: string[];
@@ -112,6 +114,8 @@ export default function VendorProfile() {
     contact_phone: '',
     contact_email: '',
     avatar_url: '',
+    portfolio_url: '',
+    linkedin_url: '',
     years_in_business: 0,
     employee_count: 0,
     certifications: [],
@@ -292,6 +296,8 @@ export default function VendorProfile() {
           certifications: profile.certifications,
           vendor_services: selectedServices,
           vendor_coverage_areas: coverageAreaIds,
+          portfolio_url: profile.portfolio_url,
+          linkedin_url: profile.linkedin_url,
           is_approved: false,
         })
       });
@@ -459,6 +465,33 @@ export default function VendorProfile() {
                   className="mt-1"
                 />
               </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Links & Social */}
+        <Card className="p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Portfolio & Social Links</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Portfolio URL</label>
+              <Input
+                type="url"
+                value={profile.portfolio_url || ''}
+                onChange={(e) => setProfile(prev => ({ ...prev, portfolio_url: e.target.value }))}
+                placeholder="https://yourportfolio.com"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">LinkedIn Profile</label>
+              <Input
+                type="url"
+                value={profile.linkedin_url || ''}
+                onChange={(e) => setProfile(prev => ({ ...prev, linkedin_url: e.target.value }))}
+                placeholder="https://linkedin.com/in/yourcompany"
+                className="mt-1"
+              />
             </div>
           </div>
         </Card>
