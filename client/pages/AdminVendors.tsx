@@ -7,6 +7,7 @@ import { AlertCircle, Loader2, CheckCircle2, Clock, Search, ChevronRight, ArrowL
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ImagePreviewDialog } from '@/components/ImagePreviewDialog';
 
 interface Vendor {
   id: string;
@@ -186,12 +187,16 @@ export default function AdminVendors() {
                   onClick={() => navigate(`/admin/vendors/${vendor.id}`)}
                 >
                   <div className="flex items-start justify-between gap-6">
-                    <Avatar className="h-12 w-12 rounded-lg border border-slate-100 dark:border-slate-800">
-                      <AvatarImage src={vendor.avatar_url} />
-                      <AvatarFallback className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 font-bold">
-                        {vendor.company_name?.[0] || 'V'}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <ImagePreviewDialog src={vendor.avatar_url} alt={vendor.company_name}>
+                        <Avatar className="h-12 w-12 rounded-lg border border-slate-100 dark:border-slate-800">
+                          <AvatarImage src={vendor.avatar_url} />
+                          <AvatarFallback className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 font-bold">
+                            {vendor.company_name?.[0] || 'V'}
+                          </AvatarFallback>
+                        </Avatar>
+                      </ImagePreviewDialog>
+                    </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-bold text-slate-900 dark:text-white">{vendor.company_name}</h3>

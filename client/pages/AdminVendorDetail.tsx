@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ImagePreviewDialog } from '@/components/ImagePreviewDialog';
 
 interface VendorProfile {
   id: string;
@@ -215,12 +216,14 @@ export default function AdminVendorDetail() {
             Vendor Details
           </h1>
           <div className="flex items-center gap-4 mt-4">
-            <Avatar className="h-12 w-12 border border-slate-200 dark:border-slate-700">
-              <AvatarImage src={vendor.avatar_url} />
-              <AvatarFallback className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 font-bold">
-                {vendor.company_name?.[0] || 'V'}
-              </AvatarFallback>
-            </Avatar>
+            <ImagePreviewDialog src={vendor.avatar_url} alt={vendor.company_name}>
+              <Avatar className="h-12 w-12 border border-slate-200 dark:border-slate-700">
+                <AvatarImage src={vendor.avatar_url} />
+                <AvatarFallback className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 font-bold">
+                  {vendor.company_name?.[0] || 'V'}
+                </AvatarFallback>
+              </Avatar>
+            </ImagePreviewDialog>
             <p className="text-xl font-bold text-slate-600 dark:text-slate-400">{vendor.company_name}</p>
           </div>
         </div>

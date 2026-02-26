@@ -9,6 +9,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ImagePreviewDialog } from '@/components/ImagePreviewDialog';
 
 interface Message {
   id: string;
@@ -239,15 +240,17 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
                 )}
               >
                 {!isSameSender ? (
-                  <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-900 shadow-sm shrink-0 mt-1">
-                    <AvatarImage src={msg.profiles?.avatar_url} />
-                    <AvatarFallback className={cn(
-                      "text-[10px] font-black uppercase",
-                      isMe ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-600"
-                    )}>
-                      {msg.profiles?.company_name?.[0] || (isMe ? 'ME' : 'P')}
-                    </AvatarFallback>
-                  </Avatar>
+                  <ImagePreviewDialog src={msg.profiles?.avatar_url} alt={msg.profiles?.company_name}>
+                    <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-900 shadow-sm shrink-0 mt-1">
+                      <AvatarImage src={msg.profiles?.avatar_url} />
+                      <AvatarFallback className={cn(
+                        "text-[10px] font-black uppercase",
+                        isMe ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-600"
+                      )}>
+                        {msg.profiles?.company_name?.[0] || (isMe ? 'ME' : 'P')}
+                      </AvatarFallback>
+                    </Avatar>
+                  </ImagePreviewDialog>
                 ) : (
                   <div className="w-10 shrink-0" />
                 )}
@@ -271,14 +274,15 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
                     )}
                   >
                     {msg.image_url && (
-                      <div className="mb-3 overflow-hidden rounded-2xl border border-white/10 shadow-lg">
-                        <img
-                          src={msg.image_url}
-                          alt="Message attachment"
-                          className="max-w-full h-auto object-cover hover:scale-105 transition-transform duration-500 cursor-pointer"
-                          onClick={() => window.open(msg.image_url, '_blank')}
-                        />
-                      </div>
+                      <ImagePreviewDialog src={msg.image_url} alt="Message attachment">
+                        <div className="mb-3 overflow-hidden rounded-2xl border border-white/10 shadow-lg">
+                          <img
+                            src={msg.image_url}
+                            alt="Message attachment"
+                            className="max-w-full h-auto object-cover hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
+                      </ImagePreviewDialog>
                     )}
                     {msg.message_text && (
                       <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">{msg.message_text}</p>

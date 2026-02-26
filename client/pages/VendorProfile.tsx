@@ -18,6 +18,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { getErrorMessage } from '@/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ImagePreviewDialog } from '@/components/ImagePreviewDialog';
 
 interface VendorProfile {
   company_name: string;
@@ -361,23 +362,23 @@ export default function VendorProfile() {
         {/* Profile Avatar */}
         <Card className="p-6 mb-6 flex flex-col items-center">
           <div className="relative group">
-            <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
-              <AvatarImage src={profile.avatar_url} />
-              <AvatarFallback className="bg-primary/10 text-primary text-4xl font-bold">
-                {profile.company_name?.[0] || 'V'}
-              </AvatarFallback>
-            </Avatar>
-            <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-              <div className="text-white flex flex-col items-center">
-                {uploading ? (
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                ) : (
-                  <>
-                    <Camera className="h-6 w-6" />
-                    <span className="text-[10px] font-bold uppercase mt-1">Change</span>
-                  </>
-                )}
-              </div>
+            <ImagePreviewDialog src={profile.avatar_url} alt={profile.company_name}>
+              <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
+                <AvatarImage src={profile.avatar_url} />
+                <AvatarFallback className="bg-primary/10 text-primary text-4xl font-bold">
+                  {profile.company_name?.[0] || 'V'}
+                </AvatarFallback>
+              </Avatar>
+            </ImagePreviewDialog>
+            <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2.5 rounded-full cursor-pointer shadow-lg hover:scale-110 transition-transform border-4 border-white dark:border-slate-900">
+              {uploading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <Camera className="h-5 w-5" />
+                  <span className="sr-only">Change Profile Picture</span>
+                </>
+              )}
               <input
                 type="file"
                 className="hidden"
