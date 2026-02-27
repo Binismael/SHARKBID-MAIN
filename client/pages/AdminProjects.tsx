@@ -242,7 +242,7 @@ export default function AdminProjects() {
                             Project Title
                           </th>
                           <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">
-                            Business
+                            Employer
                           </th>
                           <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">
                             Service

@@ -83,7 +83,7 @@ export default function BusinessVendorDetail() {
           .single();
 
         if (fetchError) throw fetchError;
-        if (!data) throw new Error('Vendor not found');
+        if (!data) throw new Error('Employee not found');
 
         setVendor(data);
         setLikesCount(data.likes_count || 0);
@@ -258,13 +258,13 @@ export default function BusinessVendorDetail() {
             className="mb-6 gap-2"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Vendors
+            Back to Employees
           </Button>
 
           <Card className="p-8 border-l-4 border-l-red-600 bg-red-50 dark:bg-red-950/30">
             <AlertCircle className="h-6 w-6 text-red-600 mb-3" />
-            <h2 className="text-lg font-bold text-red-900 dark:text-red-200">Error Loading Vendor</h2>
-            <p className="text-red-800 dark:text-red-300 mt-2">{error || 'Vendor not found'}</p>
+            <h2 className="text-lg font-bold text-red-900 dark:text-red-200">Error Loading Employee</h2>
+            <p className="text-red-800 dark:text-red-300 mt-2">{error || 'Employee not found'}</p>
           </Card>
         </div>
       </div>
@@ -285,7 +285,7 @@ export default function BusinessVendorDetail() {
                 className="mb-4 gap-2 text-slate-500 hover:text-slate-900"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Back to Vendors
+                Back to Employees
               </Button>
               <div className="flex items-center gap-6">
                 <ImagePreviewDialog src={vendor.avatar_url} alt={vendor.company_name}>
@@ -316,7 +316,7 @@ export default function BusinessVendorDetail() {
                     </Button>
                   </div>
                   <div className="flex items-center gap-2 mt-2">
-                    <p className="text-slate-600 dark:text-slate-400">Verified Expert Vendor</p>
+                    <p className="text-slate-600 dark:text-slate-400">Verified Employee</p>
                     <span className="text-slate-300 mx-2">•</span>
                     <span className="text-sm font-bold text-slate-500 flex items-center gap-1.5">
                       <Heart className="h-3.5 w-3.5 fill-slate-500" />

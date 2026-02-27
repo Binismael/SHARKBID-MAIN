@@ -217,15 +217,15 @@ export default function Index() {
             {[
               { 
                 icon: Building2, 
-                title: "Business", 
-                desc: "Post projects and source the perfect specialized vendors.",
+                title: "Employer",
+                desc: "Post projects and source the perfect specialized employees.",
                 features: ["AI Intake", "Bid Comparison", "Auto-Selection"],
                 color: "blue"
               },
               { 
                 icon: Briefcase, 
-                title: "Vendor", 
-                desc: "Discover premium leads and win business with confidence.",
+                title: "Employee",
+                desc: "Discover premium leads and win work with confidence.",
                 features: ["Smart Pipeline", "Profile Control", "Real-time Alerts"],
                 color: "purple"
               },

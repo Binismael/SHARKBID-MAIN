@@ -246,7 +246,7 @@ export default function VendorDashboard() {
               <div>
                 <div className="flex items-center gap-3">
                   <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-                    {vendorProfile?.company_name || 'Vendor Dashboard'}
+                    {vendorProfile?.company_name || 'Employee Dashboard'}
                   </h1>
                   {vendorProfile?.likes_count > 0 && (
                     <div className="flex items-center gap-1.5 bg-rose-50 dark:bg-rose-950/30 text-rose-600 px-3 py-1 rounded-full border border-rose-100 dark:border-rose-900/50 shadow-sm">
@@ -255,7 +255,7 @@ export default function VendorDashboard() {
                     </div>
                   )}
                 </div>
-                <p className="text-slate-600 dark:text-slate-400 mt-1">Manage your leads and grow your business</p>
+                <p className="text-slate-600 dark:text-slate-400 mt-1">Manage your leads and grow your work</p>
               </div>
             </div>
             <div className="flex items-center gap-3">

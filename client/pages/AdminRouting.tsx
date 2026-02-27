@@ -251,7 +251,7 @@ export default function AdminRouting() {
                         Project
                       </th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">
-                        Vendor
+                        Employee
                       </th>
                       <th className="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">
                         Email
@@ -281,7 +281,7 @@ export default function AdminRouting() {
                         <td className="py-4 px-4">
                           <div className="text-slate-700 dark:text-slate-300">
                             {routing.profiles?.company_name ||
-                              "Unknown Vendor"}
+                              "Unknown Employee"}
                           </div>
                         </td>
                         <td className="py-4 px-4">

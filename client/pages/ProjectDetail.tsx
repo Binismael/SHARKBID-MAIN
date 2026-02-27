@@ -129,7 +129,7 @@ export default function ProjectDetail() {
         throw result.error || 'Failed to assign vendor';
       }
 
-      toast.success('Vendor assigned successfully!');
+      toast.success('Employee assigned successfully!');
       setProject({ ...project, selected_vendor_id: vendorId, status: 'selected' });
     } catch (err) {
       const message = getErrorMessage(err || 'Failed to assign vendor');
@@ -357,7 +357,7 @@ export default function ProjectDetail() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Vendor Proposals</h2>
+                  <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Employee Proposals</h2>
                 </div>
                 {bids.length > 0 && (
                   <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-slate-500 uppercase">
@@ -372,13 +372,13 @@ export default function ProjectDetail() {
                     <Briefcase className="h-8 w-8 text-slate-300" />
                   </div>
                   <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 uppercase tracking-tight">No proposals yet</h3>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 max-w-xs mx-auto">Vendors are currently reviewing your project. We'll notify you as soon as someone submits a bid.</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 max-w-xs mx-auto">Employees are currently reviewing your project. We'll notify you as soon as someone submits a bid.</p>
                   <Button
                     variant="outline"
                     onClick={() => navigate('/business/vendors')}
                     className="font-bold text-xs uppercase tracking-widest px-8"
                   >
-                    Browse & Invite Vendors
+                    Browse & Invite Employees
                   </Button>
                 </Card>
               ) : (
@@ -401,7 +401,7 @@ export default function ProjectDetail() {
                                 </ImagePreviewDialog>
                                 <div>
                                   <div className="flex items-center gap-3">
-                                    <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white leading-none">{bid.vendor_profile?.company_name || 'Expert Vendor'}</h3>
+                                    <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 dark:text-white leading-none">{bid.vendor_profile?.company_name || 'Expert Employee'}</h3>
                                     {isSelected && (
                                       <span className="px-2.5 py-0.5 bg-blue-600 text-white rounded text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-500/20">
                                         Selected

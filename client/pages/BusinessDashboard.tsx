@@ -161,7 +161,7 @@ export default function BusinessDashboard() {
                 className="gap-2 border-primary/20 hover:bg-primary/5 text-primary"
               >
                 <Users className="h-4 w-4" />
-                Browse Vendors
+                Browse Employees
               </Button>
               <Button
                 onClick={() => navigate('/business/projects/create')}

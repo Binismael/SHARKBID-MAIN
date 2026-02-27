@@ -107,11 +107,11 @@ export default function AdminUsers() {
             <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{stats.total}</p>
           </Card>
           <Card className="p-6 bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800/30">
-            <p className="text-sm font-semibold text-blue-600 uppercase">Businesses</p>
+            <p className="text-sm font-semibold text-blue-600 uppercase">Employers</p>
             <p className="text-3xl font-bold text-blue-700 dark:text-blue-400 mt-2">{stats.businesses}</p>
           </Card>
           <Card className="p-6 bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800/30">
-            <p className="text-sm font-semibold text-indigo-600 uppercase">Vendors</p>
+            <p className="text-sm font-semibold text-indigo-600 uppercase">Employees</p>
             <p className="text-3xl font-bold text-indigo-700 dark:text-indigo-400 mt-2">{stats.vendors}</p>
           </Card>
           <Card className="p-6 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -134,7 +134,13 @@ export default function AdminUsers() {
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                   }`}
                 >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}s
+                  {tab === "all"
+                    ? "All"
+                    : tab === "business"
+                      ? "Employers"
+                      : tab === "vendor"
+                        ? "Employees"
+                        : "Admins"}
                 </button>
               ))}
             </div>
@@ -208,7 +214,7 @@ export default function AdminUsers() {
                           : "bg-slate-200 text-slate-700"
                       }`}
                     >
-                      {u.role}
+                      {u.role === "business" ? "Employer" : u.role === "vendor" ? "Employee" : "Admin"}
                     </span>
 
                     {u.role === "vendor" && (

@@ -96,7 +96,7 @@ export function AIAssistant({
     }
   }, [messages, isOpen, isMinimized, isHidden]);
 
-  const defaultSystemPrompt = `You are a helpful assistant for Sharkbid, a B2B marketplace connecting businesses with vendors.
+  const defaultSystemPrompt = `You are a helpful assistant for Sharkbid, a B2B marketplace connecting employers with employees.
 Your current user is a ${userRole || 'visitor'}.
 The current page is: ${location.pathname}.
 Additional context: ${context || 'General help'}.
@@ -104,18 +104,18 @@ Additional context: ${context || 'General help'}.
 Your goal is to help the user navigate the platform, answer questions about account creation, project posting, bidding, and general platform usage.
 
 If the user is at /signup:
-- Explain the difference between Business (find vendors) and Vendor (bid on projects).
+- Explain the difference between Employer (find employees) and Employee (bid on projects).
 - Help them understand what information is required for each.
 
 If the user is at /vendor/onboarding:
 - Guide them through filling out their profile, rates, and portfolio.
 - Explain that a complete profile gets better matches.
 
-If the user is a Business (Client):
+If the user is an Employer:
 - Help them with account setup and project posting.
 - Explain how the matching process works.
 
-If the user is a Vendor (Creator):
+If the user is an Employee:
 - Help them with onboarding and profile completion.
 - Explain how to find and bid on projects.
 

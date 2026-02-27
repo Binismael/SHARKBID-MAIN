@@ -72,14 +72,14 @@ export default function Signup() {
   const roleOptions = [
     {
       value: "business" as const,
-      label: "Business",
-      description: "Find vendors",
+      label: "Employer",
+      description: "Find employees",
       icon: Building2,
       color: "from-blue-500 to-blue-600",
     },
     {
       value: "vendor" as const,
-      label: "Vendor",
+      label: "Employee",
       description: "Bid on projects",
       icon: Briefcase,
       color: "from-green-500 to-green-600",

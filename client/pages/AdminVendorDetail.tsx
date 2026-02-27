@@ -75,7 +75,7 @@ export default function AdminVendorDetail() {
           .single();
 
         if (fetchError) throw fetchError;
-        if (!data) throw new Error('Vendor not found');
+        if (!data) throw new Error('Employee not found');
 
         setVendor(data);
 
@@ -137,7 +137,7 @@ export default function AdminVendorDetail() {
       if (updateError) throw updateError;
 
       setVendor({ ...vendor, is_approved: true });
-      toast.success('Vendor approved successfully');
+      toast.success('Employee approved successfully');
     } catch (err) {
       const message = getErrorMessage(err || 'Failed to approve vendor');
       toast.error(message);
@@ -160,7 +160,7 @@ export default function AdminVendorDetail() {
       if (updateError) throw updateError;
 
       setVendor({ ...vendor, is_approved: false });
-      toast.success('Vendor rejected');
+      toast.success('Employee rejected');
     } catch (err) {
       const message = getErrorMessage(err || 'Failed to update vendor');
       toast.error(message);
@@ -193,8 +193,8 @@ export default function AdminVendorDetail() {
 
           <Card className="p-8 border-l-4 border-l-red-600 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-950/30 dark:to-pink-950/30">
             <AlertCircle className="h-6 w-6 text-red-600 mb-3" />
-            <h2 className="text-lg font-bold text-red-900 dark:text-red-200">Error Loading Vendor</h2>
-            <p className="text-red-800 dark:text-red-300 mt-2">{error || 'Vendor not found'}</p>
+            <h2 className="text-lg font-bold text-red-900 dark:text-red-200">Error Loading Employee</h2>
+            <p className="text-red-800 dark:text-red-300 mt-2">{error || 'Employee not found'}</p>
           </Card>
         </div>
       </div>
@@ -215,7 +215,7 @@ export default function AdminVendorDetail() {
             Back to Dashboard
           </Button>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Vendor Details
+            Employee Details
           </h1>
           <div className="flex items-center gap-4 mt-4">
             <ImagePreviewDialog src={vendor.avatar_url} alt={vendor.company_name}>

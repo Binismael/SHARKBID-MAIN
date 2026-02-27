@@ -86,8 +86,8 @@ export default function AdminVendors() {
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Button>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">Vendors</h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">Manage and approve vendor profiles</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">Employees</h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-2">Manage and approve employee profiles</p>
         </div>
       </div>
 
@@ -95,7 +95,7 @@ export default function AdminVendors() {
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 rounded-lg p-6 border border-transparent hover:shadow-lg transition-all">
-            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Total Vendors</p>
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Total Employees</p>
             <p className="text-4xl font-bold text-slate-900 dark:text-white mt-3">{vendors.length}</p>
           </div>
 
@@ -114,7 +114,7 @@ export default function AdminVendors() {
         {error && (
           <Card className="p-5 mb-8 border-l-4 border-l-red-600 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-950/30 dark:to-pink-950/30">
             <AlertCircle className="h-6 w-6 text-red-600 dark:text-red-500 mb-3" />
-            <p className="text-sm font-bold text-red-900 dark:text-red-200">Error Loading Vendors</p>
+            <p className="text-sm font-bold text-red-900 dark:text-red-200">Error Loading Employees</p>
             <p className="text-sm text-red-800 dark:text-red-300 mt-2">{error}</p>
           </Card>
         )}
@@ -176,7 +176,7 @@ export default function AdminVendors() {
             </Card>
           ) : filteredVendors.length === 0 ? (
             <Card className="p-12 text-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-dashed">
-              <p className="text-slate-600 dark:text-slate-400">No vendors found</p>
+              <p className="text-slate-600 dark:text-slate-400">No employees found</p>
             </Card>
           ) : (
             <div className="space-y-4">

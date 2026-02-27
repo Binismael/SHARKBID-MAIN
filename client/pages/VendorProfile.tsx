@@ -350,7 +350,7 @@ export default function VendorProfile() {
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Button>
-          <h1 className="text-3xl font-bold">Vendor Profile</h1>
+          <h1 className="text-3xl font-bold">Employee Profile</h1>
           <p className="text-muted-foreground mt-1">Set up your services and coverage area to receive matching leads</p>
         </div>
       </div>
@@ -403,7 +403,7 @@ export default function VendorProfile() {
           </div>
           <div className="mt-4 text-center">
             <h3 className="text-lg font-bold">{profile.company_name || 'Your Company'}</h3>
-            <p className="text-xs text-muted-foreground uppercase tracking-widest font-black mt-1">Vendor Partner</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-widest font-black mt-1">Employee Partner</p>
           </div>
         </Card>
 

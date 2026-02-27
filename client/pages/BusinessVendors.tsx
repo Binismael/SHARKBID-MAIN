@@ -153,8 +153,8 @@ export default function BusinessVendors() {
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Button>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Browse Vendors</h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">Find and invite expert vendors to your projects</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Browse Employees</h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-2">Find and invite expert employees to your projects</p>
         </div>
       </div>
 
@@ -189,7 +189,7 @@ export default function BusinessVendors() {
           ) : filteredVendors.length === 0 ? (
             <Card className="p-12 text-center bg-white dark:bg-slate-900 border-dashed">
               <Users className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-600 dark:text-slate-400">No matching vendors found</p>
+              <p className="text-slate-600 dark:text-slate-400">No matching employees found</p>
             </Card>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -225,7 +225,7 @@ export default function BusinessVendors() {
                       
                       <div className="flex flex-wrap gap-2 mb-6">
                         <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-xs font-medium text-slate-600 dark:text-slate-400">
-                          Verified Vendor
+                          Verified Employee
                         </span>
                         {vendor.vendor_services?.slice(0, 2).map((s, i) => (
                           <span key={i} className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-full text-xs font-medium text-blue-600 dark:text-blue-400">
