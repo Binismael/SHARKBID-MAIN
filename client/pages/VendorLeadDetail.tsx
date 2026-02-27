@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { AlertCircle, Loader2, ArrowLeft, Send, CheckCircle2, MessageSquare } from 'lucide-react';
+import { AlertCircle, Loader2, ArrowLeft, Send, CheckCircle2, MessageSquare, User } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { getErrorMessage } from '@/lib/utils';
