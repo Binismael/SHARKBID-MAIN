@@ -812,11 +812,11 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
           return respondWithEnrichedMessages(res, messages, supabaseAdmin);
         }
 
-        if (msgError.code !== '42703') {
+        if (!['42703', 'PGRST204'].includes(msgError.code)) {
           throw msgError;
         }
       } catch (e: any) {
-        if (e?.code !== '42703') throw e;
+        if (e?.code && !['42703', 'PGRST204'].includes(e.code)) throw e;
       }
 
       // Fallback: Use only existing columns
@@ -1068,7 +1068,7 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
       .select("*")
       .single();
 
-    if (error && error.code === '42703') {
+    if (error && ['42703', 'PGRST204'].includes(error.code)) {
       // Column doesn't exist yet, retry without vendor_id
       const { data: retryMessage, error: retryError } = await supabaseAdmin
         .from("project_messages")

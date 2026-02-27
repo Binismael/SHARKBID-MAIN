@@ -398,7 +398,7 @@ export default function VendorLeadDetail() {
                   <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
                   <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Workspace Communication</h2>
                 </div>
-                <ProjectMessages projectId={project.id} />
+                <ProjectMessages projectId={project.id} vendorId={user.id} />
               </section>
             )}
           </div>
