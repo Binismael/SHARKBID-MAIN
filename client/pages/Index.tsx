@@ -69,40 +69,8 @@ export default function Index() {
 
           {/* Main Headline */}
           <div className="space-y-4 relative">
-            {/* Featured Image / Dashboard Preview (centered above headline) */}
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1.1, delay: 0.35, ease: "easeOut" }}
-              className="relative max-w-5xl mx-auto"
-            >
-              <div className="relative group">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-[3rem] blur opacity-20 group-hover:opacity-40 transition duration-1000" />
-                <div className="relative bg-slate-900 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl shadow-blue-500/20">
-                  <img
-                    src="https://cdn.builder.io/api/v1/image/assets%2Fd51db21242644bff87f6c68e2397daf7%2F59fdcc0ddd4f428f9b5720b5a469b88f?format=webp&width=1600"
-                    alt="Sharkbid Professional Network"
-                    className="w-full h-auto object-cover opacity-80"
-                  />
-
-                  {/* Floating Elements */}
-                  <div className="absolute top-10 right-10 p-6 rounded-2xl bg-slate-900/80 backdrop-blur-xl border border-white/10 hidden lg:block animate-bounce shadow-xl">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-                        <Zap className="h-5 w-5 text-white" />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-[10px] font-black uppercase tracking-widest">Lead Matched</p>
-                        <p className="text-[8px] font-bold text-slate-500 uppercase tracking-tight">Verified Specialist Found</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-
-            <div className="pointer-events-none absolute top-[-1.5rem] sm:top-[-2.5rem] md:top-[-3rem] left-1/2 -translate-x-1/2 md:left-[-2rem] md:translate-x-0 opacity-95 z-0">
-              <Logo variant="light" className="h-32 sm:h-40 md:h-48 lg:h-56" />
+            <div className="pointer-events-none flex justify-center -mb-10 sm:-mb-12">
+              <Logo variant="light" className="h-40 sm:h-48 md:h-56 lg:h-64" />
             </div>
 
             <motion.h1 
@@ -144,6 +112,38 @@ export default function Index() {
                 View Intelligence
               </a>
             </Button>
+          </motion.div>
+
+          {/* Featured Image / Dashboard Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2, delay: 1, ease: "easeOut" }}
+            className="pt-24 relative max-w-6xl mx-auto"
+          >
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-[3rem] blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+              <div className="relative bg-slate-900 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl shadow-blue-500/20">
+                <img
+                  src="https://cdn.builder.io/api/v1/image/assets%2Fd51db21242644bff87f6c68e2397daf7%2F59fdcc0ddd4f428f9b5720b5a469b88f?format=webp&width=1600"
+                  alt="Sharkbid Professional Network"
+                  className="w-full h-auto object-cover opacity-80"
+                />
+
+                {/* Floating Elements */}
+                <div className="absolute top-10 right-10 p-6 rounded-2xl bg-slate-900/80 backdrop-blur-xl border border-white/10 hidden lg:block animate-bounce shadow-xl">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                      <Zap className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[10px] font-black uppercase tracking-widest">Lead Matched</p>
+                      <p className="text-[8px] font-bold text-slate-500 uppercase tracking-tight">Verified Specialist Found</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
 
         </motion.div>
