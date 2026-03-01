@@ -19,7 +19,7 @@ export function Logo({ className, variant = 'light', showText = true }: LogoProp
       <img
         src={logoUrl}
         alt="Sharkbid Logo"
-        className="h-full w-auto object-contain scale-[1.25] origin-left"
+        className="h-full w-auto object-contain scale-[1.6] origin-left"
       />
     </div>
   );
