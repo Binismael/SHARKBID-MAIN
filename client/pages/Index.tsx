@@ -68,7 +68,11 @@ export default function Index() {
           </motion.div>
 
           {/* Main Headline */}
-          <div className="space-y-6">
+          <div className="space-y-6 relative">
+            <div className="pointer-events-none absolute top-[-1.5rem] sm:top-[-2.5rem] md:top-[-3rem] left-1/2 -translate-x-1/2 md:left-[-2rem] md:translate-x-0 opacity-95">
+              <Logo variant="light" className="h-32 sm:h-40 md:h-48 lg:h-56" />
+            </div>
+
             <motion.h1 
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
