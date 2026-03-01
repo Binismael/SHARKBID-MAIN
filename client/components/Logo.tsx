@@ -15,11 +15,11 @@ export function Logo({ className, variant = 'light', showText = true }: LogoProp
     : "https://cdn.builder.io/api/v1/image/assets%2Fd51db21242644bff87f6c68e2397daf7%2F1e443557515645229e0489a01923ed56?format=webp";
 
   return (
-    <div className={cn("flex items-center gap-2 shrink-0 overflow-hidden", className)}>
+    <div className={cn("flex items-center gap-2 shrink-0", className)}>
       <img
         src={logoUrl}
         alt="Sharkbid Logo"
-        className="h-full w-auto object-contain scale-[1.6] origin-left"
+        className="h-full w-auto object-contain"
       />
     </div>
   );
