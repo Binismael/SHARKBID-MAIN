@@ -156,15 +156,15 @@ export default function Index() {
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">Routing</span>
                 </h2>
                 <p className="text-slate-400 text-lg font-medium leading-relaxed max-w-lg">
-                  Natural language project discovery meets precision engineering. Our system maps your requirements to the exact experts in your region in real-time.
+                  Sharkbid connects businesses with the right partners based on industry and location — using AI-guided intake and chat to qualify needs and centralize competitive bids.
                 </p>
               </div>
 
               <div className="space-y-8">
                 {[
-                  { icon: Layers, title: "AI Intake", desc: "No complex forms. Just conversation." },
-                  { icon: Target, title: "Hyper-Local", desc: "Precision matching by geography." },
-                  { icon: ShieldCheck, title: "Verified Network", desc: "100% vetted professionals only." }
+                  { icon: Layers, title: "AI Intake", desc: "Collect requirements fast with guided chat." },
+                  { icon: Target, title: "Smart Matching", desc: "Match by industry + location." },
+                  { icon: Inbox, title: "Competitive Bids", desc: "Receive and compare bids in one place." }
                 ].map((item, i) => (
                   <motion.div 
                     key={item.title}
@@ -206,27 +206,27 @@ export default function Index() {
       <section id="network" className="py-32 relative">
         <div className="container mx-auto px-6 text-center space-y-20">
           <div className="space-y-4">
-            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-purple-500">Dedicated Gateways</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-purple-500">Two-Sided Marketplace</span>
             <h2 className="text-6xl md:text-7xl font-black uppercase leading-[0.9] tracking-tighter">
-              Three Distinct <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-500">Experiences</span>
+              Built For <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-500">Businesses & Partners</span>
             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { 
-                icon: Building2, 
-                title: "Employer",
-                desc: "Post projects and source the perfect specialized employees.",
-                features: ["AI Intake", "Bid Comparison", "Auto-Selection"],
+              {
+                icon: Building2,
+                title: "Business",
+                desc: "Use AI-guided intake to clarify needs and receive competitive bids in one place.",
+                features: ["AI Intake", "Bid Comparison", "Centralized Chat"],
                 color: "blue"
               },
-              { 
-                icon: Briefcase, 
-                title: "Employee",
-                desc: "Discover premium leads and win work with confidence.",
-                features: ["Smart Pipeline", "Profile Control", "Real-time Alerts"],
+              {
+                icon: Briefcase,
+                title: "Partner",
+                desc: "Access high-intent, targeted opportunities within your market — without cold outreach.",
+                features: ["Targeted Leads", "Profile Control", "Real-time Alerts"],
                 color: "purple"
               },
               { 
@@ -298,7 +298,7 @@ export default function Index() {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">Evolution</span>
             </h2>
             <p className="text-slate-400 text-lg md:text-xl font-medium max-w-2xl mx-auto leading-relaxed uppercase tracking-tight">
-              Join hundreds of businesses and vendors using Sharkbid to make smarter decisions, faster.
+              Sharkbid aims to modernize how businesses discover and purchase services across industries.
             </p>
           </motion.div>
 
@@ -325,9 +325,9 @@ export default function Index() {
             <div className="space-y-6">
               <Logo variant="light" className="h-16" />
               <p className="text-[11px] font-bold text-slate-500 uppercase tracking-tight leading-relaxed">
-                The most efficient B2B marketplace <br />
-                connecting verified businesses <br />
-                with qualified vendors.
+                An AI-driven marketplace <br />
+                connecting businesses with the right partners <br />
+                by industry and location.
               </p>
             </div>
 
