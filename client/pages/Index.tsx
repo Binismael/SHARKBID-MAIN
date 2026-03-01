@@ -33,9 +33,9 @@ export default function Index() {
 
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-slate-950/50 backdrop-blur-xl">
-        <div className="container mx-auto px-6 h-24 flex items-center justify-between">
+        <div className="container mx-auto px-6 h-28 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <Logo variant="light" className="h-20" />
+            <Logo variant="light" className="h-24" />
           </Link>
           
 
@@ -323,7 +323,7 @@ export default function Index() {
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-4 gap-16 mb-20">
             <div className="space-y-6">
-              <Logo variant="light" className="h-20" />
+              <Logo variant="light" className="h-24" />
               <p className="text-[11px] font-bold text-slate-500 uppercase tracking-tight leading-relaxed">
                 An AI-driven marketplace <br />
                 connecting businesses with the right partners <br />
