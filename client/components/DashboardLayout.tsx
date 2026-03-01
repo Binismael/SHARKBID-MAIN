@@ -9,7 +9,7 @@ import { Logo } from "@/components/Logo";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  role: "admin" | "client" | "creator";
+  role: "admin" | "client" | "creator" | "business" | "vendor";
   userName?: string;
 }
 

@@ -194,7 +194,7 @@ export async function getPlatformAnalytics() {
     }, {});
 
     return {
-      success: true,
+      success: true as const,
       analytics: {
         overview: {
           totalProjects,
@@ -212,14 +212,17 @@ export async function getPlatformAnalytics() {
           byTier: projectsByTier,
           completedDeliverables,
           totalDeliverables,
-          completionRate: totalDeliverables > 0 ? Math.round((completedDeliverables / totalDeliverables) * 100) : 0,
+          completionRate:
+            totalDeliverables > 0
+              ? Math.round((completedDeliverables / totalDeliverables) * 100)
+              : 0,
         },
       },
     };
   } catch (error) {
     const message = formatError(error);
     console.error("Error fetching platform analytics:", message);
-    return { success: false, error: message, analytics: {} };
+    return { success: false as const, error: message };
   }
 }
 

@@ -11,6 +11,7 @@ import { handlePublishProject, handleGetProject, handleGetAvailableProjects, han
 import { handleCreateProject } from "./routes/create-project";
 import emailRouter from "./routes/email";
 import adminRouter from "./routes/admin";
+import { isSupabaseConfigured } from "./lib/supabase";
 
 export function createServer() {
   const app = express();
@@ -64,6 +65,27 @@ export function createServer() {
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // Fail fast with a clear message when server-side (service-role) Supabase credentials
+  // are not configured. This prevents confusing "Unknown error" responses.
+  app.use((req, res, next) => {
+    const needsServiceRole =
+      req.path.startsWith("/api/projects") ||
+      req.path.startsWith("/api/profiles") ||
+      req.path.startsWith("/api/routing") ||
+      req.path.startsWith("/api/admin");
+
+    if (needsServiceRole && !isSupabaseConfigured) {
+      return res.status(500).json({
+        error: "Configuration Error",
+        message:
+          "Server is missing SUPABASE_SERVICE_ROLE_KEY. Configure it to enable database operations.",
+        isConfigError: true,
+      });
+    }
+
+    next();
+  });
 
   app.use("/api/test-me", (req, res) => {
     res.json({ success: true, message: "Hit Express successfully!" });

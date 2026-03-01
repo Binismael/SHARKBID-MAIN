@@ -25,10 +25,21 @@ export const handleCreateProject: RequestHandler = async (req, res) => {
       return res.status(401).json({ error: "User not authenticated" });
     }
 
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      return res.status(400).json({ error: "Invalid x-user-id header" });
+    }
+
     // Validate required fields
-    if (!projectData.title || !projectData.service_category || !projectData.project_state) {
+    const missingFields: string[] = [];
+    if (!projectData.title) missingFields.push("title");
+    if (!projectData.service_category) missingFields.push("service_category");
+    if (!projectData.project_state) missingFields.push("project_state");
+
+    if (missingFields.length > 0) {
       return res.status(400).json({
-        error: "Missing required fields: title, service_category, project_state",
+        error: `Missing required fields: ${missingFields.join(", ")}`,
       });
     }
 

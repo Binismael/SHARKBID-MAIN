@@ -11,7 +11,7 @@ interface UserProfileData {
   id: string;
   name?: string;
   email: string;
-  role: "admin" | "client" | "creator";
+  role: "admin" | "client" | "creator" | "business" | "vendor";
   avatar_url?: string;
   created_at?: string;
 }

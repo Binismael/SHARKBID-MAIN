@@ -155,19 +155,20 @@ export async function getUserDataUsage(userId: string) {
       .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`);
 
     return {
-      success: true,
+      success: true as const,
       usage: {
         storageUsedMB: Math.round(totalStorageMB * 100) / 100,
         projectsCount: projectCount || 0,
         deliverablesCount: deliverableCount || 0,
         messagesCount: messageCount || 0,
-        totalDataPoints: (projectCount || 0) + (deliverableCount || 0) + (messageCount || 0),
+        totalDataPoints:
+          (projectCount || 0) + (deliverableCount || 0) + (messageCount || 0),
       },
     };
   } catch (error) {
     const message = formatError(error);
     console.error("Error getting user data usage:", message);
-    return { success: false, error: message, usage: {} };
+    return { success: false as const, error: message };
   }
 }
 
@@ -177,7 +178,7 @@ export async function getPrivacySettings(userId: string) {
     // This could be stored in a privacy_settings table
     // For now, returning default settings
     return {
-      success: true,
+      success: true as const,
       settings: {
         emailNotifications: true,
         marketingEmails: false,
@@ -190,7 +191,7 @@ export async function getPrivacySettings(userId: string) {
   } catch (error) {
     const message = formatError(error);
     console.error("Error getting privacy settings:", message);
-    return { success: false, error: message, settings: {} };
+    return { success: false as const, error: message };
   }
 }
 

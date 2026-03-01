@@ -1,5 +1,4 @@
 import { RequestHandler } from "express";
-import { OPENAI_API_KEY } from "../config";
 
 interface Message {
   role: "user" | "assistant";
@@ -15,6 +14,40 @@ interface IntakeRequest {
 interface IntakeResponse {
   response: string;
   extractedData?: Record<string, any>;
+}
+
+function parseMoney(raw: string, unit?: string | null) {
+  const n = Number(raw.replace(/,/g, ""));
+  if (!Number.isFinite(n)) return null;
+  const u = (unit || "").toLowerCase();
+  if (u === "k") return Math.round(n * 1_000);
+  if (u === "m") return Math.round(n * 1_000_000);
+  return Math.round(n);
+}
+
+function generateDemoAssistantResponse(extracted: Record<string, any>): string {
+  const missingService = !extracted.service_category;
+  const missingTitle = !extracted.title;
+  const missingState = !extracted.project_state;
+  const missingZip = !extracted.project_zip;
+
+  if (missingService) {
+    return "What type of service do you need? For example: Payroll, Accounting, IT, Marketing, Legal, or Construction.";
+  }
+
+  if (missingTitle) {
+    return "What’s a short title for this project? (Example: ‘Payroll setup for 25 employees’)";
+  }
+
+  if (missingState || missingZip) {
+    return "What’s the project location (state + ZIP code)?";
+  }
+
+  if (!extracted.budget_min || !extracted.budget_max) {
+    return "What’s your budget range for this project? (Example: $5,000–$10,000)";
+  }
+
+  return `Thanks — here’s what I have so far:\n\n- Service: ${extracted.service_category}\n- Title: ${extracted.title}\n- Location: ${extracted.project_state} ${extracted.project_zip}\n- Budget: $${Number(extracted.budget_min).toLocaleString()}–$${Number(extracted.budget_max).toLocaleString()}\n\nIf that looks right, you can submit the project from the summary panel.`;
 }
 
 // Helper to call OpenAI API
@@ -97,40 +130,60 @@ function extractProjectData(
     lastMessage,
   ].join(" ");
 
-  // Service categories to match
-  const services = [
-    "Payroll Services",
-    "Accounting Services",
-    "Legal Services",
-    "IT Services",
-    "Consulting",
-    "Marketing Services",
-    "Construction",
-    "Cleaning Services",
-    "HVAC",
-    "Electrical",
+  const serviceMatchers: Array<{ name: string; keywords: string[] }> = [
+    { name: "Payroll Services", keywords: ["payroll", "pay roll"] },
+    { name: "Accounting Services", keywords: ["accounting", "bookkeeping", "book keeping"] },
+    { name: "Legal Services", keywords: ["legal", "lawyer", "contract"] },
+    { name: "IT Services", keywords: ["it", "tech support", "network", "cybersecurity", "security"] },
+    { name: "Consulting", keywords: ["consulting", "advisor", "strategy"] },
+    { name: "Marketing Services", keywords: ["marketing", "seo", "ads", "advertising", "social media"] },
+    { name: "Construction", keywords: ["construction", "build", "renovation", "remodel"] },
+    { name: "Cleaning Services", keywords: ["cleaning", "janitorial"] },
+    { name: "HVAC", keywords: ["hvac", "heating", "cooling", "air conditioning"] },
+    { name: "Electrical", keywords: ["electrical", "electrician"] },
   ];
 
-  // Extract service category (case-insensitive)
-  for (const service of services) {
-    if (conversationText.toLowerCase().includes(service.toLowerCase())) {
-      extracted.service_category = service;
+  for (const service of serviceMatchers) {
+    if (service.keywords.some((k) => conversationText.toLowerCase().includes(k))) {
+      extracted.service_category = service.name;
       break;
     }
   }
 
-  // Extract budget amounts
-  const budgetMatch = conversationText.match(/\$?([\d,]+)\s*(?:to|-|\s)\s*\$?([\d,]+)/i);
-  if (budgetMatch) {
-    extracted.budget_min = parseInt(budgetMatch[1].replace(/,/g, ""));
-    extracted.budget_max = parseInt(budgetMatch[2].replace(/,/g, ""));
+  // Extract budget amounts (avoid accidentally reading ZIP codes / dates)
+  const rangeMatch = conversationText.match(
+    /\$?\s*([\d,.]+)\s*(k|m)?\s*(?:to|-|–)\s*\$?\s*([\d,.]+)\s*(k|m)?/i
+  );
+  if (rangeMatch) {
+    const min = parseMoney(rangeMatch[1], rangeMatch[2]);
+    const max = parseMoney(rangeMatch[3], rangeMatch[4]);
+    if (min != null && max != null) {
+      extracted.budget_min = Math.min(min, max);
+      extracted.budget_max = Math.max(min, max);
+    }
   } else {
-    // Try to find single budget
-    const singleBudgetMatch = conversationText.match(/\$?([\d,]+)/);
-    if (singleBudgetMatch) {
-      const amount = parseInt(singleBudgetMatch[1].replace(/,/g, ""));
-      extracted.budget_min = amount;
-      extracted.budget_max = amount;
+    const dollarMatches = [...conversationText.matchAll(/\$\s*([\d,.]+)\s*(k|m)?/gi)];
+    if (dollarMatches.length >= 1) {
+      const first = parseMoney(dollarMatches[0][1], dollarMatches[0][2]);
+      const second = dollarMatches.length >= 2 ? parseMoney(dollarMatches[1][1], dollarMatches[1][2]) : null;
+      if (first != null && second != null) {
+        extracted.budget_min = Math.min(first, second);
+        extracted.budget_max = Math.max(first, second);
+      } else if (first != null) {
+        extracted.budget_min = first;
+        extracted.budget_max = first;
+      }
+    } else {
+      const budgetWordMatch = conversationText.match(
+        /(?:budget|spend|cost|around|approx(?:imately)?|up to)\s*\$?\s*([\d,.]+)\s*(k|m)?/i
+      );
+      if (budgetWordMatch) {
+        const amt = parseMoney(budgetWordMatch[1], budgetWordMatch[2]);
+        if (amt != null) {
+          extracted.budget_min = amt;
+          extracted.budget_max = amt;
+        }
+      }
     }
   }
 
@@ -140,12 +193,74 @@ function extractProjectData(
     extracted.project_zip = zipMatch[1];
   }
 
-  // Extract state (two-letter abbreviation)
-  const stateMatch = conversationText.match(
-    /\b(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY)\b/i
-  );
-  if (stateMatch) {
-    extracted.project_state = stateMatch[0].toUpperCase();
+  // Extract state (prefer full state names; only accept 2-letter abbreviations when they appear as uppercase tokens)
+  const stateAbbrevs = [
+    "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
+  ];
+
+  const stateNameToAbbrev: Record<string, string> = {
+    alabama: "AL",
+    alaska: "AK",
+    arizona: "AZ",
+    arkansas: "AR",
+    california: "CA",
+    colorado: "CO",
+    connecticut: "CT",
+    delaware: "DE",
+    florida: "FL",
+    georgia: "GA",
+    hawaii: "HI",
+    idaho: "ID",
+    illinois: "IL",
+    indiana: "IN",
+    iowa: "IA",
+    kansas: "KS",
+    kentucky: "KY",
+    louisiana: "LA",
+    maine: "ME",
+    maryland: "MD",
+    massachusetts: "MA",
+    michigan: "MI",
+    minnesota: "MN",
+    mississippi: "MS",
+    missouri: "MO",
+    montana: "MT",
+    nebraska: "NE",
+    nevada: "NV",
+    "new hampshire": "NH",
+    "new jersey": "NJ",
+    "new mexico": "NM",
+    "new york": "NY",
+    "north carolina": "NC",
+    "north dakota": "ND",
+    ohio: "OH",
+    oklahoma: "OK",
+    oregon: "OR",
+    pennsylvania: "PA",
+    "rhode island": "RI",
+    "south carolina": "SC",
+    "south dakota": "SD",
+    tennessee: "TN",
+    texas: "TX",
+    utah: "UT",
+    vermont: "VT",
+    virginia: "VA",
+    washington: "WA",
+    "west virginia": "WV",
+    wisconsin: "WI",
+    wyoming: "WY",
+  };
+
+  const lower = conversationText.toLowerCase();
+  const stateName = Object.keys(stateNameToAbbrev).find((name) => lower.includes(name));
+  if (stateName) {
+    extracted.project_state = stateNameToAbbrev[stateName];
+  } else {
+    const upperTokens = conversationText.match(/\b[A-Z]{2}\b/g) || [];
+    const abbrev = upperTokens.find((t) => stateAbbrevs.includes(t));
+    if (abbrev) {
+      extracted.project_state = abbrev;
+    }
   }
 
   // Extract company size (employee count range)
@@ -195,22 +310,26 @@ export const handleAIIntake: RequestHandler = async (req, res) => {
       });
     }
 
-    // Check if API key is configured
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey || apiKey === 'your-openai-api-key-here') {
-      console.error("OpenAI API key is missing or using placeholder value");
-      return res.status(500).json({
-        error: "Configuration Error",
-        message: "The OpenAI API key is not configured. Please set a valid OPENAI_API_KEY in your .env file.",
-        isConfigError: true
-      });
-    }
-
     // Build the messages array for OpenAI
     const messages: Message[] = [
       ...conversationHistory,
       { role: "user", content: userMessage },
     ];
+
+    // If no OpenAI key is configured, keep the intake flow usable in a deterministic
+    // (non-AI) demo mode instead of hard-failing.
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey || apiKey === "your-openai-api-key-here") {
+      const extractedData = extractProjectData(userMessage, messages);
+      const response = generateDemoAssistantResponse(extractedData);
+      res.setHeader("Content-Type", "application/json");
+      return res.status(200).json({
+        response,
+        extractedData,
+        success: true,
+        demoMode: true,
+      });
+    }
 
     // Call OpenAI
     const { response, extractedData } = await callOpenAI(systemPrompt, messages);

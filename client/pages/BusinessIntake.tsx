@@ -159,8 +159,18 @@ export default function BusinessIntake() {
   };
 
   const handleSubmitProject = async () => {
-    if (!user || !projectData.title || !projectData.service_category) {
+    if (!user) {
+      setError('Please sign in again to submit your project');
+      return;
+    }
+
+    if (!projectData.service_category || !projectData.title) {
       setError('Please provide at least a project title and service category');
+      return;
+    }
+
+    if (!projectData.project_state || !projectData.project_zip) {
+      setError('Please provide your project location (state + ZIP code)');
       return;
     }
 
@@ -183,7 +193,7 @@ export default function BusinessIntake() {
           budget_max: projectData.budget_max,
           project_zip: projectData.project_zip,
           project_city: projectData.project_city,
-          project_state: projectData.project_state,
+          project_state: projectData.project_state?.toUpperCase(),
           business_size: projectData.business_size,
           special_requirements: projectData.special_requirements,
         }),
@@ -206,7 +216,7 @@ export default function BusinessIntake() {
     }
   };
 
-  const isProjectReady = projectData.title && projectData.service_category && projectData.project_zip;
+  const isProjectReady = Boolean(projectData.title && projectData.service_category && projectData.project_state && projectData.project_zip);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -330,7 +340,7 @@ export default function BusinessIntake() {
               <div>
                 <label className="text-xs text-muted-foreground uppercase font-medium">Location</label>
                 <p className="text-sm font-medium">
-                  {projectData.project_zip ? `${projectData.project_city}, ${projectData.project_state} ${projectData.project_zip}` : 'Not specified yet'}
+                  {projectData.project_state || projectData.project_zip ? `${projectData.project_city ? `${projectData.project_city}, ` : ''}${projectData.project_state || ''}${projectData.project_zip ? ` ${projectData.project_zip}` : ''}`.trim() : 'Not specified yet'}
                 </p>
               </div>
 

@@ -67,34 +67,52 @@ export async function getCreatorDeliverables(creatorId: string) {
       data.map(async (deliverable) => {
         try {
           const [projectRes, milestoneRes, paymentRes] = await Promise.all([
-            supabase
-              .from("projects")
-              .select("id, title")
-              .eq("id", deliverable.project_id)
-              .maybeSingle()
-              .catch((err) => {
-                console.warn("Failed to fetch project", deliverable.project_id, ":", formatError(err));
-                return { data: null, error: null };
-              }),
-            supabase
-              .from("milestones")
-              .select("id, title, budget_allocation")
-              .eq("id", deliverable.milestone_id)
-              .maybeSingle()
-              .catch((err) => {
-                console.warn("Failed to fetch milestone", deliverable.milestone_id, ":", formatError(err));
-                return { data: null, error: null };
-              }),
-            supabase
-              .from("payments")
-              .select("id, amount, status")
-              .eq("creator_id", creatorId)
-              .eq("milestone_id", deliverable.milestone_id)
-              .maybeSingle()
-              .catch((err) => {
-                console.warn("Failed to fetch payment for milestone", deliverable.milestone_id, ":", formatError(err));
-                return { data: null, error: null };
-              }),
+            Promise.resolve(
+              supabase
+                .from("projects")
+                .select("id, title")
+                .eq("id", deliverable.project_id)
+                .maybeSingle()
+            ).catch((err) => {
+              console.warn(
+                "Failed to fetch project",
+                deliverable.project_id,
+                ":",
+                formatError(err)
+              );
+              return { data: null, error: null };
+            }),
+            Promise.resolve(
+              supabase
+                .from("milestones")
+                .select("id, title, budget_allocation")
+                .eq("id", deliverable.milestone_id)
+                .maybeSingle()
+            ).catch((err) => {
+              console.warn(
+                "Failed to fetch milestone",
+                deliverable.milestone_id,
+                ":",
+                formatError(err)
+              );
+              return { data: null, error: null };
+            }),
+            Promise.resolve(
+              supabase
+                .from("payments")
+                .select("id, amount, status")
+                .eq("creator_id", creatorId)
+                .eq("milestone_id", deliverable.milestone_id)
+                .maybeSingle()
+            ).catch((err) => {
+              console.warn(
+                "Failed to fetch payment for milestone",
+                deliverable.milestone_id,
+                ":",
+                formatError(err)
+              );
+              return { data: null, error: null };
+            }),
           ]);
 
           return {
@@ -145,18 +163,20 @@ export async function getCreatorPayments(creatorId: string) {
       data.map(async (payment) => {
         try {
           const [milestoneRes, projectRes] = await Promise.all([
-            supabase
-              .from("milestones")
-              .select("id, title")
-              .eq("id", payment.milestone_id)
-              .maybeSingle()
-              .catch(() => ({ data: null, error: null })),
-            supabase
-              .from("projects")
-              .select("id, title")
-              .eq("id", payment.project_id)
-              .maybeSingle()
-              .catch(() => ({ data: null, error: null })),
+            Promise.resolve(
+              supabase
+                .from("milestones")
+                .select("id, title")
+                .eq("id", payment.milestone_id)
+                .maybeSingle()
+            ).catch(() => ({ data: null, error: null } as any)),
+            Promise.resolve(
+              supabase
+                .from("projects")
+                .select("id, title")
+                .eq("id", payment.project_id)
+                .maybeSingle()
+            ).catch(() => ({ data: null, error: null } as any)),
           ]);
 
           return {

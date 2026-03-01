@@ -2,7 +2,7 @@ import { supabase } from "./supabase";
 
 // Retry helper with aggressive timeout and exponential backoff
 async function withRetry<T>(
-  fn: () => Promise<T>,
+  fn: () => PromiseLike<T>,
   maxAttempts = 6,
   delayMs = 100,
   timeoutMs = 3000
