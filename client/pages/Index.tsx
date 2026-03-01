@@ -35,7 +35,7 @@ export default function Index() {
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-slate-950/50 backdrop-blur-xl">
         <div className="container mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <Logo variant="light" className="h-12" />
+            <Logo variant="light" className="h-16" />
           </Link>
           
 
@@ -85,7 +85,7 @@ export default function Index() {
               transition={{ duration: 1, delay: 0.5 }}
               className="text-slate-400 text-lg md:text-xl font-medium max-w-2xl mx-auto leading-relaxed uppercase tracking-tight"
             >
-              Stop wasting time on vendor search. Let AI match your business with qualified experts by service, location, and expertise.
+              Sharkbid is an AI-driven marketplace that connects businesses with the right partners based on industry and location — using AI-guided intake and chat to help you qualify, compare, and receive competitive bids in one place.
             </motion.p>
           </div>
 
@@ -98,7 +98,7 @@ export default function Index() {
           >
             <Button asChild size="lg" className="h-16 px-10 rounded-2xl bg-white text-slate-950 hover:bg-slate-200 text-xs font-black uppercase tracking-[0.2em] shadow-2xl shadow-white/10 transition-all active:scale-95 group">
               <Link to="/signup" className="gap-3 flex items-center">
-                Launch Experience
+                Find a Partner
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
@@ -305,7 +305,7 @@ export default function Index() {
           <div className="flex flex-col sm:flex-row gap-6 justify-center pt-8">
             <Button asChild size="lg" className="h-16 px-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-[0.2em] shadow-2xl shadow-blue-600/20 transition-all active:scale-95 group">
               <Link to="/signup" className="gap-3 flex items-center">
-                Initialize Account
+                Find a Partner
                 <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
@@ -323,7 +323,7 @@ export default function Index() {
         <div className="container mx-auto px-6">
           <div className="grid md:grid-cols-4 gap-16 mb-20">
             <div className="space-y-6">
-              <Logo variant="light" className="h-12" />
+              <Logo variant="light" className="h-16" />
               <p className="text-[11px] font-bold text-slate-500 uppercase tracking-tight leading-relaxed">
                 The most efficient B2B marketplace <br />
                 connecting verified businesses <br />

@@ -360,7 +360,7 @@ export default function CreateProjectForm() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
                       <DollarSign className="h-3 w-3 text-emerald-500" />
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Financial Range ($)</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Budget Range ($)</label>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <Input
@@ -386,23 +386,33 @@ export default function CreateProjectForm() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-3 w-3 text-orange-500" />
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Execution Window</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Project Timing</label>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                      <Input
-                        type="date"
-                        name="timeline_start"
-                        value={formData.timeline_start}
-                        onChange={handleChange}
-                        className="h-12 bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 focus:ring-4 focus:ring-orange-500/5 rounded-xl text-xs font-bold uppercase"
-                      />
-                      <Input
-                        type="date"
-                        name="timeline_end"
-                        value={formData.timeline_end}
-                        onChange={handleChange}
-                        className="h-12 bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 focus:ring-4 focus:ring-orange-500/5 rounded-xl text-xs font-bold uppercase"
-                      />
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          Target Start Date
+                        </label>
+                        <Input
+                          type="date"
+                          name="timeline_start"
+                          value={formData.timeline_start}
+                          onChange={handleChange}
+                          className="h-12 bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 focus:ring-4 focus:ring-orange-500/5 rounded-xl text-xs font-bold uppercase"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                          Project Start By
+                        </label>
+                        <Input
+                          type="date"
+                          name="timeline_end"
+                          value={formData.timeline_end}
+                          onChange={handleChange}
+                          className="h-12 bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 focus:ring-4 focus:ring-orange-500/5 rounded-xl text-xs font-bold uppercase"
+                        />
+                      </div>
                     </div>
                   </div>
 

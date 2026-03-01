@@ -140,7 +140,7 @@ export default function VendorProfile() {
           .from('service_categories')
           .select('id, name');
 
-        setServices(categoriesData || []);
+        setServices((categoriesData || []).filter((c: any) => (c?.name || "").toLowerCase() !== "financial"));
 
         // Fetch vendor profile via server-side API to bypass RLS recursion
         const response = await fetch('/api/profiles/me', {

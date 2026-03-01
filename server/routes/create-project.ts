@@ -98,6 +98,8 @@ export const handleCreateProject: RequestHandler = async (req, res) => {
 
     // Trigger lead routing
     try {
+      const routeAllVendors = process.env.ROUTE_ALL_VENDORS !== "false";
+
       // Route project to matching vendors
       const { data: vendors, error: vendorError } = await supabaseAdmin
         .from("profiles")
@@ -106,29 +108,39 @@ export const handleCreateProject: RequestHandler = async (req, res) => {
         .eq("is_approved", true);
 
       if (!vendorError && vendors && vendors.length > 0) {
-        const matchedVendors = [];
+        const matchedVendors: Array<{ project_id: string; vendor_id: string; status: string }> = [];
 
-        for (const vendor of vendors) {
-          // Check if vendor offers this service category
-          const vendorServices = vendor.vendor_services || [];
-          if (vendorServices.includes(categoryData.id)) {
-            // Check if vendor covers this state
-            const vendorStates = vendor.vendor_coverage_areas || [];
-            const { data: coverageData } = await supabaseAdmin
-              .from("coverage_areas")
-              .select("state")
-              .in("id", vendorStates);
+        if (routeAllVendors) {
+          for (const vendor of vendors) {
+            matchedVendors.push({
+              project_id: project.id,
+              vendor_id: vendor.user_id,
+              status: "routed",
+            });
+          }
+        } else {
+          for (const vendor of vendors) {
+            // Check if vendor offers this service category
+            const vendorServices = vendor.vendor_services || [];
+            if (vendorServices.includes(categoryData.id)) {
+              // Check if vendor covers this state
+              const vendorStates = vendor.vendor_coverage_areas || [];
+              const { data: coverageData } = await supabaseAdmin
+                .from("coverage_areas")
+                .select("state")
+                .in("id", vendorStates);
 
-            const vendorCoversState = coverageData?.some(
-              (c) => c.state === projectData.project_state.toUpperCase()
-            );
+              const vendorCoversState = coverageData?.some(
+                (c) => c.state === projectData.project_state.toUpperCase()
+              );
 
-            if (vendorCoversState) {
-              matchedVendors.push({
-                project_id: project.id,
-                vendor_id: vendor.user_id,
-                status: "routed",
-              });
+              if (vendorCoversState) {
+                matchedVendors.push({
+                  project_id: project.id,
+                  vendor_id: vendor.user_id,
+                  status: "routed",
+                });
+              }
             }
           }
         }
@@ -141,7 +153,10 @@ export const handleCreateProject: RequestHandler = async (req, res) => {
           await supabaseAdmin.from("project_activity").insert({
             project_id: project.id,
             action: "routed",
-            details: { matched_vendors: matchedVendors.length },
+            details: {
+              matched_vendors: matchedVendors.length,
+              route_all_vendors: routeAllVendors,
+            },
           });
         }
       }
