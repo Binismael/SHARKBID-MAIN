@@ -19,28 +19,30 @@
     <script type="module" src="/client/main.tsx"></script>
 
     <script>
-      // Register service worker
+      // Register service worker (disabled in Builder preview to avoid unexpected reloads)
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register("/service-worker.js")
-            .then((registration) => {
-              console.log("Service Worker registered:", registration);
+        const host = window.location.hostname;
+        const isLocalhost = host === "localhost" || host === "127.0.0.1";
+        const isBuilderPreview = host.endsWith("builderio.xyz");
 
-              // Check for updates periodically
-              setInterval(() => {
-                registration.update();
-              }, 60000); // Check every minute
-            })
-            .catch((error) => {
-              console.log("Service Worker registration failed:", error);
-            });
-        });
+        if (!isLocalhost && !isBuilderPreview) {
+          window.addEventListener("load", () => {
+            navigator.serviceWorker
+              .register("/service-worker.js")
+              .then((registration) => {
+                console.log("Service Worker registered:", registration);
+                // Note: Avoid aggressive update polling; it can feel like the app is 'refreshing'.
+              })
+              .catch((error) => {
+                console.log("Service Worker registration failed:", error);
+              });
+          });
 
-        // Handle service worker updates
-        navigator.serviceWorker.addEventListener("controllerchange", () => {
-          console.log("New Service Worker activated");
-        });
+          // Handle service worker updates
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            console.log("New Service Worker activated");
+          });
+        }
       }
     </script>
   </body>

@@ -1,4 +1,7 @@
 const CACHE_VERSION = "v1";
+// Bump this when you want to invalidate caches.
+const CACHE_VERSION = "1";
+
 const CACHE_NAME = `visual-matters-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 
@@ -19,8 +22,8 @@ self.addEventListener("install", (event) => {
       return cache.addAll(ASSETS_TO_CACHE);
     })
   );
-  // Immediately activate the new service worker
-  self.skipWaiting();
+  // Don't force-activate immediately; avoids clients being disrupted mid-session.
+  // The new service worker will activate on the next navigation/reload.
 });
 
 // Activate event - clean up old caches
@@ -38,8 +41,7 @@ self.addEventListener("activate", (event) => {
       );
     })
   );
-  // Take control of all clients immediately
-  return self.clients.claim();
+  // Don't claim clients immediately; avoids sudden control changes that can feel like a refresh.
 });
 
 // Fetch event - network first strategy with fallback to cache
