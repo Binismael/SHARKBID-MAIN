@@ -33,12 +33,7 @@ export default function Index() {
 
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 border-b border-white/5 bg-slate-950/50 backdrop-blur-xl">
-        <div className="container mx-auto px-6 h-32 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3">
-            <Logo variant="light" className="h-28" />
-          </Link>
-          
-
+        <div className="container mx-auto px-6 h-32 flex items-center justify-end">
           <div className="flex items-center gap-6">
             <Link to="/login" className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 hover:text-white transition-colors">
               Sign In
