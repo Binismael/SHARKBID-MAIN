@@ -33,11 +33,17 @@ function generateDemoAssistantResponse(extracted: Record<string, any>): string {
   const missingProblem = !extracted.description;
   const missingTitle = !extracted.title;
   const requirementsText = String(extracted.special_requirements || "");
-  const missingUrgency = !/\bUrgency:\b/i.test(requirementsText);
-  const missingImpact = !/\bImpact:\b/i.test(requirementsText);
-  const missingEngagement = !/\bEngagement:\b/i.test(requirementsText);
+
+  const hasUrgency = Boolean(extracted.intake_urgency) || /\bUrgency:\b/i.test(requirementsText);
+  const hasImpact = Boolean(extracted.intake_impact) || /\bImpact:\b/i.test(requirementsText);
+  const hasEngagement = Boolean(extracted.intake_engagement) || /\bEngagement:\b/i.test(requirementsText);
+  const hasRequirements = Boolean(extracted.intake_requirements) || /\bRequirements:\b/i.test(requirementsText);
+
+  const missingUrgency = !hasUrgency;
+  const missingImpact = !hasImpact;
+  const missingEngagement = !hasEngagement;
   const missingCompanySize = !extracted.business_size;
-  const missingRequirements = !/\bRequirements:\b/i.test(requirementsText);
+  const missingRequirements = !hasRequirements;
 
   // Step 1 — Industry & Location
   if (missingService) {
@@ -74,16 +80,19 @@ function generateDemoAssistantResponse(extracted: Record<string, any>): string {
     return "Step 3/3 — What’s your company size? (1–10 / 10–50 / 50–200 / 200+)";
   }
 
-  if (missingRequirements) {
-    return "Step 3/3 — Any specific requirements? (Certifications / Insurance / Compliance / Other notes)";
-  }
+  // Requirements are helpful but not blocking.
 
   const budgetLine =
     extracted.budget_min && extracted.budget_max
       ? `\n- Budget: $${Number(extracted.budget_min).toLocaleString()}–$${Number(extracted.budget_max).toLocaleString()}`
       : "";
 
-  return `Thanks — here’s what I have so far:\n\n- Service: ${extracted.service_category}\n- Location: ${extracted.project_state} ${extracted.project_zip}${budgetLine}\n\nIf that looks right, you can submit the project from the summary panel.`;
+  const urgencyLine = extracted.intake_urgency ? `\n- Urgency: ${extracted.intake_urgency}` : "";
+  const engagementLine = extracted.intake_engagement ? `\n- Engagement: ${extracted.intake_engagement}` : "";
+  const sizeLine = extracted.business_size ? `\n- Company size: ${extracted.business_size}` : "";
+  const scopeLine = extracted.intake_scope ? `\n- Scope: ${extracted.intake_scope}` : "";
+
+  return `Thanks — here’s what I have so far:\n\n- Service: ${extracted.service_category}\n- Title: ${extracted.title}\n- Location: ${extracted.project_state} ${extracted.project_zip}${scopeLine}${budgetLine}${urgencyLine}${engagementLine}${sizeLine}\n\nIf that looks right, you can submit the project from the summary panel (you can also add any extra requirements in the chat if needed).`;
 }
 
 // Helper to call OpenAI API
@@ -321,6 +330,86 @@ function extractProjectData(
     const sizeOption = conversationText.match(/\b(1\s*[–-]\s*10|10\s*[–-]\s*50|50\s*[–-]\s*200|200\s*\+)\b/);
     if (sizeOption) {
       extracted.business_size = sizeOption[1].replace(/\s+/g, "").replace("–", "-");
+    }
+  }
+
+  // Global extraction (so users can answer multiple steps at once)
+  const urgency =
+    lower.includes("asap") || lower.includes("urgent") || lower.includes("immediately")
+      ? "ASAP"
+      : /within\s*(30|thirty)\s*days?|within\s*a\s*month|in\s*a\s*month/.test(lower)
+        ? "Within 30 days"
+        : /within\s*(90|ninety)\s*days?|within\s*3\s*months?|in\s*3\s*months?/.test(lower)
+          ? "Within 90 days"
+          : lower.includes("flexible") || lower.includes("no rush")
+            ? "Flexible"
+            : null;
+  if (urgency && !extracted.intake_urgency) {
+    extracted.intake_urgency = urgency;
+    appendSpecial(`Urgency: ${urgency}`);
+  }
+
+  const engagement =
+    lower.includes("ongoing") || lower.includes("recurring") || lower.includes("retainer") || lower.includes("monthly")
+      ? "Ongoing"
+      : (lower.includes("one-time") || lower.includes("one time") || lower.includes("once"))
+        ? "One-time"
+        : null;
+  if (engagement && !extracted.intake_engagement) {
+    extracted.intake_engagement = engagement;
+    appendSpecial(`Engagement: ${engagement}`);
+  }
+
+  const scope = lower.includes("remote")
+    ? "Remote"
+    : lower.includes("national")
+      ? "National"
+      : (lower.includes("statewide") || lower.includes("state-wide"))
+        ? "Statewide"
+        : (lower.includes("city") || lower.includes("local"))
+          ? "City"
+          : null;
+  if (scope && !extracted.intake_scope) {
+    extracted.intake_scope = scope;
+    appendSpecial(`Scope: ${scope}`);
+  }
+
+  const requirements: string[] = [];
+  if (lower.includes("certification") || lower.includes("certified") || lower.includes("licensed")) requirements.push("Certifications");
+  if (lower.includes("insurance")) requirements.push("Insurance");
+  if (lower.includes("compliance") || lower.includes("soc 2") || lower.includes("soc2") || lower.includes("hipaa") || lower.includes("pci") || lower.includes("gdpr")) requirements.push("Compliance");
+  if (requirements.length && !extracted.intake_requirements) {
+    extracted.intake_requirements = requirements.join(", ");
+    appendSpecial(`Requirements: ${requirements.join(", ")}`);
+  }
+
+  if (!extracted.intake_impact) {
+    const impactSentence =
+      conversationText.match(/\bif\b[^.?!]{15,200}[.?!]/i)?.[0] ||
+      conversationText.match(/\b(otherwise|risk|or else)\b[^.?!]{10,200}[.?!]/i)?.[0];
+
+    if (impactSentence) {
+      extracted.intake_impact = impactSentence.trim();
+      appendSpecial(`Impact: ${impactSentence.trim()}`);
+    } else if (latestUserMessage) {
+      const l = latestUserMessage.toLowerCase();
+      const looksLikeImpact =
+        latestUserMessage.length >= 20 &&
+        (l.includes("otherwise") || l.includes("risk") || l.includes("lose") || l.includes("downtime") || l.includes("penalt") || l.includes("fine"));
+      if (looksLikeImpact) {
+        extracted.intake_impact = latestUserMessage;
+        appendSpecial(`Impact: ${latestUserMessage}`);
+      }
+    }
+  }
+
+  if (!extracted.description && latestUserMessage) {
+    const msgLower = latestUserMessage.toLowerCase();
+    const looksLikeDescription =
+      latestUserMessage.length >= 25 &&
+      (msgLower.includes("need") || msgLower.includes("looking") || msgLower.includes("want") || msgLower.includes("problem") || msgLower.includes("issue"));
+    if (looksLikeDescription) {
+      extracted.description = latestUserMessage;
     }
   }
 
