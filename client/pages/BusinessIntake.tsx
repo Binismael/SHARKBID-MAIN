@@ -95,6 +95,7 @@ export default function BusinessIntake() {
   const [isListening, setIsListening] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState('');
   const recognitionRef = useRef<any>(null);
+  const keepListeningRef = useRef(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -192,10 +193,14 @@ export default function BusinessIntake() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    await sendMessage(input);
+    const fullText = `${input} ${interimTranscript}`.trim();
+    if (isListening) stopListening();
+    setInput(fullText);
+    await sendMessage(fullText);
   };
 
   const stopListening = () => {
+    keepListeningRef.current = false;
     try {
       recognitionRef.current?.stop?.();
     } catch {
@@ -209,23 +214,25 @@ export default function BusinessIntake() {
   const startListening = () => {
     if (!voiceSupported || isListening) return;
 
+    keepListeningRef.current = true;
+
     const recognition = new (SpeechRecognitionCtor as any)();
     recognitionRef.current = recognition;
 
     recognition.lang = 'en-US';
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
-
-    let finalTranscript = '';
 
     recognition.onresult = (event: any) => {
       let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = String(event.results[i][0]?.transcript || '');
+        const transcript = String(event.results[i][0]?.transcript || '').trim();
+        if (!transcript) continue;
+
         if (event.results[i].isFinal) {
-          finalTranscript += transcript;
+          setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
         } else {
-          interim += transcript;
+          interim += (interim ? ' ' : '') + transcript;
         }
       }
       setInterimTranscript(interim);
@@ -235,18 +242,21 @@ export default function BusinessIntake() {
       stopListening();
     };
 
-    recognition.onend = async () => {
-      setIsListening(false);
+    recognition.onend = () => {
       recognitionRef.current = null;
-      const text = finalTranscript.trim();
-      finalTranscript = '';
       setInterimTranscript('');
 
-      if (text) {
-        // Put the transcript into the input so the user can review/edit,
-        // then manually press Send.
-        setInput(text);
+      if (keepListeningRef.current) {
+        try {
+          recognition.start();
+          setIsListening(true);
+          return;
+        } catch {
+          // fall through
+        }
       }
+
+      setIsListening(false);
     };
 
     setIsListening(true);
@@ -438,7 +448,13 @@ export default function BusinessIntake() {
                     <button
                       type="button"
                       className="inline-flex items-center gap-2"
-                      onClick={() => setVoiceInputEnabled((v) => !v)}
+                      onClick={() => {
+                        setVoiceInputEnabled((v) => {
+                          const next = !v;
+                          if (!next) stopListening();
+                          return next;
+                        });
+                      }}
                     >
                       {voiceInputEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
                       Voice input
@@ -473,7 +489,7 @@ export default function BusinessIntake() {
                 </Button>
               )}
 
-              <Button type="submit" disabled={isLoading || !input.trim() || isListening} size="icon">
+              <Button type="submit" disabled={isLoading || !input.trim()} size="icon">
                 <Send className="h-4 w-4" />
               </Button>
             </form>
