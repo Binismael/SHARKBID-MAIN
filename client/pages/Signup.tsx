@@ -103,7 +103,7 @@ export default function Signup() {
           className="text-center mb-12"
         >
           <div className="flex justify-center mb-8">
-            <Logo variant="light" className="h-20" />
+            <Logo variant="light" className="h-24 sm:h-28 md:h-32" />
           </div>
           <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500">Registration Portal</span>
           <h1 className="text-5xl font-black text-white mb-4 uppercase tracking-tighter">Join the <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-indigo-500">Marketplace</span></h1>
