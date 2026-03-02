@@ -243,10 +243,9 @@ export default function BusinessIntake() {
       setInterimTranscript('');
 
       if (text) {
+        // Put the transcript into the input so the user can review/edit,
+        // then manually press Send.
         setInput(text);
-        if (voiceInputEnabled) {
-          await sendMessage(text);
-        }
       }
     };
 
