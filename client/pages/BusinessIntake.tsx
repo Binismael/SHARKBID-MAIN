@@ -2,7 +2,17 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Send, Loader2, Check, AlertCircle, ArrowLeft } from 'lucide-react';
+import {
+  Send,
+  Loader2,
+  Check,
+  AlertCircle,
+  ArrowLeft,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+} from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -73,6 +83,19 @@ export default function BusinessIntake() {
   const [projectData, setProjectData] = useState<ProjectData>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Voice mode (browser native Web Speech API)
+  const SpeechRecognitionCtor =
+    typeof window !== 'undefined'
+      ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      : null;
+  const voiceSupported = Boolean(SpeechRecognitionCtor) && typeof window !== 'undefined';
+  const [voiceInputEnabled, setVoiceInputEnabled] = useState(false);
+  const [autoSpeakEnabled, setAutoSpeakEnabled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState('');
+  const recognitionRef = useRef<any>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -83,22 +106,22 @@ export default function BusinessIntake() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || isLoading) return;
 
     // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: input,
+      content: text,
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
     setError(null);
+    setInterimTranscript('');
 
     try {
       // Call AI to get response
@@ -106,8 +129,8 @@ export default function BusinessIntake() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userMessage: input,
-          conversationHistory: messages.map(m => ({
+          userMessage: text,
+          conversationHistory: messages.map((m) => ({
             role: m.role,
             content: m.content,
           })),
@@ -132,7 +155,7 @@ export default function BusinessIntake() {
       if (!data.response) {
         throw new Error('Invalid response from AI service');
       }
-      
+
       const assistantMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
@@ -140,11 +163,11 @@ export default function BusinessIntake() {
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, assistantMessage]);
 
       // Update extracted project data
       if (data.extractedData) {
-        setProjectData(prev => ({
+        setProjectData((prev) => ({
           ...prev,
           ...data.extractedData,
         }));
@@ -161,11 +184,111 @@ export default function BusinessIntake() {
         content: `I encountered an error: ${errorMessage}. Please try again or contact support if the problem persists.`,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorAssistantMessage]);
+      setMessages((prev) => [...prev, errorAssistantMessage]);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await sendMessage(input);
+  };
+
+  const stopListening = () => {
+    try {
+      recognitionRef.current?.stop?.();
+    } catch {
+      // ignore
+    }
+    recognitionRef.current = null;
+    setIsListening(false);
+    setInterimTranscript('');
+  };
+
+  const startListening = () => {
+    if (!voiceSupported || isListening) return;
+
+    const recognition = new (SpeechRecognitionCtor as any)();
+    recognitionRef.current = recognition;
+
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = true;
+
+    let finalTranscript = '';
+
+    recognition.onresult = (event: any) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = String(event.results[i][0]?.transcript || '');
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+      setInterimTranscript(interim);
+    };
+
+    recognition.onerror = () => {
+      stopListening();
+    };
+
+    recognition.onend = async () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+      const text = finalTranscript.trim();
+      finalTranscript = '';
+      setInterimTranscript('');
+
+      if (text) {
+        setInput(text);
+        if (voiceInputEnabled) {
+          await sendMessage(text);
+        }
+      }
+    };
+
+    setIsListening(true);
+    recognition.start();
+  };
+
+  const speak = (text: string) => {
+    if (!autoSpeakEnabled) return;
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      stopListening();
+      try {
+        window.speechSynthesis?.cancel?.();
+      } catch {
+        // ignore
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!autoSpeakEnabled) return;
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== 'assistant') return;
+    speak(last.content);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, autoSpeakEnabled]);
 
   const handleSubmitProject = async () => {
     if (!user) {
@@ -296,18 +419,62 @@ export default function BusinessIntake() {
 
             {/* Input Form */}
             <form onSubmit={handleSendMessage} className="border-t border-border p-4 flex gap-2">
-              <Input
-                placeholder="Tell me about your project..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                disabled={isLoading}
-                className="flex-1"
-              />
-              <Button
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                size="icon"
-              >
+              <div className="flex-1 space-y-2">
+                <Input
+                  placeholder={
+                    voiceInputEnabled
+                      ? isListening
+                        ? 'Listening…'
+                        : 'Press the mic and speak…'
+                      : 'Tell me about your project…'
+                  }
+                  value={interimTranscript ? `${input}${input ? ' ' : ''}${interimTranscript}` : input}
+                  onChange={(e) => setInput(e.target.value)}
+                  disabled={isLoading || isListening}
+                  className="flex-1"
+                />
+
+                {voiceSupported ? (
+                  <div className="flex flex-wrap items-center gap-4 text-[11px] text-muted-foreground">
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2"
+                      onClick={() => setVoiceInputEnabled((v) => !v)}
+                    >
+                      {voiceInputEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                      Voice input
+                    </button>
+
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2"
+                      onClick={() => setAutoSpeakEnabled((v) => !v)}
+                    >
+                      {autoSpeakEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                      Read replies
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground">
+                    Voice conversation isn’t supported in this browser.
+                  </p>
+                )}
+              </div>
+
+              {voiceSupported && voiceInputEnabled && (
+                <Button
+                  type="button"
+                  variant={isListening ? 'destructive' : 'secondary'}
+                  size="icon"
+                  disabled={isLoading}
+                  onClick={() => (isListening ? stopListening() : startListening())}
+                  title={isListening ? 'Stop listening' : 'Start listening'}
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
+              )}
+
+              <Button type="submit" disabled={isLoading || !input.trim() || isListening} size="icon">
                 <Send className="h-4 w-4" />
               </Button>
             </form>
