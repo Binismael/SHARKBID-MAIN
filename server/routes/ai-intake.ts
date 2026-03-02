@@ -29,6 +29,7 @@ function generateDemoAssistantResponse(extracted: Record<string, any>): string {
   const missingService = !extracted.service_category;
   const missingState = !extracted.project_state;
   const missingZip = !extracted.project_zip;
+  const missingCity = !extracted.project_city;
 
   const missingProblem = !extracted.description;
   const missingTitle = !extracted.title;
@@ -50,8 +51,12 @@ function generateDemoAssistantResponse(extracted: Record<string, any>): string {
     return "Step 1/3 — Industry & Location: What industry are you in, and what service do you need? (Example: ‘Healthcare — IT support’)";
   }
 
-  if (missingState || missingZip) {
-    return "Step 1/3 — Where do you need the service? Please share City + State + ZIP (and tell me if the scope is City / Statewide / National / Remote).";
+  if (missingState) {
+    return "Step 1/3 — Where do you need the service? Please share at least State (and if you can, City + ZIP).";
+  }
+
+  if (missingZip && missingCity) {
+    return "Step 1/3 — Where do you need the service? Please share City + State (ZIP optional), and tell me if the scope is City / Statewide / National / Remote.";
   }
 
   // Step 2 — Problem & Urgency
@@ -250,7 +255,14 @@ function extractProjectData(
     extracted.project_zip = zipMatch[1];
   }
 
-  // Extract state (prefer full state names; only accept 2-letter abbreviations when they appear as uppercase tokens)
+  // Extract city from common patterns like "Minneapolis, MN" or "Minneapolis Minnesota"
+  // (best-effort; routing only needs state)
+  const cityStateAbbrevMatch = conversationText.match(/\b([A-Za-z][A-Za-z .'-]{1,40}),\s*([A-Za-z]{2})\b/);
+  if (cityStateAbbrevMatch) {
+    extracted.project_city = cityStateAbbrevMatch[1].trim();
+  }
+
+  // Extract state (prefer full state names; accept common abbreviated patterns too)
   const stateAbbrevs = [
     "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
   ];
@@ -313,10 +325,19 @@ function extractProjectData(
   if (stateName) {
     extracted.project_state = stateNameToAbbrev[stateName];
   } else {
-    const upperTokens = conversationText.match(/\b[A-Z]{2}\b/g) || [];
-    const abbrev = upperTokens.find((t) => stateAbbrevs.includes(t));
-    if (abbrev) {
-      extracted.project_state = abbrev;
+    // Common pattern: "City, mn" or "City, MN"
+    const commaAbbrev = conversationText.match(/,\s*([A-Za-z]{2})\b/);
+    const parenAbbrev = conversationText.match(/\(\s*([A-Za-z]{2})\s*\)/);
+    const zipAbbrev = conversationText.match(/\b([A-Za-z]{2})\b\s+\d{5}\b/);
+    const candidate = (commaAbbrev?.[1] || parenAbbrev?.[1] || zipAbbrev?.[1] || "").toUpperCase();
+    if (candidate && stateAbbrevs.includes(candidate)) {
+      extracted.project_state = candidate;
+    } else {
+      const upperTokens = conversationText.match(/\b[A-Z]{2}\b/g) || [];
+      const abbrev = upperTokens.find((t) => stateAbbrevs.includes(t));
+      if (abbrev) {
+        extracted.project_state = abbrev;
+      }
     }
   }
 

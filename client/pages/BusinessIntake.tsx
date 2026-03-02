@@ -310,8 +310,8 @@ export default function BusinessIntake() {
       return;
     }
 
-    if (!projectData.project_state || !projectData.project_zip) {
-      setError('Please provide your project location (state + ZIP code)');
+    if (!projectData.project_state || (!projectData.project_zip && !projectData.project_city)) {
+      setError('Please provide your project location (at least state, and either city or ZIP code)');
       return;
     }
 
@@ -357,7 +357,12 @@ export default function BusinessIntake() {
     }
   };
 
-  const isProjectReady = Boolean(projectData.title && projectData.service_category && projectData.project_state && projectData.project_zip);
+  const isProjectReady = Boolean(
+    projectData.title &&
+      projectData.service_category &&
+      projectData.project_state &&
+      (projectData.project_zip || projectData.project_city)
+  );
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
