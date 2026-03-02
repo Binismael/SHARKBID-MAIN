@@ -27,27 +27,63 @@ function parseMoney(raw: string, unit?: string | null) {
 
 function generateDemoAssistantResponse(extracted: Record<string, any>): string {
   const missingService = !extracted.service_category;
-  const missingTitle = !extracted.title;
   const missingState = !extracted.project_state;
   const missingZip = !extracted.project_zip;
 
-  if (missingService) {
-    return "What type of service do you need? For example: Payroll, Accounting, IT, Marketing, Legal, or Construction.";
-  }
+  const missingProblem = !extracted.description;
+  const missingTitle = !extracted.title;
+  const requirementsText = String(extracted.special_requirements || "");
+  const missingUrgency = !/\bUrgency:\b/i.test(requirementsText);
+  const missingImpact = !/\bImpact:\b/i.test(requirementsText);
+  const missingEngagement = !/\bEngagement:\b/i.test(requirementsText);
+  const missingCompanySize = !extracted.business_size;
+  const missingRequirements = !/\bRequirements:\b/i.test(requirementsText);
 
-  if (missingTitle) {
-    return "What’s a short title for this project? (Example: ‘Payroll setup for 25 employees’)";
+  // Step 1 — Industry & Location
+  if (missingService) {
+    return "Step 1/3 — Industry & Location: What industry are you in, and what service do you need? (Example: ‘Healthcare — IT support’)";
   }
 
   if (missingState || missingZip) {
-    return "What’s the project location (state + ZIP code)?";
+    return "Step 1/3 — Where do you need the service? Please share City + State + ZIP (and tell me if the scope is City / Statewide / National / Remote).";
   }
 
-  if (!extracted.budget_min || !extracted.budget_max) {
-    return "What’s your budget range for this project? (Example: $5,000–$10,000)";
+  // Step 2 — Problem & Urgency
+  if (missingProblem) {
+    return "Step 2/3 — What problem are you trying to solve?";
   }
 
-  return `Thanks — here’s what I have so far:\n\n- Service: ${extracted.service_category}\n- Title: ${extracted.title}\n- Location: ${extracted.project_state} ${extracted.project_zip}\n- Budget: $${Number(extracted.budget_min).toLocaleString()}–$${Number(extracted.budget_max).toLocaleString()}\n\nIf that looks right, you can submit the project from the summary panel.`;
+  if (missingUrgency) {
+    return "Step 2/3 — How urgent is this? (ASAP / Within 30 days / Within 90 days / Flexible)";
+  }
+
+  if (missingImpact) {
+    return "Step 2/3 — What happens if this doesn’t get fixed?";
+  }
+
+  // Step 3 — Project Details
+  if (missingTitle) {
+    return "Step 3/3 — What’s a short title for this project? (Example: ‘Payroll setup for 25 employees’)";
+  }
+
+  if (missingEngagement) {
+    return "Step 3/3 — Is this a one-time project or ongoing work?";
+  }
+
+  if (missingCompanySize) {
+    return "Step 3/3 — What’s your company size? (1–10 / 10–50 / 50–200 / 200+)";
+  }
+
+  if (missingRequirements) {
+    return "Step 3/3 — Any specific requirements? (Certifications / Insurance / Compliance / Other notes)";
+  }
+
+  const budgetLine =
+    extracted.budget_min && extracted.budget_max
+      ? `\n- Budget: $${Number(extracted.budget_min).toLocaleString()}–$${Number(extracted.budget_max).toLocaleString()}`
+      : "";
+
+  return `Thanks — here’s what I have so far:\n\n- Service: ${extracted.service_category}\n- Location: ${extracted.project_state} ${extracted.project_zip}${budgetLine}\n\nIf that looks right, you can submit the project from the summary panel.`;
 }
 
 // Helper to call OpenAI API
@@ -123,6 +159,18 @@ function extractProjectData(
   history: Message[]
 ): Record<string, any> {
   const extracted: Record<string, any> = {};
+
+  const latestUserMessage =
+    [...history].reverse().find((m) => m.role === "user")?.content?.trim() || "";
+  const previousAssistantMessage =
+    [...history].reverse().find((m) => m.role === "assistant")?.content?.trim() || "";
+
+  const appendSpecial = (line: string) => {
+    const current = String(extracted.special_requirements || "").trim();
+    if (!line.trim()) return;
+    if (current.toLowerCase().includes(line.toLowerCase())) return;
+    extracted.special_requirements = current ? `${current}\n${line}` : line;
+  };
 
   // Combine all messages for context
   const conversationText = [
@@ -269,6 +317,81 @@ function extractProjectData(
   );
   if (sizeMatch) {
     extracted.business_size = `${sizeMatch[1]}-${sizeMatch[2]}`;
+  } else {
+    const sizeOption = conversationText.match(/\b(1\s*[–-]\s*10|10\s*[–-]\s*50|50\s*[–-]\s*200|200\s*\+)\b/);
+    if (sizeOption) {
+      extracted.business_size = sizeOption[1].replace(/\s+/g, "").replace("–", "-");
+    }
+  }
+
+  // Context-aware captures based on what the assistant just asked
+  const promptLower = previousAssistantMessage.toLowerCase();
+  if (promptLower.includes("industry") && latestUserMessage) {
+    // We don't have a dedicated industry field in the project schema yet,
+    // so store it in special requirements for now.
+    appendSpecial(`Industry: ${latestUserMessage}`);
+  }
+
+  if ((promptLower.includes("short title") || promptLower.includes("project title")) && latestUserMessage) {
+    if (!extracted.title) {
+      extracted.title = latestUserMessage;
+    }
+  }
+
+  if ((promptLower.includes("what problem") || promptLower.includes("trying to solve")) && latestUserMessage) {
+    if (!extracted.description) {
+      extracted.description = latestUserMessage;
+    }
+  }
+
+  if (promptLower.includes("how urgent") && latestUserMessage) {
+    const lower = latestUserMessage.toLowerCase();
+    const urgency =
+      lower.includes("asap")
+        ? "ASAP"
+        : lower.includes("30")
+          ? "Within 30 days"
+          : lower.includes("90")
+            ? "Within 90 days"
+            : lower.includes("flex")
+              ? "Flexible"
+              : null;
+    if (urgency) appendSpecial(`Urgency: ${urgency}`);
+  }
+
+  if (promptLower.includes("what happens if") && latestUserMessage) {
+    appendSpecial(`Impact: ${latestUserMessage}`);
+  }
+
+  if ((promptLower.includes("one-time") || promptLower.includes("one time") || promptLower.includes("ongoing")) && latestUserMessage) {
+    const lower = latestUserMessage.toLowerCase();
+    const engagement =
+      lower.includes("one") && (lower.includes("time") || lower.includes("once"))
+        ? "One-time"
+        : lower.includes("ongoing") || lower.includes("recurring") || lower.includes("retainer")
+          ? "Ongoing"
+          : null;
+    if (engagement) appendSpecial(`Engagement: ${engagement}`);
+  }
+
+  if (promptLower.includes("requirements") || promptLower.includes("certification") || promptLower.includes("insurance") || promptLower.includes("compliance")) {
+    if (latestUserMessage) {
+      appendSpecial(`Requirements: ${latestUserMessage}`);
+    }
+  }
+
+  if (promptLower.includes("where do you need") && latestUserMessage) {
+    const lower = latestUserMessage.toLowerCase();
+    const scope = lower.includes("remote")
+      ? "Remote"
+      : lower.includes("national")
+        ? "National"
+        : lower.includes("state")
+          ? "Statewide"
+          : lower.includes("city") || lower.includes("local")
+            ? "City"
+            : null;
+    if (scope) appendSpecial(`Scope: ${scope}`);
   }
 
   // Extract timeline dates
