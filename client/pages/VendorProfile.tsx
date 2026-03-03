@@ -350,7 +350,7 @@ export default function VendorProfile() {
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Button>
-          <h1 className="text-3xl font-bold">Employee Profile</h1>
+          <h1 className="text-3xl font-bold">Vendor Profile</h1>
           <p className="text-muted-foreground mt-1">Set up your services and coverage area to receive matching leads</p>
         </div>
       </div>

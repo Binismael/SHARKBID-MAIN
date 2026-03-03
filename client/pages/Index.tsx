@@ -209,7 +209,7 @@ export default function Index() {
             <span className="text-[10px] font-black uppercase tracking-[0.4em] text-purple-500">Two-Sided Marketplace</span>
             <h2 className="text-6xl md:text-7xl font-black uppercase leading-[0.9] tracking-tighter">
               Built For <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-500">Businesses & Partners</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-500">Businesses & Vendors</span>
             </h2>
           </div>
 
@@ -224,7 +224,7 @@ export default function Index() {
               },
               {
                 icon: Briefcase,
-                title: "Partner",
+                title: "Vendor",
                 desc: "Access high-intent, targeted opportunities within your market — without cold outreach.",
                 features: ["Targeted Leads", "Profile Control", "Real-time Alerts"],
                 color: "purple"
