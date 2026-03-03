@@ -33,44 +33,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let mounted = true;
 
     const fetchProfileWithTimeout = async (userId: string, metadataRole: any) => {
-      const startTime = Date.now();
       try {
-        // Try fetching via direct Supabase first (usually fastest and most reliable for basic data)
-        const supabasePromise = supabase
-          .from("profiles")
-          .select("role")
-          .eq("user_id", userId)
-          .maybeSingle();
+        // Try fetching via direct Supabase first.
+        // Note: In some preview/dev environments, network requests can intermittently fail.
+        // We intentionally swallow those errors to avoid noisy console traces.
+        const supabasePromise = Promise.resolve(
+          supabase
+            .from("profiles")
+            .select("role")
+            .eq("user_id", userId)
+            .maybeSingle()
+        ).catch(() => ({ data: null } as any));
 
         // Also try server-side API (background)
-        const apiPromise = fetch('/api/profiles/me', {
-          headers: { 'x-user-id': userId }
-        }).then(res => res.json()).catch(e => ({ success: false, error: e.message }));
+        const apiPromise = Promise.resolve(
+          fetch('/api/profiles/me', {
+            headers: { 'x-user-id': userId },
+          }).then((res) => res.json())
+        ).catch(() => ({ success: false } as any));
 
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout")), 15000)
+        // Race the Supabase call against a timeout that resolves (doesn't throw)
+        const timeoutPromise = new Promise((resolve) =>
+          setTimeout(() => resolve({ data: null } as any), 15000)
         );
 
-        // We race the Supabase direct call against the timeout
-        const result = await Promise.race([supabasePromise, timeoutPromise]) as any;
-        const duration = Date.now() - startTime;
+        const result = (await Promise.race([supabasePromise, timeoutPromise])) as any;
 
         if (result && result.data) {
-          console.log(`Profile fetched via Supabase in ${duration}ms`);
           return (result.data.role || metadataRole || "business") as "admin" | "business" | "vendor";
         }
 
-        // If Supabase was empty or failed quickly, wait a bit for API
+        // If Supabase was empty or timed out, wait a bit for API
         const apiResult = await apiPromise;
         if (apiResult && apiResult.success && apiResult.data) {
-          console.log(`Profile fetched via API as fallback`);
           return apiResult.data.role as "admin" | "business" | "vendor";
         }
 
         return (metadataRole || "business") as "admin" | "business" | "vendor";
-      } catch (err) {
-        const duration = Date.now() - startTime;
-        console.error(`Profile fetch error/timeout after ${duration}ms:`, err);
+      } catch {
         return (metadataRole || "business") as "admin" | "business" | "vendor";
       }
     };
@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       if (!mounted) return;
 
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
         if (currentSession?.user) {
           setSession(currentSession);
           setUser(currentSession.user);
@@ -128,9 +128,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false);
 
           // Update profile in background
-          fetchProfileWithTimeout(currentSession.user.id, initialRole).then(role => {
+          fetchProfileWithTimeout(currentSession.user.id, initialRole).then((role) => {
             if (mounted) setUserRole(role);
           });
+        }
+      } else if (event === 'TOKEN_REFRESHED') {
+        // Keep the session fresh without re-fetching the profile role each time.
+        if (currentSession?.user) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          setLoading(false);
         }
       } else if (event === 'SIGNED_OUT') {
         setSession(null);
