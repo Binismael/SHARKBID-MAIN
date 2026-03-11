@@ -16,6 +16,9 @@ interface Project {
   budget_min: number;
   budget_max: number;
   created_at: string;
+  project_city?: string;
+  project_state?: string;
+  project_zip?: string;
   vendor_response_count?: number;
 }
 

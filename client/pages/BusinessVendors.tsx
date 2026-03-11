@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { AlertCircle, Loader2, Search, ChevronRight, ArrowLeft, Users, Building2, Briefcase, Plus, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, Loader2, Search, ChevronRight, ArrowLeft, Users, Building2, Briefcase, Plus, CheckCircle2, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/lib/utils';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ImagePreviewDialog } from '@/components/ImagePreviewDialog';
 
 interface Vendor {
   id: string;
@@ -15,6 +17,8 @@ interface Vendor {
   company_name: string;
   company_description?: string;
   contact_email: string;
+  avatar_url?: string;
+  likes_count: number;
   vendor_services?: string[];
   is_approved: boolean;
   created_at: string;
@@ -58,20 +62,24 @@ export default function BusinessVendors() {
 
         // Fetch my projects
         if (user) {
-          let query = supabase
-            .from('projects')
-            .select('id, title')
-            .neq('status', 'completed')
-            .neq('status', 'cancelled');
+          try {
+            const response = await fetch('/api/projects/business', {
+              headers: {
+                'x-user-id': user.id
+              }
+            });
+            const result = await response.json();
 
-          // Only filter by business_id if not an admin
-          if (userRole !== 'admin') {
-            query = query.eq('business_id', user.id);
+            if (result.success) {
+              // Filter out completed and cancelled projects for the invitation modal
+              const activeProjects = (result.data || []).filter((p: any) =>
+                p.status !== 'completed' && p.status !== 'cancelled'
+              );
+              setMyProjects(activeProjects);
+            }
+          } catch (projErr) {
+            console.error('Error fetching projects for modal:', projErr);
           }
-
-          const { data: projectData } = await query;
-
-          setMyProjects(projectData || []);
         }
 
         setError(null);
@@ -145,8 +153,8 @@ export default function BusinessVendors() {
             <ArrowLeft className="h-4 w-4" />
             Back to Dashboard
           </Button>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Browse Vendors</h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">Find and invite expert vendors to your projects</p>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Browse Employees</h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-2">Find and invite expert employees to your projects</p>
         </div>
       </div>
 
@@ -181,24 +189,35 @@ export default function BusinessVendors() {
           ) : filteredVendors.length === 0 ? (
             <Card className="p-12 text-center bg-white dark:bg-slate-900 border-dashed">
               <Users className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-600 dark:text-slate-400">No matching vendors found</p>
+              <p className="text-slate-600 dark:text-slate-400">No matching employees found</p>
             </Card>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {filteredVendors.map((vendor) => (
                 <Card
                   key={vendor.id}
-                  className="p-6 hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                  className="p-6 hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 group"
                 >
                   <div className="flex items-start gap-6">
-                    <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-lg">
-                      <Building2 className="h-8 w-8" />
-                    </div>
-                    
+                    <ImagePreviewDialog src={vendor.avatar_url} alt={vendor.company_name}>
+                      <Avatar className="h-16 w-16 rounded-xl shadow-lg border border-slate-100 dark:border-slate-800">
+                        <AvatarImage src={vendor.avatar_url} />
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white text-xl font-bold">
+                          {vendor.company_name?.[0] || 'V'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </ImagePreviewDialog>
+
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">{vendor.company_name}</h3>
-                        <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-xl font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">{vendor.company_name}</h3>
+                          <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                        </div>
+                        <div className="flex items-center gap-1 text-slate-400 text-xs font-bold bg-slate-50 dark:bg-slate-800/50 px-2 py-1 rounded-full">
+                          <Heart className="h-3 w-3 fill-rose-500 text-rose-500" />
+                          <span>{vendor.likes_count || 0}</span>
+                        </div>
                       </div>
                       <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 line-clamp-2">
                         {vendor.company_description || "Expert vendor providing high-quality B2B services through Sharkbid."}
@@ -206,7 +225,7 @@ export default function BusinessVendors() {
                       
                       <div className="flex flex-wrap gap-2 mb-6">
                         <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-xs font-medium text-slate-600 dark:text-slate-400">
-                          Verified Vendor
+                          Verified Employee
                         </span>
                         {vendor.vendor_services?.slice(0, 2).map((s, i) => (
                           <span key={i} className="px-3 py-1 bg-blue-50 dark:bg-blue-900/20 rounded-full text-xs font-medium text-blue-600 dark:text-blue-400">

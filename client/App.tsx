@@ -1,5 +1,6 @@
 import "./global.css";
 
+import { Component } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -234,19 +235,57 @@ const AppRoutes = () => (
   </Routes>
 );
 
+class ErrorBoundary extends Component<
+  { children: React.ReactNode },
+  { hasError: boolean; message?: string }
+> {
+  state = { hasError: false as const, message: undefined as string | undefined };
+
+  static getDerivedStateFromError(error: unknown) {
+    const message =
+      error instanceof Error ? error.message : "An unexpected error occurred";
+    return { hasError: true, message };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error("Unhandled UI error:", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-background p-6">
+          <div className="max-w-lg w-full rounded-lg border border-border bg-card p-6">
+            <h1 className="text-lg font-semibold">Something went wrong</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {this.state.message}
+            </p>
+            <a
+              className="mt-4 inline-block text-sm underline"
+              href="/"
+            >
+              Go back home
+            </a>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const App = () => (
-  <AuthProvider>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-          <AIAssistant />
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </AuthProvider>
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <ErrorBoundary>
+        <AppRoutes />
+        <AIAssistant />
+      </ErrorBoundary>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;

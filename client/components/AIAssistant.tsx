@@ -86,17 +86,15 @@ export function AIAssistant({
 
   const isHidden = ['/business/intake'].includes(location.pathname);
 
-  if (isHidden) return null;
-
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
-    if (isOpen && !isMinimized) {
+    if (isOpen && !isMinimized && !isHidden) {
       scrollToBottom();
     }
-  }, [messages, isOpen, isMinimized]);
+  }, [messages, isOpen, isMinimized, isHidden]);
 
   const defaultSystemPrompt = `You are a helpful assistant for Sharkbid, a B2B marketplace connecting businesses with vendors.
 Your current user is a ${userRole || 'visitor'}.
@@ -106,18 +104,18 @@ Additional context: ${context || 'General help'}.
 Your goal is to help the user navigate the platform, answer questions about account creation, project posting, bidding, and general platform usage.
 
 If the user is at /signup:
-- Explain the difference between Business (find vendors) and Vendor (bid on projects).
+- Explain the difference between Business (post projects / request bids) and Vendor (receive leads / bid on projects).
 - Help them understand what information is required for each.
 
 If the user is at /vendor/onboarding:
-- Guide them through filling out their profile, rates, and portfolio.
+- Guide them through filling out their profile, services, and coverage area.
 - Explain that a complete profile gets better matches.
 
-If the user is a Business (Client):
-- Help them with account setup and project posting.
+If the user is a Business:
+- Help them with account setup and posting projects.
 - Explain how the matching process works.
 
-If the user is a Vendor (Creator):
+If the user is a Vendor:
 - Help them with onboarding and profile completion.
 - Explain how to find and bid on projects.
 
@@ -175,7 +173,7 @@ Be friendly, professional, and concise. Use markdown for formatting if helpful.`
       }
 
       const data = await response.json();
-      
+
       const assistantMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
@@ -200,6 +198,8 @@ Be friendly, professional, and concise. Use markdown for formatting if helpful.`
       setIsLoading(false);
     }
   };
+
+  if (isHidden) return null;
 
   if (!isOpen) {
     return (

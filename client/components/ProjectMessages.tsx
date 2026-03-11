@@ -8,6 +8,8 @@ import { getErrorMessage } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ImagePreviewDialog } from '@/components/ImagePreviewDialog';
 
 interface Message {
   id: string;
@@ -20,6 +22,7 @@ interface Message {
     company_name: string;
     contact_email: string;
     role: string;
+    avatar_url?: string;
   };
 }
 
@@ -231,55 +234,77 @@ export default function ProjectMessages({ projectId, vendorId }: ProjectMessages
               <div
                 key={msg.id}
                 className={cn(
-                  "flex flex-col group",
-                  isMe ? "items-end" : "items-start",
+                  "flex items-start gap-4 group",
+                  isMe ? "flex-row-reverse" : "flex-row",
                   isSameSender ? "mt-1" : "mt-6"
                 )}
               >
-                {!isMe && !isSameSender && (
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-2">
-                    {msg.profiles?.company_name || 'Partner Account'}
-                  </p>
+                {!isSameSender ? (
+                  <ImagePreviewDialog src={msg.profiles?.avatar_url} alt={msg.profiles?.company_name}>
+                    <Avatar className="h-10 w-10 border-2 border-white dark:border-slate-900 shadow-sm shrink-0 mt-1">
+                      <AvatarImage src={msg.profiles?.avatar_url} />
+                      <AvatarFallback className={cn(
+                        "text-[10px] font-black uppercase",
+                        isMe ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-600"
+                      )}>
+                        {msg.profiles?.company_name?.[0] || (isMe ? 'ME' : 'P')}
+                      </AvatarFallback>
+                    </Avatar>
+                  </ImagePreviewDialog>
+                ) : (
+                  <div className="w-10 shrink-0" />
                 )}
 
-                <div
-                  className={cn(
-                    "max-w-[80%] px-5 py-3.5 shadow-sm transition-all relative",
-                    isMe
-                      ? "bg-blue-600 text-white rounded-[2rem] rounded-tr-none shadow-blue-500/10 hover:shadow-blue-500/20"
-                      : "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-[2rem] rounded-tl-none border border-slate-100 dark:border-slate-700 hover:shadow-lg"
+                <div className={cn(
+                  "flex flex-col max-w-[70%]",
+                  isMe ? "items-end" : "items-start"
+                )}>
+                  {!isMe && !isSameSender && (
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2 mb-2">
+                      {msg.profiles?.company_name || 'Partner Account'}
+                    </p>
                   )}
-                >
-                  {msg.image_url && (
-                    <div className="mb-3 overflow-hidden rounded-2xl border border-white/10 shadow-lg">
-                      <img
-                        src={msg.image_url}
-                        alt="Message attachment"
-                        className="max-w-full h-auto object-cover hover:scale-105 transition-transform duration-500 cursor-pointer"
-                        onClick={() => window.open(msg.image_url, '_blank')}
-                      />
+
+                  <div
+                    className={cn(
+                      "px-5 py-3.5 shadow-sm transition-all relative",
+                      isMe
+                        ? "bg-blue-600 text-white rounded-[2rem] rounded-tr-none shadow-blue-500/10 hover:shadow-blue-500/20"
+                        : "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-[2rem] rounded-tl-none border border-slate-100 dark:border-slate-700 hover:shadow-lg"
+                    )}
+                  >
+                    {msg.image_url && (
+                      <ImagePreviewDialog src={msg.image_url} alt="Message attachment">
+                        <div className="mb-3 overflow-hidden rounded-2xl border border-white/10 shadow-lg">
+                          <img
+                            src={msg.image_url}
+                            alt="Message attachment"
+                            className="max-w-full h-auto object-cover hover:scale-105 transition-transform duration-500"
+                          />
+                        </div>
+                      </ImagePreviewDialog>
+                    )}
+                    {msg.message_text && (
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">{msg.message_text}</p>
+                    )}
+
+                    <div className={cn(
+                      "absolute bottom-0 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap py-1 px-2 bg-slate-900 text-white text-[8px] font-black uppercase tracking-widest rounded-full shadow-2xl",
+                      isMe ? "right-full mr-2 translate-y-0" : "left-full ml-2 translate-y-0"
+                    )}>
+                      {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                     </div>
-                  )}
-                  {msg.message_text && (
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">{msg.message_text}</p>
-                  )}
-
-                  <div className={cn(
-                    "absolute bottom-0 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap py-1 px-2 bg-slate-900 text-white text-[8px] font-black uppercase tracking-widest rounded-full shadow-2xl",
-                    isMe ? "-left-12 translate-y-1/2" : "-right-12 translate-y-1/2"
-                  )}>
-                    {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                   </div>
-                </div>
 
-                {!isSameSender || (idx === messages.length - 1) ? (
-                  <p className={cn(
-                    "text-[8px] mt-2 text-slate-400 font-black uppercase tracking-widest opacity-60",
-                    isMe ? "mr-2 text-right" : "ml-2"
-                  )}>
-                    {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
-                  </p>
-                ) : null}
+                  {(!isSameSender || (idx === messages.length - 1)) ? (
+                    <p className={cn(
+                      "text-[8px] mt-2 text-slate-400 font-black uppercase tracking-widest opacity-60",
+                      isMe ? "mr-2 text-right" : "ml-2"
+                    )}>
+                      {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
+                    </p>
+                  ) : null}
+                </div>
               </div>
             );
           })

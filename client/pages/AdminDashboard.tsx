@@ -115,28 +115,28 @@ export default function AdminDashboard() {
 
   const statCards = [
     {
-      label: 'Total Businesses',
+      label: 'Total Employers',
       value: metrics.total_businesses,
       icon: Users,
       gradientBg: 'from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900',
       color: 'text-blue-600 dark:text-blue-400',
     },
     {
-      label: 'Total Vendors',
+      label: 'Total Employees',
       value: metrics.total_vendors,
       icon: Users,
       gradientBg: 'from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900',
       color: 'text-purple-600 dark:text-purple-400',
     },
     {
-      label: 'Approved Vendors',
+      label: 'Approved Employees',
       value: metrics.approved_vendors,
       icon: CheckCircle2,
       gradientBg: 'from-green-50 to-green-100 dark:from-green-950 dark:to-green-900',
       color: 'text-green-600 dark:text-green-400',
     },
     {
-      label: 'Pending Vendors',
+      label: 'Pending Employees',
       value: metrics.pending_vendors,
       icon: Clock,
       gradientBg: 'from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900',

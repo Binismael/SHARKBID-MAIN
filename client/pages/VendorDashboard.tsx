@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, TrendingUp, AlertCircle, Loader2, Eye, CheckCircle2, Clock, LogOut, ArrowLeft, Briefcase, MessageSquare, Inbox } from 'lucide-react';
+import { Plus, TrendingUp, AlertCircle, Loader2, Eye, CheckCircle2, Clock, LogOut, ArrowLeft, Briefcase, MessageSquare, Inbox, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { getErrorMessage } from '@/lib/utils';
 import { toast } from 'sonner';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 interface Lead {
   id: string;
@@ -38,6 +39,7 @@ export default function VendorDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [profileComplete, setProfileComplete] = useState(false);
+  const [vendorProfile, setVendorProfile] = useState<any>(null);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleLogout = async () => {
@@ -112,8 +114,11 @@ export default function VendorDashboard() {
 
         // Check profile separately so it doesn't block the leads/stats
         fetchProfile().then(profileData => {
-          if (profileData?.vendor_services && profileData.vendor_services.length > 0) {
-            setProfileComplete(true);
+          if (profileData) {
+            setVendorProfile(profileData);
+            if (profileData.vendor_services && profileData.vendor_services.length > 0) {
+              setProfileComplete(true);
+            }
           }
         });
 
@@ -231,9 +236,27 @@ export default function VendorDashboard() {
       <div className="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">Vendor Dashboard</h1>
-              <p className="text-slate-600 dark:text-slate-400 mt-2">Manage your leads and grow your business</p>
+            <div className="flex items-center gap-6">
+              <Avatar className="h-20 w-20 border-2 border-white shadow-md">
+                <AvatarImage src={vendorProfile?.avatar_url} />
+                <AvatarFallback className="bg-gradient-to-br from-blue-500 to-green-600 text-white text-2xl font-bold">
+                  {vendorProfile?.company_name?.[0] || 'V'}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
+                    {vendorProfile?.company_name || 'Employee Dashboard'}
+                  </h1>
+                  {vendorProfile?.likes_count > 0 && (
+                    <div className="flex items-center gap-1.5 bg-rose-50 dark:bg-rose-950/30 text-rose-600 px-3 py-1 rounded-full border border-rose-100 dark:border-rose-900/50 shadow-sm">
+                      <Heart className="h-3.5 w-3.5 fill-current" />
+                      <span className="text-xs font-black">{vendorProfile.likes_count}</span>
+                    </div>
+                  )}
+                </div>
+                <p className="text-slate-600 dark:text-slate-400 mt-1">Manage your leads and grow your work</p>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <Button

@@ -3,16 +3,32 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { AlertCircle, Loader2, Save, X, Plus, ArrowLeft } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  AlertCircle,
+  Loader2,
+  Save,
+  X,
+  Plus,
+  ArrowLeft,
+  Camera,
+  Upload
+} from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth-context';
 import { getErrorMessage } from '@/lib/utils';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ImagePreviewDialog } from '@/components/ImagePreviewDialog';
 
 interface VendorProfile {
   company_name: string;
   company_description: string;
   contact_phone: string;
   contact_email: string;
+  avatar_url?: string;
+  portfolio_url?: string;
+  linkedin_url?: string;
+  is_approved?: boolean;
   years_in_business?: number;
   employee_count?: number;
   certifications?: string[];
@@ -89,6 +105,7 @@ export default function VendorProfile() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
@@ -97,11 +114,15 @@ export default function VendorProfile() {
     company_description: '',
     contact_phone: '',
     contact_email: '',
+    avatar_url: '',
+    portfolio_url: '',
+    linkedin_url: '',
     years_in_business: 0,
     employee_count: 0,
     certifications: [],
     vendor_services: [],
     vendor_coverage_areas: [],
+    is_approved: false,
   });
 
   const [services, setServices] = useState<ServiceCategory[]>([]);
@@ -119,7 +140,7 @@ export default function VendorProfile() {
           .from('service_categories')
           .select('id, name');
 
-        setServices(categoriesData || []);
+        setServices((categoriesData || []).filter((c: any) => (c?.name || "").toLowerCase() !== "financial"));
 
         // Fetch vendor profile via server-side API to bypass RLS recursion
         const response = await fetch('/api/profiles/me', {
@@ -191,6 +212,55 @@ export default function VendorProfile() {
     }));
   };
 
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0 || !user) return;
+
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+    const filePath = `avatars/${fileName}`;
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      // Upload image to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('assets')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('assets')
+        .getPublicUrl(filePath);
+
+      setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
+
+      // Automatically save to database so it doesn't disappear on refresh/navigation
+      await fetch('/api/profiles/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': user.id
+        },
+        body: JSON.stringify({
+          ...profile,
+          avatar_url: publicUrl,
+          role: 'vendor'
+        })
+      });
+
+      toast.success('Avatar uploaded and saved successfully!');
+    } catch (err) {
+      const message = getErrorMessage(err || 'Failed to upload avatar');
+      setError(message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!user || !profile.company_name || selectedServices.length === 0 || selectedStates.length === 0) {
       setError('Please fill in all required fields');
@@ -222,12 +292,15 @@ export default function VendorProfile() {
           company_description: profile.company_description,
           contact_phone: profile.contact_phone,
           contact_email: profile.contact_email,
+          avatar_url: profile.avatar_url,
           years_in_business: profile.years_in_business,
           employee_count: profile.employee_count,
           certifications: profile.certifications,
           vendor_services: selectedServices,
           vendor_coverage_areas: coverageAreaIds,
-          is_approved: false,
+          portfolio_url: profile.portfolio_url,
+          linkedin_url: profile.linkedin_url,
+          is_approved: profile.is_approved,
         })
       });
 
@@ -244,6 +317,11 @@ export default function VendorProfile() {
     } catch (err) {
       const message = getErrorMessage(err || 'Failed to save profile');
       setError(message);
+      if (message.includes("migration required")) {
+        toast.error("Database Update Needed", {
+          description: "Please run the SQL migration in your Supabase SQL Editor to enable portfolio links."
+        });
+      }
       console.error('Error:', err);
     } finally {
       setSaving(false);
@@ -293,6 +371,41 @@ export default function VendorProfile() {
             <p className="text-sm text-destructive">{error}</p>
           </Card>
         )}
+
+        {/* Profile Avatar */}
+        <Card className="p-6 mb-6 flex flex-col items-center">
+          <div className="relative group">
+            <ImagePreviewDialog src={profile.avatar_url} alt={profile.company_name}>
+              <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
+                <AvatarImage src={profile.avatar_url} />
+                <AvatarFallback className="bg-primary/10 text-primary text-4xl font-bold">
+                  {profile.company_name?.[0] || 'V'}
+                </AvatarFallback>
+              </Avatar>
+            </ImagePreviewDialog>
+            <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2.5 rounded-full cursor-pointer shadow-lg hover:scale-110 transition-transform border-4 border-white dark:border-slate-900">
+              {uploading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <Camera className="h-5 w-5" />
+                  <span className="sr-only">Change Profile Picture</span>
+                </>
+              )}
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={handleAvatarUpload}
+                disabled={uploading}
+              />
+            </label>
+          </div>
+          <div className="mt-4 text-center">
+            <h3 className="text-lg font-bold">{profile.company_name || 'Your Company'}</h3>
+            <p className="text-xs text-muted-foreground uppercase tracking-widest font-black mt-1">Employee Partner</p>
+          </div>
+        </Card>
 
         {/* Company Info */}
         <Card className="p-6 mb-6">
@@ -359,6 +472,33 @@ export default function VendorProfile() {
                   className="mt-1"
                 />
               </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Links & Social */}
+        <Card className="p-6 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Portfolio & Social Links</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Portfolio URL</label>
+              <Input
+                type="url"
+                value={profile.portfolio_url || ''}
+                onChange={(e) => setProfile(prev => ({ ...prev, portfolio_url: e.target.value }))}
+                placeholder="https://yourportfolio.com"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">LinkedIn Profile</label>
+              <Input
+                type="url"
+                value={profile.linkedin_url || ''}
+                onChange={(e) => setProfile(prev => ({ ...prev, linkedin_url: e.target.value }))}
+                placeholder="https://linkedin.com/in/yourcompany"
+                className="mt-1"
+              />
             </div>
           </div>
         </Card>

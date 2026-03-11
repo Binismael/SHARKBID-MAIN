@@ -12,7 +12,7 @@ function formatError(error: any): string {
 
 // Utility function for retries with exponential backoff
 async function withRetry<T>(
-  fn: () => Promise<T>,
+  fn: () => PromiseLike<T>,
   maxAttempts = 5,
   delayMs = 200,
   timeoutMs = 5000

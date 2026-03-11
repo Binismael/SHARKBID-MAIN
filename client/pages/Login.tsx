@@ -74,7 +74,7 @@ export default function Login() {
               transition={{ duration: 0.8 }}
             >
               <div className="mb-8">
-                <Logo variant="light" className="h-20" />
+                <Logo variant="light" className="h-24 sm:h-28 md:h-32" />
               </div>
               <div className="space-y-4">
                 <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-500">Access Portal</span>

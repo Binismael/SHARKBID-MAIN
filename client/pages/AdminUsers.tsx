@@ -7,12 +7,15 @@ import { Search, Filter, User, Building, Shield, ArrowRight, Loader2, AlertCircl
 import { supabase } from "@/lib/supabase";
 import { getErrorMessage } from "@/lib/utils";
 import { toast } from "sonner";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { ImagePreviewDialog } from "@/components/ImagePreviewDialog";
 
 interface UserProfile {
   id: string;
   user_id: string;
   company_name: string;
   contact_email: string;
+  avatar_url?: string;
   role: "business" | "vendor" | "admin";
   is_approved: boolean;
   created_at: string;
@@ -104,11 +107,11 @@ export default function AdminUsers() {
             <p className="text-3xl font-bold text-slate-900 dark:text-white mt-2">{stats.total}</p>
           </Card>
           <Card className="p-6 bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800/30">
-            <p className="text-sm font-semibold text-blue-600 uppercase">Businesses</p>
+            <p className="text-sm font-semibold text-blue-600 uppercase">Employers</p>
             <p className="text-3xl font-bold text-blue-700 dark:text-blue-400 mt-2">{stats.businesses}</p>
           </Card>
           <Card className="p-6 bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800/30">
-            <p className="text-sm font-semibold text-indigo-600 uppercase">Vendors</p>
+            <p className="text-sm font-semibold text-indigo-600 uppercase">Employees</p>
             <p className="text-3xl font-bold text-indigo-700 dark:text-indigo-400 mt-2">{stats.vendors}</p>
           </Card>
           <Card className="p-6 bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700">
@@ -131,7 +134,13 @@ export default function AdminUsers() {
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                   }`}
                 >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}s
+                  {tab === "all"
+                    ? "All"
+                    : tab === "business"
+                      ? "Employers"
+                      : tab === "vendor"
+                        ? "Employees"
+                        : "Admins"}
                 </button>
               ))}
             </div>
@@ -167,23 +176,26 @@ export default function AdminUsers() {
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    <div
-                      className={`h-12 w-12 rounded-full flex items-center justify-center ${
-                        u.role === "business"
-                          ? "bg-blue-100 text-blue-600"
-                          : u.role === "vendor"
-                          ? "bg-indigo-100 text-indigo-600"
-                          : "bg-slate-200 text-slate-600"
-                      }`}
-                    >
-                      {u.role === "business" ? (
-                        <Building className="h-6 w-6" />
-                      ) : u.role === "vendor" ? (
-                        <User className="h-6 w-6" />
-                      ) : (
-                        <Shield className="h-6 w-6" />
-                      )}
-                    </div>
+                    <ImagePreviewDialog src={u.avatar_url} alt={u.company_name}>
+                      <Avatar className="h-12 w-12 border-2 border-white dark:border-slate-800 shadow-sm">
+                        <AvatarImage src={u.avatar_url} />
+                        <AvatarFallback className={`flex items-center justify-center ${
+                          u.role === "business"
+                            ? "bg-blue-100 text-blue-600"
+                            : u.role === "vendor"
+                            ? "bg-indigo-100 text-indigo-600"
+                            : "bg-slate-200 text-slate-600"
+                        }`}>
+                          {u.role === "business" ? (
+                            <Building className="h-5 w-5" />
+                          ) : u.role === "vendor" ? (
+                            <User className="h-5 w-5" />
+                          ) : (
+                            <Shield className="h-5 w-5" />
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                    </ImagePreviewDialog>
                     <div>
                       <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                         {u.company_name}
@@ -202,7 +214,7 @@ export default function AdminUsers() {
                           : "bg-slate-200 text-slate-700"
                       }`}
                     >
-                      {u.role}
+                      {u.role === "business" ? "Employer" : u.role === "vendor" ? "Employee" : "Admin"}
                     </span>
 
                     {u.role === "vendor" && (

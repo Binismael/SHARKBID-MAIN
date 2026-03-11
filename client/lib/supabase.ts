@@ -3,10 +3,11 @@ import { createClient } from "@supabase/supabase-js";
 // Note: In Vite, only variables starting with VITE_ are exposed to the client
 const rawKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
-// Use absolute proxy URL
-const supabaseUrl = typeof window !== 'undefined'
-  ? `${window.location.origin}/api/v1/supabase`
-  : "https://kpytttekmeoeqskfopqj.supabase.co";
+const envUrl = (import.meta.env.VITE_SUPABASE_URL || "").replace(/\/$/, "");
+
+// Use direct Supabase URL from env in the browser. This avoids intermittent "Failed to fetch"
+// errors whenever the local /api proxy restarts during dev HMR.
+const supabaseUrl = envUrl || "https://kpytttekmeoeqskfopqj.supabase.co";
 
 if (!rawKey || rawKey.length < 10 || rawKey.includes("your-")) {
   console.error("❌ Supabase Anon Key missing or invalid!", {
@@ -15,7 +16,7 @@ if (!rawKey || rawKey.length < 10 || rawKey.includes("your-")) {
     allEnvKeys: Object.keys(import.meta.env).filter(k => k.includes("SUPABASE"))
   });
 } else {
-  console.log("✅ Supabase initialized via proxy:", supabaseUrl);
+  console.log("✅ Supabase initialized:", supabaseUrl);
 }
 
 export const supabase = createClient(

@@ -164,7 +164,7 @@ export const handleGetProject: RequestHandler = async (req, res) => {
         const vendorIds = responses.map(r => r.vendor_id);
         const { data: profiles } = await supabaseAdmin
           .from("profiles")
-          .select("user_id, company_name, contact_email")
+          .select("user_id, company_name, contact_email, avatar_url")
           .in("user_id", vendorIds);
 
         const profileMap = (profiles || []).reduce((acc: any, p) => {
@@ -360,11 +360,32 @@ export const handleGetBusinessProjects: RequestHandler = async (req, res) => {
       return res.status(400).json({ error: "Missing x-user-id header" });
     }
 
-    const { data, error } = await supabaseAdmin
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      return res.status(400).json({ error: "Invalid x-user-id header" });
+    }
+
+    // Check if user is an admin
+    const { data: userProfile } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const isAdmin = userProfile?.role === "admin";
+
+    let query = supabaseAdmin
       .from("projects")
       .select("*")
-      .eq("business_id", userId)
       .order("created_at", { ascending: false });
+
+    // If not admin, only show their own projects
+    if (!isAdmin) {
+      query = query.eq("business_id", userId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       throw error;
@@ -797,11 +818,11 @@ export const handleGetMessages: RequestHandler = async (req, res) => {
           return respondWithEnrichedMessages(res, messages, supabaseAdmin);
         }
 
-        if (msgError.code !== '42703') {
+        if (!['42703', 'PGRST204'].includes(msgError.code)) {
           throw msgError;
         }
       } catch (e: any) {
-        if (e?.code !== '42703') throw e;
+        if (e?.code && !['42703', 'PGRST204'].includes(e.code)) throw e;
       }
 
       // Fallback: Use only existing columns
@@ -834,7 +855,7 @@ async function respondWithEnrichedMessages(res: any, messages: any[] | null, sup
     const senderIds = Array.from(new Set(messages.map(m => m.sender_id)));
     const { data: profiles } = await supabaseAdmin
       .from("profiles")
-      .select("user_id, company_name, contact_email, role")
+      .select("user_id, company_name, contact_email, role, avatar_url")
       .in("user_id", senderIds);
 
     const profileMap = (profiles || []).reduce((acc: any, p: any) => {
@@ -1053,7 +1074,7 @@ export const handleSendMessage: RequestHandler = async (req, res) => {
       .select("*")
       .single();
 
-    if (error && error.code === '42703') {
+    if (error && ['42703', 'PGRST204'].includes(error.code)) {
       // Column doesn't exist yet, retry without vendor_id
       const { data: retryMessage, error: retryError } = await supabaseAdmin
         .from("project_messages")

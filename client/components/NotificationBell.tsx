@@ -55,9 +55,6 @@ export function NotificationBell() {
         const unread = result.notifications.filter((n) => !n.is_read).length;
         setUnreadCount(unread);
       } else {
-        if (result.error) {
-          console.warn("Failed to load notifications:", result.error);
-        }
         // Set empty notifications on error instead of keeping stale data
         setNotifications([]);
         setUnreadCount(0);

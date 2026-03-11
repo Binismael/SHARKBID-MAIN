@@ -28,17 +28,22 @@ export function ProtectedRoute({
     return <Navigate to="/login" replace />;
   }
 
-  // If a specific role is required, check if user has it
-  // Admin bypass: admins can access any protected route
-  if (requiredRole && userRole !== requiredRole && userRole !== "admin") {
-    // If user is logged in but doesn't have the right role, redirect to their dashboard
+  // If a specific role is required, check if user has it.
+  // Admin bypass: admins can access any protected route.
+  if (requiredRole && userRole !== requiredRole) {
     if (userRole === "admin") {
-      return <Navigate to="/admin/dashboard" replace />;
-    } else if (userRole === "business") {
+      return <>{children}</>;
+    }
+
+    // If user is logged in but doesn't have the right role, redirect to their dashboard
+    if (userRole === "business") {
       return <Navigate to="/business/dashboard" replace />;
-    } else if (userRole === "vendor") {
+    }
+
+    if (userRole === "vendor") {
       return <Navigate to="/vendor/dashboard" replace />;
     }
+
     // Fallback
     return <Navigate to="/login" replace />;
   }

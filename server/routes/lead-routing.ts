@@ -79,46 +79,58 @@ async function routeProjectToVendors(projectId: string): Promise<MatchedVendor[]
     // 3. Find matching vendors
     const matchedVendors: MatchedVendor[] = [];
 
-    for (const vendor of vendors) {
-      const reasons: string[] = [];
-      let score = 0;
+    const routeAllVendors = process.env.ROUTE_ALL_VENDORS !== "false";
 
-      // Check service match
-      const hasService = await checkServiceMatch(
-        project.service_category_id,
-        vendor.vendor_services || []
-      );
-
-      if (hasService) {
-        score += 50;
-        reasons.push("Service match");
-      } else {
-        continue; // Skip if service doesn't match
+    if (routeAllVendors) {
+      for (const vendor of vendors) {
+        matchedVendors.push({
+          vendor_id: vendor.user_id,
+          score: 0,
+          reasons: ["Launch mode: broadcast to all approved vendors"],
+        });
       }
+    } else {
+      for (const vendor of vendors) {
+        const reasons: string[] = [];
+        let score = 0;
 
-      // Check geographic match
-      const hasLocation = await checkGeographicMatch(
-        project.project_zip,
-        project.project_state,
-        vendor.vendor_coverage_areas || []
-      );
+        // Check service match
+        const hasService = await checkServiceMatch(
+          project.service_category_id,
+          vendor.vendor_services || []
+        );
 
-      if (hasLocation) {
-        score += 50;
-        reasons.push("Location match");
-      } else {
-        continue; // Skip if location doesn't match
+        if (hasService) {
+          score += 50;
+          reasons.push("Service match");
+        } else {
+          continue; // Skip if service doesn't match
+        }
+
+        // Check geographic match
+        const hasLocation = await checkGeographicMatch(
+          project.project_zip,
+          project.project_state,
+          vendor.vendor_coverage_areas || []
+        );
+
+        if (hasLocation) {
+          score += 50;
+          reasons.push("Location match");
+        } else {
+          continue; // Skip if location doesn't match
+        }
+
+        matchedVendors.push({
+          vendor_id: vendor.user_id,
+          score,
+          reasons,
+        });
+
+        console.log(
+          `[ROUTING] Matched vendor: ${vendor.company_name} (score: ${score})`
+        );
       }
-
-      matchedVendors.push({
-        vendor_id: vendor.user_id,
-        score,
-        reasons,
-      });
-
-      console.log(
-        `[ROUTING] Matched vendor: ${vendor.company_name} (score: ${score})`
-      );
     }
 
     // 4. Create routing records for matched vendors
@@ -147,6 +159,7 @@ async function routeProjectToVendors(projectId: string): Promise<MatchedVendor[]
           details: {
             matched_vendors: matchedVendors.length,
             matched_vendor_ids: matchedVendors.map((m) => m.vendor_id),
+            route_all_vendors: process.env.ROUTE_ALL_VENDORS !== "false",
           },
         });
       }

@@ -25,10 +25,21 @@ export const handleCreateProject: RequestHandler = async (req, res) => {
       return res.status(401).json({ error: "User not authenticated" });
     }
 
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(userId)) {
+      return res.status(400).json({ error: "Invalid x-user-id header" });
+    }
+
     // Validate required fields
-    if (!projectData.title || !projectData.service_category || !projectData.project_state) {
+    const missingFields: string[] = [];
+    if (!projectData.title) missingFields.push("title");
+    if (!projectData.service_category) missingFields.push("service_category");
+    if (!projectData.project_state) missingFields.push("project_state");
+
+    if (missingFields.length > 0) {
       return res.status(400).json({
-        error: "Missing required fields: title, service_category, project_state",
+        error: `Missing required fields: ${missingFields.join(", ")}`,
       });
     }
 
@@ -87,6 +98,8 @@ export const handleCreateProject: RequestHandler = async (req, res) => {
 
     // Trigger lead routing
     try {
+      const routeAllVendors = process.env.ROUTE_ALL_VENDORS !== "false";
+
       // Route project to matching vendors
       const { data: vendors, error: vendorError } = await supabaseAdmin
         .from("profiles")
@@ -95,29 +108,39 @@ export const handleCreateProject: RequestHandler = async (req, res) => {
         .eq("is_approved", true);
 
       if (!vendorError && vendors && vendors.length > 0) {
-        const matchedVendors = [];
+        const matchedVendors: Array<{ project_id: string; vendor_id: string; status: string }> = [];
 
-        for (const vendor of vendors) {
-          // Check if vendor offers this service category
-          const vendorServices = vendor.vendor_services || [];
-          if (vendorServices.includes(categoryData.id)) {
-            // Check if vendor covers this state
-            const vendorStates = vendor.vendor_coverage_areas || [];
-            const { data: coverageData } = await supabaseAdmin
-              .from("coverage_areas")
-              .select("state")
-              .in("id", vendorStates);
+        if (routeAllVendors) {
+          for (const vendor of vendors) {
+            matchedVendors.push({
+              project_id: project.id,
+              vendor_id: vendor.user_id,
+              status: "routed",
+            });
+          }
+        } else {
+          for (const vendor of vendors) {
+            // Check if vendor offers this service category
+            const vendorServices = vendor.vendor_services || [];
+            if (vendorServices.includes(categoryData.id)) {
+              // Check if vendor covers this state
+              const vendorStates = vendor.vendor_coverage_areas || [];
+              const { data: coverageData } = await supabaseAdmin
+                .from("coverage_areas")
+                .select("state")
+                .in("id", vendorStates);
 
-            const vendorCoversState = coverageData?.some(
-              (c) => c.state === projectData.project_state.toUpperCase()
-            );
+              const vendorCoversState = coverageData?.some(
+                (c) => c.state === projectData.project_state.toUpperCase()
+              );
 
-            if (vendorCoversState) {
-              matchedVendors.push({
-                project_id: project.id,
-                vendor_id: vendor.user_id,
-                status: "routed",
-              });
+              if (vendorCoversState) {
+                matchedVendors.push({
+                  project_id: project.id,
+                  vendor_id: vendor.user_id,
+                  status: "routed",
+                });
+              }
             }
           }
         }
@@ -130,7 +153,10 @@ export const handleCreateProject: RequestHandler = async (req, res) => {
           await supabaseAdmin.from("project_activity").insert({
             project_id: project.id,
             action: "routed",
-            details: { matched_vendors: matchedVendors.length },
+            details: {
+              matched_vendors: matchedVendors.length,
+              route_all_vendors: routeAllVendors,
+            },
           });
         }
       }

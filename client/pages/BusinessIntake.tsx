@@ -2,7 +2,17 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Send, Loader2, Check, AlertCircle, ArrowLeft } from 'lucide-react';
+import {
+  Send,
+  Loader2,
+  Check,
+  AlertCircle,
+  ArrowLeft,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+} from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
@@ -32,21 +42,30 @@ interface ProjectData {
 
 const SYSTEM_PROMPT = `You are a helpful project intake assistant for Sharkbid, a B2B marketplace connecting businesses with vendors.
 
-Your goal is to have a natural conversation to understand the business's project needs and help them submit a clear project request.
+Your goal is to have a natural conversation to understand the business's needs and help them submit a clear project request.
 
-Guide the conversation to collect:
-1. What service they need (e.g., payroll, accounting, IT services, construction, etc.)
-2. Project title and description
-3. Timeline (start and end dates)
-4. Budget range
-5. Company size (number of employees)
-6. Project location (ZIP code, city, state)
-7. Any special requirements or preferences
+Use this 3-step flow (keep it concise and move one step at a time):
 
-After gathering these details, summarize what you've learned and ask if they'd like to proceed.
+Step 1 — Industry & Location
+- What industry are they in?
+- What service do they need? (e.g., payroll, accounting, IT services, marketing, legal, construction, etc.)
+- Where do they need the service? Ask for City + State + ZIP.
+- Also ask the scope: City / Statewide / National / Remote.
 
-Be conversational, friendly, and efficient. Extract information naturally from what they share.
-Always respond in a concise, helpful manner.`;
+Step 2 — Problem & Urgency
+- What problem are they trying to solve?
+- How urgent is this? Offer options: ASAP / Within 30 days / Within 90 days / Flexible
+- What happens if this doesn’t get fixed?
+
+Step 3 — Project Details
+- Give the project a short title
+- One-time project or ongoing?
+- Company size (offer options): 1–10 / 10–50 / 50–200 / 200+
+- Any specific requirements? (Certifications / Insurance / Compliance / Other notes)
+
+After collecting the key details, summarize what you've learned and ask if they'd like to submit.
+
+Be conversational, friendly, and efficient. Always respond in a concise, helpful manner.`;
 
 export default function BusinessIntake() {
   const { user } = useAuth();
@@ -55,7 +74,7 @@ export default function BusinessIntake() {
     {
       id: '1',
       role: 'assistant',
-      content: "Hi! I'm here to help you describe your project so we can match you with the right vendors. What kind of service are you looking for today?",
+      content: "Hi! Let’s get this scoped in a few quick steps. Step 1: What industry are you in, and what kind of service do you need?",
       timestamp: new Date(),
     }
   ]);
@@ -64,6 +83,20 @@ export default function BusinessIntake() {
   const [projectData, setProjectData] = useState<ProjectData>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Voice mode (browser native Web Speech API)
+  const SpeechRecognitionCtor =
+    typeof window !== 'undefined'
+      ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      : null;
+  const voiceSupported = Boolean(SpeechRecognitionCtor) && typeof window !== 'undefined';
+  const [voiceInputEnabled, setVoiceInputEnabled] = useState(false);
+  const [autoSpeakEnabled, setAutoSpeakEnabled] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState('');
+  const recognitionRef = useRef<any>(null);
+  const keepListeningRef = useRef(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -74,22 +107,22 @@ export default function BusinessIntake() {
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || isLoading) return;
 
     // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: input,
+      content: text,
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsLoading(true);
     setError(null);
+    setInterimTranscript('');
 
     try {
       // Call AI to get response
@@ -97,8 +130,8 @@ export default function BusinessIntake() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userMessage: input,
-          conversationHistory: messages.map(m => ({
+          userMessage: text,
+          conversationHistory: messages.map((m) => ({
             role: m.role,
             content: m.content,
           })),
@@ -123,7 +156,7 @@ export default function BusinessIntake() {
       if (!data.response) {
         throw new Error('Invalid response from AI service');
       }
-      
+
       const assistantMessage: Message = {
         id: Date.now().toString(),
         role: 'assistant',
@@ -131,11 +164,11 @@ export default function BusinessIntake() {
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, assistantMessage]);
+      setMessages((prev) => [...prev, assistantMessage]);
 
       // Update extracted project data
       if (data.extractedData) {
-        setProjectData(prev => ({
+        setProjectData((prev) => ({
           ...prev,
           ...data.extractedData,
         }));
@@ -152,15 +185,133 @@ export default function BusinessIntake() {
         content: `I encountered an error: ${errorMessage}. Please try again or contact support if the problem persists.`,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorAssistantMessage]);
+      setMessages((prev) => [...prev, errorAssistantMessage]);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const fullText = `${input} ${interimTranscript}`.trim();
+    if (isListening) stopListening();
+    setInput(fullText);
+    await sendMessage(fullText);
+  };
+
+  const stopListening = () => {
+    keepListeningRef.current = false;
+    try {
+      recognitionRef.current?.stop?.();
+    } catch {
+      // ignore
+    }
+    recognitionRef.current = null;
+    setIsListening(false);
+    setInterimTranscript('');
+  };
+
+  const startListening = () => {
+    if (!voiceSupported || isListening) return;
+
+    keepListeningRef.current = true;
+
+    const recognition = new (SpeechRecognitionCtor as any)();
+    recognitionRef.current = recognition;
+
+    recognition.lang = 'en-US';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onresult = (event: any) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = String(event.results[i][0]?.transcript || '').trim();
+        if (!transcript) continue;
+
+        if (event.results[i].isFinal) {
+          setInput((prev) => (prev ? `${prev} ${transcript}` : transcript));
+        } else {
+          interim += (interim ? ' ' : '') + transcript;
+        }
+      }
+      setInterimTranscript(interim);
+    };
+
+    recognition.onerror = () => {
+      stopListening();
+    };
+
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setInterimTranscript('');
+
+      if (keepListeningRef.current) {
+        try {
+          recognition.start();
+          setIsListening(true);
+          return;
+        } catch {
+          // fall through
+        }
+      }
+
+      setIsListening(false);
+    };
+
+    setIsListening(true);
+    recognition.start();
+  };
+
+  const speak = (text: string) => {
+    if (!autoSpeakEnabled) return;
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      window.speechSynthesis.speak(utterance);
+    } catch {
+      // ignore
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      stopListening();
+      try {
+        window.speechSynthesis?.cancel?.();
+      } catch {
+        // ignore
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!autoSpeakEnabled) return;
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== 'assistant') return;
+    speak(last.content);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, autoSpeakEnabled]);
+
   const handleSubmitProject = async () => {
-    if (!user || !projectData.title || !projectData.service_category) {
+    if (!user) {
+      setError('Please sign in again to submit your project');
+      return;
+    }
+
+    if (!projectData.service_category || !projectData.title) {
       setError('Please provide at least a project title and service category');
+      return;
+    }
+
+    if (!projectData.project_state || (!projectData.project_zip && !projectData.project_city)) {
+      setError('Please provide your project location (at least state, and either city or ZIP code)');
       return;
     }
 
@@ -183,7 +334,7 @@ export default function BusinessIntake() {
           budget_max: projectData.budget_max,
           project_zip: projectData.project_zip,
           project_city: projectData.project_city,
-          project_state: projectData.project_state,
+          project_state: projectData.project_state?.toUpperCase(),
           business_size: projectData.business_size,
           special_requirements: projectData.special_requirements,
         }),
@@ -206,7 +357,12 @@ export default function BusinessIntake() {
     }
   };
 
-  const isProjectReady = projectData.title && projectData.service_category && projectData.project_zip;
+  const isProjectReady = Boolean(
+    projectData.title &&
+      projectData.service_category &&
+      projectData.project_state &&
+      (projectData.project_zip || projectData.project_city)
+  );
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -277,18 +433,68 @@ export default function BusinessIntake() {
 
             {/* Input Form */}
             <form onSubmit={handleSendMessage} className="border-t border-border p-4 flex gap-2">
-              <Input
-                placeholder="Tell me about your project..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                disabled={isLoading}
-                className="flex-1"
-              />
-              <Button
-                type="submit"
-                disabled={isLoading || !input.trim()}
-                size="icon"
-              >
+              <div className="flex-1 space-y-2">
+                <Input
+                  placeholder={
+                    voiceInputEnabled
+                      ? isListening
+                        ? 'Listening…'
+                        : 'Press the mic and speak…'
+                      : 'Tell me about your project…'
+                  }
+                  value={interimTranscript ? `${input}${input ? ' ' : ''}${interimTranscript}` : input}
+                  onChange={(e) => setInput(e.target.value)}
+                  disabled={isLoading || isListening}
+                  className="flex-1"
+                />
+
+                {voiceSupported ? (
+                  <div className="flex flex-wrap items-center gap-4 text-[11px] text-muted-foreground">
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2"
+                      onClick={() => {
+                        setVoiceInputEnabled((v) => {
+                          const next = !v;
+                          if (!next) stopListening();
+                          return next;
+                        });
+                      }}
+                    >
+                      {voiceInputEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                      Voice input
+                    </button>
+
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-2"
+                      onClick={() => setAutoSpeakEnabled((v) => !v)}
+                    >
+                      {autoSpeakEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                      Read replies
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-muted-foreground">
+                    Voice conversation isn’t supported in this browser.
+                  </p>
+                )}
+              </div>
+
+              {voiceSupported && voiceInputEnabled && (
+                <Button
+                  type="button"
+                  variant={isListening ? 'destructive' : 'secondary'}
+                  size="icon"
+                  disabled={isLoading}
+                  onClick={() => (isListening ? stopListening() : startListening())}
+                  title={isListening ? 'Stop listening' : 'Start listening'}
+                >
+                  {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
+              )}
+
+              <Button type="submit" disabled={isLoading || !input.trim()} size="icon">
                 <Send className="h-4 w-4" />
               </Button>
             </form>
@@ -330,7 +536,7 @@ export default function BusinessIntake() {
               <div>
                 <label className="text-xs text-muted-foreground uppercase font-medium">Location</label>
                 <p className="text-sm font-medium">
-                  {projectData.project_zip ? `${projectData.project_city}, ${projectData.project_state} ${projectData.project_zip}` : 'Not specified yet'}
+                  {projectData.project_state || projectData.project_zip ? `${projectData.project_city ? `${projectData.project_city}, ` : ''}${projectData.project_state || ''}${projectData.project_zip ? ` ${projectData.project_zip}` : ''}`.trim() : 'Not specified yet'}
                 </p>
               </div>
 

@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, AlertCircle, Loader2, CheckCircle2, XCircle, Briefcase } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Loader2, CheckCircle2, XCircle, Briefcase, ExternalLink, Linkedin } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { getErrorMessage } from '@/lib/utils';
 import { toast } from 'sonner';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { ImagePreviewDialog } from '@/components/ImagePreviewDialog';
 
 interface VendorProfile {
   id: string;
@@ -14,6 +16,9 @@ interface VendorProfile {
   company_description: string;
   contact_email: string;
   contact_phone: string;
+  avatar_url?: string;
+  portfolio_url?: string;
+  linkedin_url?: string;
   vendor_services: string[];
   vendor_coverage_areas: string[];
   certifications: string[];
@@ -70,7 +75,7 @@ export default function AdminVendorDetail() {
           .single();
 
         if (fetchError) throw fetchError;
-        if (!data) throw new Error('Vendor not found');
+        if (!data) throw new Error('Employee not found');
 
         setVendor(data);
 
@@ -132,7 +137,7 @@ export default function AdminVendorDetail() {
       if (updateError) throw updateError;
 
       setVendor({ ...vendor, is_approved: true });
-      toast.success('Vendor approved successfully');
+      toast.success('Employee approved successfully');
     } catch (err) {
       const message = getErrorMessage(err || 'Failed to approve vendor');
       toast.error(message);
@@ -155,7 +160,7 @@ export default function AdminVendorDetail() {
       if (updateError) throw updateError;
 
       setVendor({ ...vendor, is_approved: false });
-      toast.success('Vendor rejected');
+      toast.success('Employee rejected');
     } catch (err) {
       const message = getErrorMessage(err || 'Failed to update vendor');
       toast.error(message);
@@ -188,8 +193,8 @@ export default function AdminVendorDetail() {
 
           <Card className="p-8 border-l-4 border-l-red-600 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-950/30 dark:to-pink-950/30">
             <AlertCircle className="h-6 w-6 text-red-600 mb-3" />
-            <h2 className="text-lg font-bold text-red-900 dark:text-red-200">Error Loading Vendor</h2>
-            <p className="text-red-800 dark:text-red-300 mt-2">{error || 'Vendor not found'}</p>
+            <h2 className="text-lg font-bold text-red-900 dark:text-red-200">Error Loading Employee</h2>
+            <p className="text-red-800 dark:text-red-300 mt-2">{error || 'Employee not found'}</p>
           </Card>
         </div>
       </div>
@@ -210,9 +215,19 @@ export default function AdminVendorDetail() {
             Back to Dashboard
           </Button>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Vendor Details
+            Employee Details
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-2">{vendor.company_name}</p>
+          <div className="flex items-center gap-4 mt-4">
+            <ImagePreviewDialog src={vendor.avatar_url} alt={vendor.company_name}>
+              <Avatar className="h-12 w-12 border border-slate-200 dark:border-slate-700">
+                <AvatarImage src={vendor.avatar_url} />
+                <AvatarFallback className="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 font-bold">
+                  {vendor.company_name?.[0] || 'V'}
+                </AvatarFallback>
+              </Avatar>
+            </ImagePreviewDialog>
+            <p className="text-xl font-bold text-slate-600 dark:text-slate-400">{vendor.company_name}</p>
+          </div>
         </div>
       </div>
 
@@ -293,6 +308,36 @@ export default function AdminVendorDetail() {
                 <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Joined</p>
                 <p className="text-lg font-bold text-slate-900 dark:text-white mt-2">{new Date(vendor.created_at).toLocaleDateString()}</p>
               </div>
+
+              {vendor.portfolio_url && (
+                <div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">Portfolio</p>
+                  <a
+                    href={vendor.portfolio_url.startsWith('http') ? vendor.portfolio_url : `https://${vendor.portfolio_url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-lg font-bold text-blue-600 hover:underline mt-2 flex items-center gap-2"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    View Portfolio
+                  </a>
+                </div>
+              )}
+
+              {vendor.linkedin_url && (
+                <div>
+                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">LinkedIn</p>
+                  <a
+                    href={vendor.linkedin_url.startsWith('http') ? vendor.linkedin_url : `https://${vendor.linkedin_url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-lg font-bold text-blue-600 hover:underline mt-2 flex items-center gap-2"
+                  >
+                    <Linkedin className="h-4 w-4" />
+                    LinkedIn Profile
+                  </a>
+                </div>
+              )}
             </div>
 
             {vendor.company_description && (

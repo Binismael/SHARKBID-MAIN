@@ -92,7 +92,7 @@ export default function AdminBusinessDetail() {
       if (updateError) throw updateError;
 
       setBusiness({ ...business, is_approved: newStatus });
-      toast.success(newStatus ? 'Business approved' : 'Business approval revoked');
+      toast.success(newStatus ? 'Employer approved' : 'Employer approval revoked');
     } catch (err) {
       const message = getErrorMessage(err || 'Failed to update business');
       toast.error(message);
@@ -118,7 +118,7 @@ export default function AdminBusinessDetail() {
           </Button>
           <Card className="p-8 border-l-4 border-l-red-600">
             <AlertCircle className="h-6 w-6 text-red-600 mb-3" />
-            <h2 className="text-lg font-bold">Error Loading Business</h2>
+            <h2 className="text-lg font-bold">Error Loading Employer</h2>
             <p className="text-slate-600 mt-2">{error || 'Business not found'}</p>
           </Card>
         </div>
@@ -135,7 +135,7 @@ export default function AdminBusinessDetail() {
             <ArrowLeft className="h-4 w-4" /> Back to Users
           </Button>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Business Details
+            Employer Details
           </h1>
           <p className="text-slate-600 dark:text-slate-400 mt-2">{business.company_name}</p>
         </div>
@@ -168,7 +168,7 @@ export default function AdminBusinessDetail() {
               {business.is_approved ? (
                 <><XCircle className="h-4 w-4 mr-2" /> Revoke Approval</>
               ) : (
-                <><CheckCircle2 className="h-4 w-4 mr-2" /> Approve Business</>
+                <><CheckCircle2 className="h-4 w-4 mr-2" /> Approve Employer</>
               )}
             </Button>
           </div>

@@ -13,7 +13,7 @@ function formatError(error: any): string {
 
 // Utility function for retries with exponential backoff and timeout
 async function withRetry<T>(
-  fn: () => Promise<T>,
+  fn: () => PromiseLike<T>,
   maxAttempts = 4,
   delayMs = 200,
   timeoutMs = 5000
@@ -254,18 +254,20 @@ export async function getProjectDeliverables(projectId: string) {
         // Limit to first 10 to avoid slow page loads
         try {
           const enrichPromise = Promise.all([
-            supabase
-              .from("milestones")
-              .select("id, title")
-              .eq("id", deliverable.milestone_id)
-              .maybeSingle()
-              .catch(() => ({ data: null })),
-            supabase
-              .from("user_profiles")
-              .select("id, name")
-              .eq("id", deliverable.creator_id)
-              .maybeSingle()
-              .catch(() => ({ data: null })),
+            Promise.resolve(
+              supabase
+                .from("milestones")
+                .select("id, title")
+                .eq("id", deliverable.milestone_id)
+                .maybeSingle()
+            ).catch(() => ({ data: null } as any)),
+            Promise.resolve(
+              supabase
+                .from("user_profiles")
+                .select("id, name")
+                .eq("id", deliverable.creator_id)
+                .maybeSingle()
+            ).catch(() => ({ data: null } as any)),
           ]);
 
           const [milestoneRes, creatorRes] = await Promise.race([

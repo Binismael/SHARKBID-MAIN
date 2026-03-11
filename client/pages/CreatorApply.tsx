@@ -5,6 +5,7 @@ import { useState } from "react";
 import { submitCreatorApplication } from "@/lib/creator-application-service";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { getErrorMessage } from "@/lib/utils";
 
 export default function CreatorApply() {
   const [formData, setFormData] = useState({

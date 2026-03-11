@@ -34,31 +34,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const fetchProfileWithTimeout = async (userId: string, metadataRole: any) => {
       try {
-        // Try fetching via server-side API first (bypasses RLS recursion)
-        const apiPromise = fetch('/api/profiles/me', {
-          headers: { 'x-user-id': userId }
-        }).then(res => res.json());
+        // Try fetching via direct Supabase first.
+        // Note: In some preview/dev environments, network requests can intermittently fail.
+        // We intentionally swallow those errors to avoid noisy console traces.
+        const supabasePromise = Promise.resolve(
+          supabase
+            .from("profiles")
+            .select("role")
+            .eq("user_id", userId)
+            .maybeSingle()
+        ).catch(() => ({ data: null } as any));
 
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout")), 3000)
+        // Also try server-side API (background)
+        const apiPromise = Promise.resolve(
+          fetch('/api/profiles/me', {
+            headers: { 'x-user-id': userId },
+          }).then((res) => res.json())
+        ).catch(() => ({ success: false } as any));
+
+        // Race the Supabase call against a timeout that resolves (doesn't throw)
+        const timeoutPromise = new Promise((resolve) =>
+          setTimeout(() => resolve({ data: null } as any), 15000)
         );
 
-        const result = await Promise.race([apiPromise, timeoutPromise]) as any;
+        const result = (await Promise.race([supabasePromise, timeoutPromise])) as any;
 
-        if (result && result.success && result.data) {
-          return result.data.role as "admin" | "business" | "vendor";
+        if (result && result.data) {
+          return (result.data.role || metadataRole || "business") as "admin" | "business" | "vendor";
         }
 
-        // Fallback to direct supabase fetch if API fails or is missing
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("user_id", userId)
-          .maybeSingle();
+        // If Supabase was empty or timed out, wait a bit for API
+        const apiResult = await apiPromise;
+        if (apiResult && apiResult.success && apiResult.data) {
+          return apiResult.data.role as "admin" | "business" | "vendor";
+        }
 
-        return (profile?.role || metadataRole || "business") as "admin" | "business" | "vendor";
-      } catch (err) {
-        console.error("Profile fetch timeout or exception:", err);
+        return (metadataRole || "business") as "admin" | "business" | "vendor";
+      } catch {
         return (metadataRole || "business") as "admin" | "business" | "vendor";
       }
     };
@@ -104,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       if (!mounted) return;
 
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
         if (currentSession?.user) {
           setSession(currentSession);
           setUser(currentSession.user);
@@ -116,9 +128,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false);
 
           // Update profile in background
-          fetchProfileWithTimeout(currentSession.user.id, initialRole).then(role => {
+          fetchProfileWithTimeout(currentSession.user.id, initialRole).then((role) => {
             if (mounted) setUserRole(role);
           });
+        }
+      } else if (event === 'TOKEN_REFRESHED') {
+        // Keep the session fresh without re-fetching the profile role each time.
+        if (currentSession?.user) {
+          setSession(currentSession);
+          setUser(currentSession.user);
+          setLoading(false);
         }
       } else if (event === 'SIGNED_OUT') {
         setSession(null);
