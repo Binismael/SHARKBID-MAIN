@@ -648,7 +648,10 @@ export const handleAIIntake: RequestHandler = async (req, res) => {
     // If no OpenAI key is configured, keep the intake flow usable in a deterministic
     // (non-AI) demo mode instead of hard-failing.
     const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey || apiKey === "your-openai-api-key-here") {
+    const hasValidApiKey = apiKey && apiKey !== "your-openai-api-key-here" && apiKey.length > 10;
+
+    if (!hasValidApiKey) {
+      console.log("OpenAI API key not configured, using demo mode");
       const extractedData = extractProjectData(userMessage, messages);
       const response = generateDemoAssistantResponse(extractedData);
       res.setHeader("Content-Type", "application/json");
@@ -661,7 +664,9 @@ export const handleAIIntake: RequestHandler = async (req, res) => {
     }
 
     // Call OpenAI
+    console.log("Calling OpenAI API...");
     const { response, extractedData } = await callOpenAI(systemPrompt, messages);
+    console.log("OpenAI API call successful");
 
     // Return response with proper headers
     res.setHeader("Content-Type", "application/json");
