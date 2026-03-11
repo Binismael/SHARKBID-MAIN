@@ -452,9 +452,9 @@ function extractProjectData(
   const urgency =
     lower.includes("asap") || lower.includes("urgent") || lower.includes("immediately")
       ? "ASAP"
-      : /within\s*(30|thirty)\s*days?|within\s*a\s*month|in\s*a\s*month/.test(lower)
+      : /within\s*(30|thirty)\s*days?|within\s*a\s*month|in\s*a\s*month|\b30\b/.test(lower)
         ? "Within 30 days"
-        : /within\s*(90|ninety)\s*days?|within\s*3\s*months?|in\s*3\s*months?/.test(lower)
+        : /within\s*(90|ninety)\s*days?|within\s*3\s*months?|in\s*3\s*months?|\b90\b/.test(lower)
           ? "Within 90 days"
           : lower.includes("flexible") || lower.includes("no rush")
             ? "Flexible"
