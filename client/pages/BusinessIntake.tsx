@@ -42,30 +42,27 @@ interface ProjectData {
 
 const SYSTEM_PROMPT = `You are a helpful project intake assistant for Sharkbid, a B2B marketplace connecting businesses with vendors.
 
-Your goal is to have a natural conversation to understand the business's needs and help them submit a clear project request.
+Your goal is to have a natural, friendly conversation to understand their needs and help them describe their project for vendors.
 
-Use this 3-step flow (keep it concise and move one step at a time):
+Gather information naturally about:
+- Service type (payroll, accounting, IT, marketing, legal, construction, cleaning, HVAC, electrical, etc.)
+- Location (city/state)
+- The problem they're solving
+- Timeline/urgency (ASAP / within 30 days / within 90 days / flexible)
+- Project title or description
+- One-time or ongoing work
+- Company size (ballpark estimate)
+- Special requirements (certifications, insurance, compliance, etc.)
 
-Step 1 — Industry & Location
-- What industry are they in?
-- What service do they need? (e.g., payroll, accounting, IT services, marketing, legal, construction, etc.)
-- Where do they need the service? Ask for City + State + ZIP.
-- Also ask the scope: City / Statewide / National / Remote.
+Guidelines:
+- Ask questions naturally and conversationally, NOT as a rigid checklist
+- Ask only 1-2 questions per message
+- Keep responses to 1-3 sentences max
+- Be friendly and encouraging
+- Don't repeat questions already answered
+- Move the conversation forward naturally
 
-Step 2 — Problem & Urgency
-- What problem are they trying to solve?
-- How urgent is this? Offer options: ASAP / Within 30 days / Within 90 days / Flexible
-- What happens if this doesn’t get fixed?
-
-Step 3 — Project Details
-- Give the project a short title
-- One-time project or ongoing?
-- Company size (offer options): 1–10 / 10–50 / 50–200 / 200+
-- Any specific requirements? (Certifications / Insurance / Compliance / Other notes)
-
-After collecting the key details, summarize what you've learned and ask if they'd like to submit.
-
-Be conversational, friendly, and efficient. Always respond in a concise, helpful manner.`;
+When you have the essentials (service, location, problem, timeline), provide a brief summary and let them know they can submit. If they're ready to submit, direct them to click the submit button on the right.`;
 
 export default function BusinessIntake() {
   const { user } = useAuth();
@@ -74,7 +71,7 @@ export default function BusinessIntake() {
     {
       id: '1',
       role: 'assistant',
-      content: "Hi! Let’s get this scoped in a few quick steps. Step 1: What industry are you in, and what kind of service do you need?",
+      content: "Hi! I'm here to help you describe your project. What kind of service do you need help with?",
       timestamp: new Date(),
     }
   ]);
@@ -476,7 +473,7 @@ export default function BusinessIntake() {
                   </div>
                 ) : (
                   <p className="text-[11px] text-muted-foreground">
-                    Voice conversation isn’t supported in this browser.
+                    Voice conversation isn't supported in this browser.
                   </p>
                 )}
               </div>
@@ -503,95 +500,79 @@ export default function BusinessIntake() {
 
         {/* Project Summary Sidebar */}
         <div className="flex flex-col gap-4">
-          <Card className="p-6">
-            <h2 className="text-lg font-semibold mb-4">Project Summary</h2>
-            <div className="space-y-3">
-              {/* Service Category */}
-              <div>
-                <label className="text-xs text-muted-foreground uppercase font-medium">Service</label>
-                <p className="text-sm font-medium">
-                  {projectData.service_category || 'Not specified yet'}
-                </p>
-              </div>
-
-              {/* Project Title */}
-              <div>
-                <label className="text-xs text-muted-foreground uppercase font-medium">Title</label>
-                <p className="text-sm font-medium">
-                  {projectData.title || 'Not specified yet'}
-                </p>
-              </div>
-
-              {/* Budget */}
-              <div>
-                <label className="text-xs text-muted-foreground uppercase font-medium">Budget</label>
-                <p className="text-sm font-medium">
-                  {projectData.budget_min && projectData.budget_max
-                    ? `$${projectData.budget_min.toLocaleString()} - $${projectData.budget_max.toLocaleString()}`
-                    : 'Not specified yet'}
-                </p>
-              </div>
-
-              {/* Location */}
-              <div>
-                <label className="text-xs text-muted-foreground uppercase font-medium">Location</label>
-                <p className="text-sm font-medium">
-                  {projectData.project_state || projectData.project_zip ? `${projectData.project_city ? `${projectData.project_city}, ` : ''}${projectData.project_state || ''}${projectData.project_zip ? ` ${projectData.project_zip}` : ''}`.trim() : 'Not specified yet'}
-                </p>
-              </div>
-
-              {/* Timeline */}
-              <div>
-                <label className="text-xs text-muted-foreground uppercase font-medium">Timeline</label>
-                <p className="text-sm font-medium">
-                  {projectData.timeline_start && projectData.timeline_end
-                    ? `${projectData.timeline_start} to ${projectData.timeline_end}`
-                    : 'Not specified yet'}
-                </p>
-              </div>
+          <Card className="p-4">
+            <h2 className="font-semibold mb-4">Project Summary</h2>
+            <div className="space-y-3 text-sm">
+              {projectData.service_category && (
+                <div>
+                  <p className="text-muted-foreground">Service</p>
+                  <p className="font-medium">{projectData.service_category}</p>
+                </div>
+              )}
+              {projectData.title && (
+                <div>
+                  <p className="text-muted-foreground">Title</p>
+                  <p className="font-medium">{projectData.title}</p>
+                </div>
+              )}
+              {projectData.description && (
+                <div>
+                  <p className="text-muted-foreground">Description</p>
+                  <p className="font-medium text-xs">{projectData.description}</p>
+                </div>
+              )}
+              {(projectData.project_state || projectData.project_city || projectData.project_zip) && (
+                <div>
+                  <p className="text-muted-foreground">Location</p>
+                  <p className="font-medium">
+                    {[projectData.project_city, projectData.project_state, projectData.project_zip]
+                      .filter(Boolean)
+                      .join(', ')}
+                  </p>
+                </div>
+              )}
+              {projectData.budget_min || projectData.budget_max ? (
+                <div>
+                  <p className="text-muted-foreground">Budget</p>
+                  <p className="font-medium">
+                    ${projectData.budget_min?.toLocaleString() || '0'}
+                    {projectData.budget_max && projectData.budget_max !== projectData.budget_min
+                      ? ` - $${projectData.budget_max.toLocaleString()}`
+                      : ''}
+                  </p>
+                </div>
+              ) : null}
+              {projectData.business_size && (
+                <div>
+                  <p className="text-muted-foreground">Company Size</p>
+                  <p className="font-medium">{projectData.business_size}</p>
+                </div>
+              )}
             </div>
 
-            {/* Readiness Indicator */}
-            <div className="mt-6 pt-6 border-t border-border">
-              <div className="flex items-center gap-2 mb-3">
-                {isProjectReady ? (
-                  <>
-                    <Check className="h-5 w-5 text-green-600" />
-                    <span className="text-sm font-medium text-green-600">Ready to submit</span>
-                  </>
-                ) : (
-                  <>
-                    <AlertCircle className="h-5 w-5 text-yellow-600" />
-                    <span className="text-sm font-medium text-yellow-600">Needs more info</span>
-                  </>
-                )}
-              </div>
+            {isProjectReady ? (
               <Button
                 onClick={handleSubmitProject}
-                disabled={!isProjectReady || submitting}
-                className="w-full"
+                disabled={submitting}
+                className="w-full mt-6"
               >
                 {submitting ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Submitting...
                   </>
                 ) : (
-                  'Submit Project'
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Submit Project
+                  </>
                 )}
               </Button>
-            </div>
-          </Card>
-
-          {/* Tips Card */}
-          <Card className="p-6 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900">
-            <h3 className="text-sm font-semibold mb-3 text-blue-900 dark:text-blue-200">💡 Tips for best results:</h3>
-            <ul className="space-y-2 text-xs text-blue-800 dark:text-blue-300">
-              <li>Be specific about your project scope</li>
-              <li>Mention any must-have features or requirements</li>
-              <li>Provide accurate timeline expectations</li>
-              <li>Include your budget range if possible</li>
-            </ul>
+            ) : (
+              <p className="text-xs text-muted-foreground mt-4">
+                Keep chatting — once you provide a service category, project title, and location, you'll be able to submit.
+              </p>
+            )}
           </Card>
         </div>
       </div>
