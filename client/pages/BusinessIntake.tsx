@@ -38,6 +38,7 @@ interface ProjectData {
   project_zip?: string;
   project_city?: string;
   project_state?: string;
+  project_location?: string;
   special_requirements?: string;
 }
 
@@ -375,8 +376,8 @@ export default function BusinessIntake() {
       return;
     }
 
-    if (!projectData.project_state || (!projectData.project_zip && !projectData.project_city)) {
-      setError('Please provide your project location (at least state, and either city or ZIP code)');
+    if (!projectData.project_location?.trim()) {
+      setError('Please provide a location');
       return;
     }
 
@@ -397,11 +398,11 @@ export default function BusinessIntake() {
           timeline_end: projectData.timeline_end,
           budget_min: projectData.budget_min,
           budget_max: projectData.budget_max,
-          project_zip: projectData.project_zip,
-          project_city: projectData.project_city,
-          project_state: projectData.project_state?.toUpperCase(),
+          project_zip: projectData.project_zip || '',
+          project_city: projectData.project_city || '',
+          project_state: projectData.project_state?.toUpperCase() || '',
           business_size: projectData.business_size,
-          special_requirements: projectData.special_requirements,
+          special_requirements: projectData.special_requirements ? `${projectData.special_requirements}\n\nLocation: ${projectData.project_location}` : `Location: ${projectData.project_location}`,
         }),
       });
 
@@ -425,8 +426,7 @@ export default function BusinessIntake() {
   const isProjectReady = Boolean(
     projectData.title &&
       projectData.service_category &&
-      projectData.project_state &&
-      (projectData.project_zip || projectData.project_city)
+      projectData.project_location?.trim()
   );
 
   return (
@@ -601,16 +601,15 @@ export default function BusinessIntake() {
                   <p className="font-medium text-xs">{projectData.description}</p>
                 </div>
               )}
-              {(projectData.project_state || projectData.project_city || projectData.project_zip) && (
-                <div>
-                  <p className="text-muted-foreground">Location</p>
-                  <p className="font-medium">
-                    {[projectData.project_city, projectData.project_state, projectData.project_zip]
-                      .filter(Boolean)
-                      .join(', ')}
-                  </p>
-                </div>
-              )}
+              <div>
+                <p className="text-muted-foreground text-xs mb-1">Location</p>
+                <Input
+                  placeholder="e.g., Minna, Niger State or gbeganu off bide road minna"
+                  value={projectData.project_location || ''}
+                  onChange={(e) => setProjectData((prev) => ({ ...prev, project_location: e.target.value }))}
+                  className="h-8 text-sm"
+                />
+              </div>
               {projectData.budget_min || projectData.budget_max ? (
                 <div>
                   <p className="text-muted-foreground">Budget</p>
@@ -650,7 +649,7 @@ export default function BusinessIntake() {
               </Button>
             ) : (
               <p className="text-xs text-muted-foreground mt-4">
-                Keep chatting — once you provide a service category, project title, and location, you'll be able to submit.
+                Fill in the location field above and provide a service category and project title to submit.
               </p>
             )}
           </Card>
