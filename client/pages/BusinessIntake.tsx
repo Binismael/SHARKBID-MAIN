@@ -12,6 +12,7 @@ import {
   MicOff,
   Volume2,
   VolumeX,
+  MapPin,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
@@ -80,6 +81,7 @@ export default function BusinessIntake() {
   const [projectData, setProjectData] = useState<ProjectData>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
 
   // Voice mode (browser native Web Speech API)
   const SpeechRecognitionCtor =
@@ -103,6 +105,72 @@ export default function BusinessIntake() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  const handleShareLocation = async () => {
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported in this browser');
+      return;
+    }
+
+    setLocationLoading(true);
+    setError(null);
+
+    try {
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000 });
+      });
+
+      const { latitude, longitude } = position.coords;
+
+      // Use OpenStreetMap's reverse geocoding API (free, no key required)
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+      );
+      const data = await response.json();
+
+      // Extract city, state, and zip
+      const address = data.address || {};
+      const city = address.city || address.town || address.village || address.county || '';
+      const state = address.state || '';
+      const zip = address.postcode || '';
+
+      // Convert state name to abbreviation if needed
+      const stateNameToAbbrev: Record<string, string> = {
+        alabama: 'AL', alaska: 'AK', arizona: 'AZ', arkansas: 'AR', california: 'CA',
+        colorado: 'CO', connecticut: 'CT', delaware: 'DE', florida: 'FL', georgia: 'GA',
+        hawaii: 'HI', idaho: 'ID', illinois: 'IL', indiana: 'IN', iowa: 'IA', kansas: 'KS',
+        kentucky: 'KY', louisiana: 'LA', maine: 'ME', maryland: 'MD', massachusetts: 'MA',
+        michigan: 'MI', minnesota: 'MN', mississippi: 'MS', missouri: 'MO', montana: 'MT',
+        nebraska: 'NE', nevada: 'NV', 'new hampshire': 'NH', 'new jersey': 'NJ', 'new mexico': 'NM',
+        'new york': 'NY', 'north carolina': 'NC', 'north dakota': 'ND', ohio: 'OH', oklahoma: 'OK',
+        oregon: 'OR', pennsylvania: 'PA', 'rhode island': 'RI', 'south carolina': 'SC',
+        'south dakota': 'SD', tennessee: 'TN', texas: 'TX', utah: 'UT', vermont: 'VT',
+        virginia: 'VA', washington: 'WA', 'west virginia': 'WV', wisconsin: 'WI', wyoming: 'WY',
+      };
+
+      const stateAbbr =
+        state.length === 2 ? state.toUpperCase() : stateNameToAbbrev[state.toLowerCase()] || state;
+
+      // Update project data
+      setProjectData((prev) => ({
+        ...prev,
+        project_city: city,
+        project_state: stateAbbr,
+        project_zip: zip,
+      }));
+
+      // Send location info to AI
+      const locationMessage = `I'm located in ${city}${state ? ', ' + stateAbbr : ''}${zip ? ' ' + zip : ''}`;
+      await sendMessage(locationMessage);
+    } catch (err) {
+      const message = err instanceof GeolocationPositionError
+        ? 'Unable to get location. Please enable location access or enter manually.'
+        : 'Failed to get location information. Please try again.';
+      setError(message);
+    } finally {
+      setLocationLoading(false);
+    }
+  };
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || isLoading) return;
@@ -445,37 +513,49 @@ export default function BusinessIntake() {
                   className="flex-1"
                 />
 
-                {voiceSupported ? (
-                  <div className="flex flex-wrap items-center gap-4 text-[11px] text-muted-foreground">
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-2"
-                      onClick={() => {
-                        setVoiceInputEnabled((v) => {
-                          const next = !v;
-                          if (!next) stopListening();
-                          return next;
-                        });
-                      }}
-                    >
-                      {voiceInputEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-                      Voice input
-                    </button>
+                <div className="flex flex-wrap items-center gap-4 text-[11px] text-muted-foreground">
+                  {voiceSupported ? (
+                    <>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2"
+                        onClick={() => {
+                          setVoiceInputEnabled((v) => {
+                            const next = !v;
+                            if (!next) stopListening();
+                            return next;
+                          });
+                        }}
+                      >
+                        {voiceInputEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                        Voice input
+                      </button>
 
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-2"
-                      onClick={() => setAutoSpeakEnabled((v) => !v)}
-                    >
-                      {autoSpeakEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-                      Read replies
-                    </button>
-                  </div>
-                ) : (
-                  <p className="text-[11px] text-muted-foreground">
-                    Voice conversation isn't supported in this browser.
-                  </p>
-                )}
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-2"
+                        onClick={() => setAutoSpeakEnabled((v) => !v)}
+                      >
+                        {autoSpeakEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                        Read replies
+                      </button>
+                    </>
+                  ) : (
+                    <p className="text-[11px] text-muted-foreground">
+                      Voice conversation isn't supported in this browser.
+                    </p>
+                  )}
+
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-2"
+                    onClick={handleShareLocation}
+                    disabled={locationLoading}
+                  >
+                    {locationLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+                    Share location
+                  </button>
+                </div>
               </div>
 
               {voiceSupported && voiceInputEnabled && (
