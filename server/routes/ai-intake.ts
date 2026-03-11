@@ -391,8 +391,9 @@ function extractProjectData(
     worcester: "MA",
     springfield: "MO",
     buffalo: "NY",
-    st: "MO",
     "saint louis": "MO",
+    "st louis": "MO",
+    "st. louis": "MO",
     cincinnati: "OH",
     "pittsburgh": "PA",
     "las vegas": "NV",
@@ -405,12 +406,13 @@ function extractProjectData(
 
   const lower = conversationText.toLowerCase();
 
-  // Check for city names first (maps to state)
-  const foundCity = Object.keys(cityToState).find((city) => lower.includes(city));
+  // Check for city names first (maps to state) — search longest first to avoid partial matches
+  const sortedCities = Object.keys(cityToState).sort((a, b) => b.length - a.length);
+  const foundCity = sortedCities.find((city) => lower.includes(city));
   if (foundCity && !extracted.project_state) {
     extracted.project_state = cityToState[foundCity];
     if (!extracted.project_city) {
-      extracted.project_city = foundCity.charAt(0).toUpperCase() + foundCity.slice(1);
+      extracted.project_city = foundCity.split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     }
   }
 
