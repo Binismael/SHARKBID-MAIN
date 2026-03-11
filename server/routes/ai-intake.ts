@@ -320,11 +320,105 @@ function extractProjectData(
     wyoming: "WY",
   };
 
+  // City-to-state mapping for major US cities
+  const cityToState: Record<string, string> = {
+    "new york": "NY",
+    "los angeles": "CA",
+    chicago: "IL",
+    houston: "TX",
+    phoenix: "AZ",
+    philadelphia: "PA",
+    "san antonio": "TX",
+    "san diego": "CA",
+    dallas: "TX",
+    "san jose": "CA",
+    austin: "TX",
+    jacksonville: "FL",
+    "fort worth": "TX",
+    columbus: "OH",
+    "charlotte": "NC",
+    "san francisco": "CA",
+    "indianapolis": "IN",
+    "austin": "TX",
+    seattle: "WA",
+    denver: "CO",
+    "washington": "DC",
+    boston: "MA",
+    "el paso": "TX",
+    nashville: "TN",
+    detroit: "MI",
+    oklahoma: "OK",
+    portland: "OR",
+    "las vegas": "NV",
+    memphis: "TN",
+    louisville: "KY",
+    baltimore: "MD",
+    milwaukee: "WI",
+    albuquerque: "NM",
+    tucson: "AZ",
+    fresno: "CA",
+    sacramento: "CA",
+    "long beach": "CA",
+    kansas: "KS",
+    mesa: "AZ",
+    virginia: "VA",
+    atlanta: "GA",
+    "colorado springs": "CO",
+    omaha: "NE",
+    miami: "FL",
+    oakland: "CA",
+    tulsa: "OK",
+    minneapolis: "MN",
+    wichita: "KS",
+    "arlington": "TX",
+    "new orleans": "LA",
+    cleveland: "OH",
+    plano: "TX",
+    aurora: "CO",
+    "corpus christi": "TX",
+    lexington: "KY",
+    "irvine": "CA",
+    henderson: "NV",
+    gilbert: "AZ",
+    laredo: "TX",
+    lubbock: "TX",
+    madison: "WI",
+    "garland": "TX",
+    glendale: "AZ",
+    missoula: "MT",
+    portland: "ME",
+    providence: "RI",
+    worcester: "MA",
+    springfield: "MO",
+    buffalo: "NY",
+    st: "MO",
+    "saint louis": "MO",
+    cincinnati: "OH",
+    "pittsburgh": "PA",
+    "las vegas": "NV",
+    "back bay": "MA",
+    brooklyn: "NY",
+    manhattan: "NY",
+    queens: "NY",
+    bronx: "NY",
+  };
+
   const lower = conversationText.toLowerCase();
+
+  // Check for city names first (maps to state)
+  const foundCity = Object.keys(cityToState).find((city) => lower.includes(city));
+  if (foundCity && !extracted.project_state) {
+    extracted.project_state = cityToState[foundCity];
+    if (!extracted.project_city) {
+      extracted.project_city = foundCity.charAt(0).toUpperCase() + foundCity.slice(1);
+    }
+  }
+
+  // Then check for state names
   const stateName = Object.keys(stateNameToAbbrev).find((name) => lower.includes(name));
-  if (stateName) {
+  if (stateName && !extracted.project_state) {
     extracted.project_state = stateNameToAbbrev[stateName];
-  } else {
+  } else if (!extracted.project_state) {
     // Common pattern: "City, mn" or "City, MN"
     const commaAbbrev = conversationText.match(/,\s*([A-Za-z]{2})\b/);
     const parenAbbrev = conversationText.match(/\(\s*([A-Za-z]{2})\s*\)/);
